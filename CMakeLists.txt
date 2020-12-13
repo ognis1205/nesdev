@@ -14,7 +14,7 @@ find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
 # Define Exucutable as 'nes'.
-add_executable(nes main.cc)
+add_executable(nes ${NES_EMULATOR_SRCS})
 
 # Link SDL2 Package.
 target_link_libraries(nes ${SDL2_LIBRARIES})

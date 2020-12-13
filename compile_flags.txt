@@ -20,3 +20,4 @@
 -fno-sanitize-recover
 -fstack-protector
 -I/usr/local/include
+-I/usr/local/include/SDL2
