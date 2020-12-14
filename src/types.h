@@ -11,29 +11,10 @@ namespace nes {
 namespace types {
 
 /* Type Name Aliases. */
-using s8_t = std::int_least8_t;
-using u8_t = std::uint_least8_t;
-using u32_t = std::uint_least32_t;
-using u16_t = std::uint_least16_t;
-
-/* Register Bitfield Accessor Class. */
-template <size_t BitNo, size_t Width = 1, typename T = u8_t>
-class RegisterBits {
- public:
-  template <typename U>
-  RegisterBits& operator=(U rhs) {
-    register_ = (register_ & ~(kMask_ << BitNo)) |
-                ((Width > 1 ? rhs & kMask_ : !!rhs) << BitNo);
-    return *this;
-  }
-  RegisterBits& operator++() { return *this = *this + 1; }
-  unsigned operator++(int) { unsigned ret = *this; ++*this; return ret; }
-  operator unsigned() const { return (register_ >> BitNo) & kMask_; }
-
- private:
-  static constexpr auto kMask_ = (1u << Width) - 1u;
-  T register_;
-};
+using int8_t = std::int_least8_t;
+using uint8_t = std::uint_least8_t;
+using uint16_t = std::uint_least16_t;
+using uint32_t = std::uint_least32_t;
 
 }  // namespace types
 }  // namespace nes

@@ -1,6 +1,5 @@
 #include <iostream>
 #include "SDL.h"
-#include "types.h"
 
 using namespace std;
 
