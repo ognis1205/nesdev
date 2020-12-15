@@ -4,6 +4,7 @@ C++ NES Implementation for My Own Learning Porpose.
 
 # Archetecture
 
+```
                 +-------------+   +---------------+   +---------------+   +---------------+
                 |             |   |               |   |               |   |               |
           +-----+ CPU (2AO3)  |   | MEMORY (2KB)  |   | APU           |   | CARTRIGDE     |
@@ -22,6 +23,7 @@ C++ NES Implementation for My Own Learning Porpose.
                 |                   |                    |
                 |                   |                    |
                 +-------------------+--------------------+--------------------------------> BUS
+```
 
 # References
 
