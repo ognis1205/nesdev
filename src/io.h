@@ -35,18 +35,5 @@ public:
   types::uint8_t Read(unsigned i);
 };
 
-///*
-// * On hardware that supports double-buffering, this function sets up a flip and
-// * returns. This must be occured at visible-scanlaine #239.
-// * SEE: https://wiki.nesdev.com/w/index.php/PPU_rendering
-// */
-//
-//
-///* Flag that joystick controller input is allowed specified with value 'v'. */
-//void StrobeJoystick(unsigned v);
-//
-///* Read joystick controller specified with index 'i'. */
-//types::uint8_t ReadJoystick(unsigned i);
-
 }  // namespace io
 }  // namespace nes
