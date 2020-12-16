@@ -22,87 +22,82 @@ class Bus;
 namespace nes {
 namespace cpu {
 
-/* http://www.6502.org/ */
-class CPU6502 {
+/*
+ * RICOH version MOS Technology 6502.
+ * SEE: http://www.6502.org/
+ */
+class MOS6502 {
  public:
-  CPU6502();
-  ~CPU6502();
+  static const types::uint8_t kInitialStackAddress = 0xFD;
+  static const types::uint16_t kStackBaseAddress = 0x0100;
+  static const types::uint16_t kResetVectorAddress = 0xFFFC;
+  static const types::uint16_t kNMIVectorAddress = 0xFFFA;
+  
+  MOS6502();
+  ~MOS6502();
 
-  // Accumulator.
-  types::uint8_t A = 0x00;
-  // X register.
-  types::uint8_t X = 0x00;
-  // Y register.
-  types::uint8_t Y = 0x00;
-  // Stack pointer.
-  types::uint8_t S = 0x00;
-  // Program counter.
-  types::uint16_t PC = 0x0000;
-  // Status register.
-  types::uint8_t P = 0x00;
+  union {
+    types::uint8_t REGISTER;
+  } A;
+  union {
+    types::uint8_t REGISTER;
+  } X;
+  union {
+    types::uint8_t REGISTER;
+  } Y;
+  union {
+    types::uint8_t REGISTER;
+  } S;
+  union {
+    types::uint16_t REGISTER;
+    types::Bitfield<0, 8, types::uint16_t> OFFSET;
+    types::Bitfield<8, 8, types::uint16_t> PAGE;
+  } PC;
+  union {
+    types::uint8_t REGISTER;
+    types::Bitfield<0, 1, types::uint8_t> CARRY;
+    types::Bitfield<1, 1, types::uint8_t> ZERO;
+    types::Bitfield<2, 1, types::uint8_t> IRQ_DISABLE;
+    types::Bitfield<3, 1, types::uint8_t> DECIMAL_MODE;
+    types::Bitfield<4, 1, types::uint8_t> BRK_COMMAND;
+    types::Bitfield<5, 1, types::uint8_t> UNUSED;
+    types::Bitfield<6, 1, types::uint8_t> OVERFLOW;
+    types::Bitfield<7, 1, types::uint8_t> NEGATIVE;
+  } P;
 
-  // Status register masks.
-  enum Status {
-    CARRY = (1u << 0),
-    ZERO = (1u << 1),
-    IRQ_DISABLE = (1u << 2),
-    DECIMAL_MODE = (1u << 3),
-    BRK_COMMAND = (1u << 4),
-    UNUSED = (1u << 5),
-    OVERFLOW = (1u << 6),
-    NEGATIVE = (1u << 7)
-  };
-
-  // Reset interrupt.
   void HandleReset();
-  // Interrupt request.
   void HandleIRQ();
-  // Non-Maskable Interrupt request.
   void HandleNMI();
-  // Perform one clock cycle's update.
-  void HandleClocks();
-  // Assisstive: Indicate the current instruction has completed by returning
-  // true.
-  bool HasCompleted();
-  // Assisstive: Link this CPU to a communications bus.
-  void ConnectTo(bus::Bus* bus) { bus_ = bus; }
-
- private:
-  // CPU Instruction.
-  struct Instruction {
-    std::string name;
-    types::uint8_t (CPU6502::*AddressingMode)(void) = nullptr;
-    types::uint8_t (CPU6502::*Opcode)(void) = nullptr;
-    types::uint8_t cycles = 0;
-  };
-
-  // Get Status Flag.
-  types::uint8_t GetFlag(Status status);
-  // Set Status Flag.
-  void SetFlag(Status status, bool v);
-  // Read content of the bus at the address.
+  void HandleClock();
+  void ConnectTo(bus::Bus* bus);
   types::uint8_t Read(types::uint16_t address);
-  // Write content to the bus at the address.
-  void Write(types::uint16_t address, types::uint8_t v);
-  // The read location of data can come from two sources, a memory address, or as part of the instruction.
+  void Write(types::uint16_t address, types::uint8_t data);
   types::uint8_t Fetch();
 
-  // Linkage to the communications bus.
-  bus::Bus* bus_ = nullptr;
+ private:
+  struct Instruction {
+    std::string name;
+    types::uint8_t (MOS6502::*addressing_mode)(void);
+    types::uint8_t (MOS6502::*opcode)(void);
+    types::uint8_t cycles;
+  };
+
+  // Assisstive: Linkage to the communications bus.
+  bus::Bus* bus_;
   // Assisstive: Lookup table of opcodes.
   std::vector<Instruction> lookup_;
   // Assisstive: Instruction byte.
-  types::uint8_t opcode_ = 0x00;
+  types::uint8_t opcode_;
   // Assisstive: Working input value to the ALU.
-  types::uint8_t operand_ = 0x00;
-  // Assisstive: Currently handling memory address.
-  types::uint16_t address_ = 0x0000;
+  types::uint8_t operand_;
+  // Assisstive: Currently handling absolute mode memory address.
+  types::uint16_t address_;
   // Assisstive: Used for relative addressing.
-  types::uint16_t address_relative_ = 0x0000;
+  types::uint16_t offset_;
   // Assisstive: Count how many cycles the instruction has remaining.
-  types::uint32_t cycles_ = 0;
+  types::uint32_t cycles_delayed_;
   // Assisstive: A global accumulation of the number of clocks.
-  types::uint32_t clock_count_ = 0;
+  types::uint32_t clock_count_;
 
   // Addressing Modes.
   types::uint8_t IMP();
@@ -175,6 +170,7 @@ class CPU6502 {
   types::uint8_t TXA();
   types::uint8_t TXS();
   types::uint8_t TYA();
+  types::uint8_t XXX();
 };
 
 }  // namespace cpu
