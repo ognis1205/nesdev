@@ -23,6 +23,7 @@ target_include_directories(
   ../${PROJECT_INC_PATH}
   ${Boost_INCLUDE_DIRS})
 
+
 target_link_libraries(
   ${PIPELINE_TEST_NAME}
   ${PROJECT_LIBRARY}
