@@ -14,19 +14,19 @@ namespace cpu {
  * Set/Clear register values and assisstive variables, and generate opcode lookup table.
  */
 MOS6502::MOS6502()
-    : A{0x00},
-      X{0x00},
-      Y{0x00},
-      S{0x00},
-      PC{0x0000},
-      P{0x00},
+    : a{0x00},
+      x{0x00},
+      y{0x00},
+      s{0x00},
+      pc{0x0000},
+      p{0x00},
       bus_{nullptr},
       opcode_{0x00},
       operand_{0x00},
-      address_{0x0000},
-      offset_{0x0000},
-      cycles_delayed_{0u},
-      clock_count_{0u} {
+      abs_{0x0000},
+      rel_{0x0000},
+      cycles_delayed_{0},
+      clock_count_{0} {
   lookup_ = {
       {"BRK", &MOS6502::BRK, &MOS6502::IMM, 7},
       {"ORA", &MOS6502::ORA, &MOS6502::IZX, 6},
@@ -300,14 +300,14 @@ MOS6502::~MOS6502() {
  * register is cleared except for unused bit which remains at 1.
  */
 void MOS6502::HandleReset() {
-  PC.OFFSET = Read(MOS6502::kResetVectorAddress);
-  PC.PAGE = Read(MOS6502::kResetVectorAddress + 1);
-  A.REGISTER = X.REGISTER = Y.REGISTER = P.REGISTER = 0x00;
-  P.UNUSED = 1u;
-  S.REGISTER = MOS6502::kInitialStackAddress;
-  opcode_ = operand_ = 0x00;
-  address_ = offset_ = 0x0000;
-  cycles_delayed_ = 8u;
+  pc.offset = Read(kResetVectorAddress);
+  pc.page = Read(kResetVectorAddress + 1);
+  a.value = x.value = y.value = p.value = 0x00;
+  p.unused = true;
+  s.value = kStackOffset;
+  opcode_.value = operand_.value = 0x00;
+  abs_.address = rel_.address = 0x0000;
+  cycles_delayed_ = 8;
 }
 
 /*
@@ -316,12 +316,12 @@ void MOS6502::HandleReset() {
  * counter is stored onthe stack.
  */
 void MOS6502::HandleIRQ() {
-  if (!P.IRQ_DISABLE) {
-    Write(MOS6502::kStackBaseAddress + S.REGISTER--, PC.PAGE);
-    Write(MOS6502::kStackBaseAddress + S.REGISTER--, PC.OFFSET);
-    P.BRK_COMMAND = 0u;
-    P.UNUSED = 1u;
-    P.IRQ_DISABLE = 1u;
+  if (!p_register.irq_disable) {
+    Write(kStackBaseAddress + s_register.offset--, pc_register.page);
+    Write(kStackBaseAddress + s_register.offset--, pc_register.offset);
+    P.BRK_COMMAND = false;
+    P.UNUSED = true;
+    P.IRQ_DISABLE = true;
     Write(MOS6502::kStackBaseAddress + S.REGISTER--, P.REGISTER);
     PC.OFFSET = Read(MOS6502::kResetVectorAddress);
     PC.PAGE = Read(MOS6502::kResetVectorAddress + 1);
@@ -355,11 +355,11 @@ void MOS6502::HandleNMI() {
  * computation in one hit.
  */
 void MOS6502::HandleClock() {
-  if (cycles_delayed_ == 0) {
+  if (!cycles_delayed_) {
     opcode_ = Read(PC.REGISTER++);
     P.UNUSED = 1u;
     cycles_delayed_ = lookup_[opcode_].cycles;
-    cycles_delayed_ += (this->*lookup_[opcode_].addressing_mode)() & (this->*lookup_[opcode_].opcode)();
+    cycles_delayed_ += (this->*lookup_[opcode_].addressing_mode)() & (this->*lookup_[opcode_].instruction)();
     P.UNUSED = 1u;
   }
   clock_count_++;
@@ -394,6 +394,32 @@ types::uint8_t MOS6502::Fetch() {
   if (!(lookup_[opcode_].addressing_mode == &MOS6502::IMP))
     operand_ = Read(address_);
   return operand_;
+}
+
+/*
+ * Addressing Mode: Implied.
+ */
+types::uint8_t MOS6502::IMP() {
+  operand_ = A.REGISTER;
+  return 0;
+}
+
+/*
+ * Addressing Mode: Immediate.
+ */
+types::uint8_t MOS6502::IMM() {
+  address_ = PC.REGISTER++;
+  return 0;
+}
+
+// Address Mode: Zero Page
+// To save program bytes, zero page addressing allows you to absolutely address
+// a location in first 0xFF bytes of address range. Clearly this only requires
+// one byte instead of the usual two.
+types::uint8_t MOS6502::ZP0() {
+  address_ = Read(PC.REGISTER++);	
+  address_ &= 0x00FF;
+  return 0;
 }
 
 }  // namespace cpu

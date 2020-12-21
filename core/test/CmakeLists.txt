@@ -1,0 +1,40 @@
+find_package (
+  Boost
+  COMPONENTS
+  system
+  filesystem
+  unit_test_framework
+  REQUIRED)
+
+set (
+  PIPELINE_TEST_NAME
+  test_pipeline)
+
+add_executable (
+  ${PIPELINE_TEST_NAME}
+  ${PIPELINE_TEST_NAME}.cc)
+
+target_compile_features (
+  ${PIPELINE_TEST_NAME}
+  PRIVATE
+  cxx_std_17)
+
+target_compile_definitions (
+  ${PIPELINE_TEST_NAME}
+  PRIVATE
+  -D_GLIBCXX_DEBUG
+  -D_GLIBCXX_DEBUG_PEDANTIC
+  -D_FORTIFY_SOURCE=2)
+
+target_include_directories(
+  ${PIPELINE_TEST_NAME}
+  PRIVATE
+  ../src
+  ../include
+  ${Boost_INCLUDE_DIRS})
+
+target_link_libraries(
+  ${PIPELINE_TEST_NAME}
+  ${Boost_FILESYSTEM_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

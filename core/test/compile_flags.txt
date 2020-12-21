@@ -1,5 +1,6 @@
 -Wall
 -Wextra
+-Werror
 -pedantic
 -std=c++17
 --language=c++
@@ -12,4 +13,5 @@
 -fstack-protector
 -I/usr/local/include
 -I/usr/local/include/c++
--I/usr/local/include/SDL2
+-I../src
+-I../include
