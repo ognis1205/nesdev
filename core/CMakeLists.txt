@@ -1,40 +1,43 @@
-project (nes-core)
+project (nescore)
+
+set (PROJECT_LIBRARY ${PROJECT_NAME})
+
+set (PROJECT_SRC_PATH src)
+
+set (PROJECT_INC_PATH include)
+
+set (PROJECT_COMPILE_FEATURES cxx_std_17)
+
+set (PROJECT_COMPILE_DEFINITIONS "-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2")
 
 file (
   GLOB_RECURSE
   NES_CORE_SRCS
   CONFIGURE_DEPENDS
-  src/*.cc src/*.h include/*.h)
+  ${PROJECT_SRC_PATH}/*.cc ${PROJECT_SRC_PATH}/*.h ${PROJECT_INC_PATH}/*.h)
 
 add_library (
-  ${PROJECT_NAME}
+  ${PROJECT_LIBRARY}
   STATIC
   ${NES_CORE_SRCS})
 
 target_compile_features (
-  ${PROJECT_NAME}
+  ${PROJECT_LIBRARY}
   PRIVATE
-  cxx_std_17)
+  ${PROJECT_COMPILE_FEATURES})
 
 target_compile_definitions (
-  ${PROJECT_NAME}
+  ${PROJECT_LIBRARY}
   PRIVATE
-  -D_GLIBCXX_DEBUG
-  -D_GLIBCXX_DEBUG_PEDANTIC
-  -D_FORTIFY_SOURCE=2)
+  ${PROJECT_COMPILE_DEFINITIONS})
 
 target_include_directories (
-  ${PROJECT_NAME}
+  ${PROJECT_LIBRARY}
   PUBLIC
-  include
+  ${PROJECT_INC_PATH}
   PRIVATE
-  src)
+  ${PROJECT_SRC_PATH})
 
 add_subdirectory (test)
 
-add_test (
-  NAME
-  TestPipeline
-  COMMAND
-  test_pipeline)
-
+add_test (NAME TestPipeline COMMAND test_pipeline)

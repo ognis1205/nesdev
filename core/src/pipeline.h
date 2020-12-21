@@ -13,16 +13,16 @@ namespace nes {
 namespace core {
 
 class Pipeline {
+ public:
   enum class Status { Continue, Skip, Stop };
 
   using Step = std::function<Status()>;
 
- public:
-  void Stage(const std::function<void()>&& step) noexcept;
+  void Stage(const std::function<void()>& step) noexcept;
 
-  void Stage(const Step&& step) noexcept;
+  void Stage(const Step& step) noexcept;
 
-  void AppendTo(const Pipeline& other) noexcept;
+  void AppendTo(Pipeline& other) noexcept;
 
   bool Done() const noexcept;
 
