@@ -11,13 +11,9 @@
 #include "pipeline.h"
 
 struct Fixture {
-  Fixture() : pipeline1{}, pipeline2{}, acc{0} {}
-
-  ~Fixture() {}
+  int acc = 0;
 
   nes::core::Pipeline pipeline1, pipeline2;
-
-  int acc;
 
   std::function<void()> step1 = [this]() {
     acc++;
