@@ -6,7 +6,9 @@
  */
 #ifndef _NES_CORE_OPCODES_H_
 #define _NES_CORE_OPCODES_H_
+#include <functional>
 #include <string>
+#include "pipeline.h"
 #include "types.h"
 
 namespace nes {
@@ -31,16 +33,16 @@ namespace core {
     Bitfield<6, 2, Byte> xx;
   };
 
-  enum class OpcodeTypeMask : Byte {
+  enum class OpcodeTypeBit : Byte {
     CC01 = 0b00000001,
     CC10 = 0b00000010,
     CC00 = 0b00000000,
-    CC11 = 0b00000011, // No instructions defined
+    CC11 = 0b00000011, // *** N/A (not on 6502 architecture) ***
     XXY0 = 0b00000000,
     XXY1 = 0b00010000
   };
 
-  enum class AddressingModeMask : Byte {
+  enum class AddressingModeBit : Byte {
     BBB000 = 0b00000000, // CC01 -> ZPX      / CC10 -> IMM      / CC00 -> IMM      /
     BBB001 = 0b00000100, // CC01 -> ZP0      / CC10 -> ZP0      / CC00 -> ZP0      /
     BBB010 = 0b00001000, // CC01 -> IMM      / CC10 -> ACC      / CC00 -> ---      /
@@ -51,7 +53,7 @@ namespace core {
     BBB111 = 0b00011100, // CC01 -> ABX      / CC10 -> ABX      / CC00 -> ABX      /
   };
 
-  enum class InstructionMask : Byte {
+  enum class InstructionBit : Byte {
     AAA000 = 0b00000000, // CC01 -> ORA      / CC10 -> ASL      / CC00 -> ---      /
     AAA001 = 0b00100000, // CC01 -> AND      / CC10 -> ROL      / CC00 -> BIT      /
     AAA010 = 0b01000000, // CC01 -> EOR      / CC10 -> LSR      / CC00 -> JMP      /
@@ -62,7 +64,7 @@ namespace core {
     AAA111 = 0b11100000  // CC01 -> SBC      / CC10 -> INC      / CC00 -> CPX      /
   };
 
-  enum class ProcessorFlagMask : Byte {
+  enum class ProcessorFlagBit : Byte {
     XX00 = 0b00000000, // Negative
     XX01 = 0b01000000, // Overflow
     XX10 = 0b10000000, // Carry
@@ -108,7 +110,7 @@ namespace core {
     CMP,     // Compare (with accumulator)
     CPX,     // Compare with X
     CPY,     // Compare with Y
-    //DCP,   // N/A (not on 6502 architecture)
+    DCP,     // *** N/A (not on 6502 architecture) ***
     DEC,     // Decrement
     DEX,     // Decrement X
     DEY,     // Decrement Y    
@@ -116,10 +118,10 @@ namespace core {
     INC,     // Increment
     INX,     // Increment X
     INY,     // Increment Y
-    //ISB,   // N/A (not on 6502 architecture)
+    ISB,     // *** N/A (not on 6502 architecture) ***
     JMP,     // Jump
     JSR,     // Jump subroutine
-    //LAX,   // N/A (not on 6502 architecture)
+    LAX,     // *** N/A (not on 6502 architecture) ***
     LDA,     // Load accumulator
     LDX,     // Load X
     LDY,     // Load Y
@@ -130,19 +132,19 @@ namespace core {
     PHP,     // Push processor status (SR)
     PLA,     // Pull accumulator
     PLP,     // Pull processor status (SR)
-    //RLA,   // N/A (not on 6502 architecture)
+    RLA,     // *** N/A (not on 6502 architecture) ***
     ROL,     // Rotate left
     ROR,     // Rotate right
-    //RRA,   // N/A (not on 6502 architecture)
+    RRA,     // *** N/A (not on 6502 architecture) ***
     RTI,     // Return from interrupt
     RTS,     // Return from subroutine
-    //SAX,   // N/A (not on 6502 architecture)
+    SAX,     // *** N/A (not on 6502 architecture) ***
     SBC,     // Subtract with carry
     SEC,     // Set carry
     SED,     // Set decimal
     SEI,     // Set interrupt disable
-    //SLO,   // N/A (not on 6502 architecture)
-    //SRE,   // N/A (not on 6502 architecture)
+    SLO,     // *** N/A (not on 6502 architecture) ***
+    SRE,     // *** N/A (not on 6502 architecture) ***
     STA,     // Store accumulator
     STX,     // Store X
     STY,     // Store Y
@@ -155,8 +157,8 @@ namespace core {
   };
 
   struct Opcode {
-    Instruction instruction;
     AddressingMode addressing_mode;
+    Instruction instruction;
   };
 
   enum class MemoryAccess {
@@ -165,11 +167,90 @@ namespace core {
     READWRITE
   };
 
-  [[nodiscard]] Opcode decode(const OpcodeByte& opcode);
+  class OpcodeHandler {
+    // Instruction/Addressing mode: No-operation (not official)
+    virtual Pipeline NOP() const noexcept = 0;
+    // Instruction: Non-maskable interruption
+    virtual Pipeline InstructNMI() noexcept = 0;
 
-  [[nodiscard]] MemoryAccess GetMemoryAccess(const Instruction& instruction);
+    // Addressing mode: Absolute
+    virtual Pipeline AddressABS(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Absolute, X-indexed
+    virtual Pipeline AddressABX(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Absolute, Y-indexed
+    virtual Pipeline AddressABY(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Accumulator
+    virtual Pipeline AddressACC(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Immediate
+    virtual Pipeline AddressIMM(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Implied
+    virtual Pipeline AddressIMP(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Indirect
+    virtual Pipeline AddressIND(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Indirect, X-indexed
+    virtual Pipeline AddressIZX(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Indirect, Y-indexed
+    virtual Pipeline AddressIZY(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Relative
+    virtual Pipeline AddressREL(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Zeropage
+    virtual Pipeline AddressZP0(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Zeropage, X-indexed
+    virtual Pipeline AddressZPX(const Opcode& opcode) noexcept = 0;
+    // Addressing mode: Zeropage, Y-indexed
+    virtual Pipeline AddressZPY(const Opcode& opcode) noexcept = 0;
 
-  [[nodiscard]] std::string_view ToString(const Instruction& instruction);
+    // Instruction: Add
+    //virtual Pipeline InstructADC(const Opcode& opcode) noexcept = 0;
+    // Instruction: Add
+    virtual Pipeline InstructADD(const Opcode& opcode) noexcept = 0;
+    // Instruction: And
+    virtual Pipeline InstructAND(const Opcode& opcode) noexcept = 0;
+    // Instruction: Branch
+    virtual Pipeline InstructBRA(const std::function<bool()>& condition) noexcept = 0;
+    // Instruction: Compare
+    virtual Pipeline InstructCMP(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructDCP(const Opcode& opcode) noexcept = 0;
+    // Instruction: Decrement
+    virtual Pipeline InstructDEC(const Opcode& opcode) noexcept = 0;
+    // Instruction: Exclusive or
+    virtual Pipeline InstructEOR(const Opcode& opcode) noexcept = 0;
+    // Instruction: Increment
+    virtual Pipeline InstructINC(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructISB(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructLAX(const Opcode& opcode) noexcept = 0;
+    // Instruction: Load
+    virtual Pipeline InstructLOD(const Opcode& opcode) noexcept = 0;
+    // Instruction: Left shift
+    virtual Pipeline InstructLSH(const Opcode& opcode, const bool& shift_in_carry) noexcept = 0;
+    // Instruction: Or
+    virtual Pipeline InstructORA(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructRLA(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructRRA(const Opcode& opcode) noexcept = 0;
+    // Instruction: Right shift
+    virtual Pipeline InstructRSH(const Opcode& opcode, const bool& shift_in_carry) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructSAX(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructSLO(const Opcode& opcode) noexcept = 0;
+    // Instruction: *** N/A ***
+    [[maybe_unused]] virtual Pipeline InstructSRE(const Opcode& opcode) noexcept = 0;
+    // Instruction: Store
+    virtual Pipeline InstructSTR(const Opcode& opcode) noexcept = 0;
+    // Instruction: Subtract
+    virtual Pipeline InstructSUB(const Opcode& opcode) noexcept = 0;
+  };
+
+  [[nodiscard]] Opcode Decode(const OpcodeByte& opcode) noexcept;
+
+  [[nodiscard]] MemoryAccess GetMemoryAccess(const Instruction& instruction) noexcept;
+
+  [[nodiscard]] std::string_view ToString(const Instruction& instruction) noexcept;
 
 }  // namespace core
 }  // namespace nes

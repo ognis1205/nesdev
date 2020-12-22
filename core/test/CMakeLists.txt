@@ -1,5 +1,6 @@
 find_package (Boost COMPONENTS system filesystem unit_test_framework REQUIRED)
 
+# Testsuite for include/pipeline.h src/pipeline.cc
 set (PIPELINE_TEST_NAME test_pipeline)
 
 add_executable (
@@ -30,7 +31,7 @@ target_link_libraries(
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-
+# Testsuite for include/types.h
 set (TYPES_TEST_NAME test_types)
 
 add_executable (

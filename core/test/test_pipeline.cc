@@ -26,29 +26,29 @@ struct Fixture {
 
 BOOST_FIXTURE_TEST_SUITE(Pipeline, Fixture)
 
-BOOST_AUTO_TEST_CASE(Stage) {
+BOOST_AUTO_TEST_CASE(Push) {
   BOOST_CHECK(pipeline1.Done());
-  pipeline1.Stage(step1);
+  pipeline1.Push(step1);
   BOOST_CHECK(!pipeline1.Done());
 }
 
-BOOST_AUTO_TEST_CASE(AppendTo) {
+BOOST_AUTO_TEST_CASE(Stage) {
   BOOST_CHECK(pipeline2.Done());
-  pipeline1.Stage(step1);
-  pipeline1.AppendTo(pipeline2);
-  BOOST_CHECK(!pipeline2.Done());
+  pipeline2.Push(step1);
+  pipeline1.Stage(pipeline2);
+  BOOST_CHECK(!pipeline1.Done());
 }
 
 BOOST_AUTO_TEST_CASE(Done) {
   BOOST_CHECK(pipeline1.Done());
-  pipeline1.Stage(step1);
+  pipeline1.Push(step1);
   BOOST_CHECK(!pipeline1.Done());
   BOOST_CHECK(acc == 0);
 }
 
 BOOST_AUTO_TEST_CASE(Clear) {
   BOOST_CHECK(pipeline1.Done());
-  pipeline1.Stage(step1);
+  pipeline1.Push(step1);
   BOOST_CHECK(!pipeline1.Done());
   pipeline1.Clear();
   BOOST_CHECK(pipeline1.Done());
@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE(Clear) {
 
 BOOST_AUTO_TEST_CASE(Tick) {
   BOOST_CHECK(pipeline1.Done());
-  pipeline1.Stage(step1);
-  pipeline1.Stage(step1);
-  pipeline1.Stage(step2);
-  pipeline1.Stage(step2);
-  pipeline1.Stage(step1);
+  pipeline1.Push(step1);
+  pipeline1.Push(step1);
+  pipeline1.Push(step2);
+  pipeline1.Push(step2);
+  pipeline1.Push(step1);
   pipeline1.Tick();
   BOOST_CHECK(acc == 1);
   BOOST_CHECK(!pipeline1.Done());

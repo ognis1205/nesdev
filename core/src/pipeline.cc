@@ -11,19 +11,19 @@
 namespace nes {
 namespace core {
 
-void Pipeline::Stage(const std::function<void()>& step) noexcept {
+void Pipeline::Push(const std::function<void()>& step) noexcept {
   steps_.emplace_back([step] {
     step();
     return Status::Continue;
   });
 }
 
-void Pipeline::Stage(const Step& step) noexcept {
+void Pipeline::Push(const Step& step) noexcept {
   steps_.push_back(std::move(step));
 }
 
-void Pipeline::AppendTo(Pipeline& other) noexcept {
-  std::copy(steps_.begin(), steps_.end(), std::back_inserter(other.steps_));
+void Pipeline::Stage(Pipeline& other) noexcept {
+  std::copy(other.steps_.begin(), other.steps_.end(), std::back_inserter(steps_));
 }
 
 bool Pipeline::Done() const noexcept {

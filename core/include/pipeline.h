@@ -18,11 +18,11 @@ class Pipeline {
 
   using Step = std::function<Status()>;
 
-  void Stage(const std::function<void()>& step) noexcept;
+  void Push(const std::function<void()>& step) noexcept;
 
-  void Stage(const Step& step) noexcept;
+  void Push(const Step& step) noexcept;
 
-  void AppendTo(Pipeline& other) noexcept;
+  void Stage(Pipeline& other) noexcept;
 
   bool Done() const noexcept;
 
