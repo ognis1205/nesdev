@@ -7,7 +7,6 @@
 #ifndef _NES_CORE_BUS_H_
 #define _NES_CORE_BUS_H_
 #include <array>
-
 #include "types.h"
 
 namespace nes {

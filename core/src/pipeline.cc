@@ -4,10 +4,9 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#include "pipeline.h"
-
 #include <functional>
 #include <iterator>
+#include "pipeline.h"
 
 namespace nes {
 namespace core {

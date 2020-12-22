@@ -6,6 +6,7 @@
  */
 #ifndef _NES_CORE_OPCODES_H_
 #define _NES_CORE_OPCODES_H_
+#include <string>
 #include "types.h"
 
 namespace nes {
@@ -20,7 +21,7 @@ namespace core {
  * The flag indicated by xx is compared with y, and the branch is taken if they are equal.
  * SEE: http://nparker.llx.com/a2/opcodes.html
  */
-  union Opcode {
+  union OpcodeByte {
     Byte value;
     Bitfield<0, 2, Byte> cc;
     Bitfield<2, 3, Byte> bbb;
@@ -28,12 +29,6 @@ namespace core {
     Bitfield<0, 5, Byte> zzzzz;
     Bitfield<5, 1, Byte> y;
     Bitfield<6, 2, Byte> xx;
-  };
-
-  enum class MemoryAccess {
-    READ,
-    WRITE,
-    READWRITE
   };
 
   enum class OpcodeTypeMask : Byte {
@@ -66,6 +61,115 @@ namespace core {
     AAA110 = 0b11000000, // CC01 -> CMP      / CC10 -> DEC      / CC00 -> CPY      /
     AAA111 = 0b11100000  // CC01 -> SBC      / CC10 -> INC      / CC00 -> CPX      /
   };
+
+  enum class ProcessorFlagMask : Byte {
+    XX00 = 0b00000000, // Negative
+    XX01 = 0b01000000, // Overflow
+    XX10 = 0b10000000, // Carry
+    XX11 = 0b11000000  // Zero
+  };
+
+  enum class AddressingMode {
+    INVALID, // Invalid (not official)
+    ABS,     // Absolute
+    ABX,     // Absolute, X-indexed
+    ABY,     // Absolute, Y-indexed
+    ACC,     // Accumulator
+    IMM,     // Immediate
+    IMP,     // Implied
+    IND,     // Indirect
+    IZX,     // Indirect, X-indexed
+    IZY,     // Indirect, Y-indexed
+    REL,     // Relative
+    ZP0,     // Zeropage
+    ZPX,     // Zeropage, X-indexed
+    ZPY      // Zeropage, Y-indexed
+  };
+
+  enum class Instruction {
+    INVALID, // Invalid (not official)
+    ADC,     // Add with carry
+    AND,     // And (with accumulator)
+    ASL,     // Arithmetic shift left
+    BCC,     // Branch on carry clear
+    BCS,     // Branch on carry set
+    BEQ,     // Branch on equal (zero set)
+    BIT,     // Bit test
+    BMI,     // Branch on minus (negative set)
+    BNE,     // Branch on not equal (zero clear)
+    BPL,     // Branch on plus (negative clear)
+    BRK,     // Break/Interrupt
+    BVC,     // Branch on overflow clear
+    BVS,     // Branch on overflow set
+    CLC,     // Clear carry
+    CLD,     // Clear decimal
+    CLI,     // Clear interrupt disable
+    CLV,     // Clear overflow
+    CMP,     // Compare (with accumulator)
+    CPX,     // Compare with X
+    CPY,     // Compare with Y
+    //DCP,   // N/A (not on 6502 architecture)
+    DEC,     // Decrement
+    DEX,     // Decrement X
+    DEY,     // Decrement Y    
+    EOR,     // Exclusive or (with accumulator)
+    INC,     // Increment
+    INX,     // Increment X
+    INY,     // Increment Y
+    //ISB,   // N/A (not on 6502 architecture)
+    JMP,     // Jump
+    JSR,     // Jump subroutine
+    //LAX,   // N/A (not on 6502 architecture)
+    LDA,     // Load accumulator
+    LDX,     // Load X
+    LDY,     // Load Y
+    LSR,     // Logical shift right
+    NOP,     // No operation
+    ORA,     // Or with accumulator
+    PHA,     // Push accumulator
+    PHP,     // Push processor status (SR)
+    PLA,     // Pull accumulator
+    PLP,     // Pull processor status (SR)
+    //RLA,   // N/A (not on 6502 architecture)
+    ROL,     // Rotate left
+    ROR,     // Rotate right
+    //RRA,   // N/A (not on 6502 architecture)
+    RTI,     // Return from interrupt
+    RTS,     // Return from subroutine
+    //SAX,   // N/A (not on 6502 architecture)
+    SBC,     // Subtract with carry
+    SEC,     // Set carry
+    SED,     // Set decimal
+    SEI,     // Set interrupt disable
+    //SLO,   // N/A (not on 6502 architecture)
+    //SRE,   // N/A (not on 6502 architecture)
+    STA,     // Store accumulator
+    STX,     // Store X
+    STY,     // Store Y
+    TAX,     // Transfer accumulator to X
+    TAY,     // Transfer accumulator to Y
+    TSX,     // Transfer stack pointer to X
+    TXA,     // Transfer X to accumulator
+    TXS,     // Transfer X to stack pointer
+    TYA      // Transfer Y to accumulator
+  };
+
+  struct Opcode {
+    Instruction instruction;
+    AddressingMode addressing_mode;
+  };
+
+  enum class MemoryAccess {
+    READ,
+    WRITE,
+    READWRITE
+  };
+
+  [[nodiscard]] Opcode decode(const OpcodeByte& opcode);
+
+  [[nodiscard]] MemoryAccess GetMemoryAccess(const Instruction& instruction);
+
+  [[nodiscard]] std::string_view ToString(const Instruction& instruction);
 
 }  // namespace core
 }  // namespace nes
