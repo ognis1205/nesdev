@@ -1,0 +1,17 @@
+-Wall
+-Wextra
+-Werror
+-pedantic
+-std=c++17
+--language=c++
+-D_GLIBCXX_DEBUG
+-D_GLIBCXX_DEBUG_PEDANTIC
+-D_FORTIFY_SOURCE=2
+-fsanitize=address
+-fsanitize=undefined
+-fno-sanitize-recover
+-fstack-protector
+-I/usr/local/include
+-I/usr/local/include/c++
+-I./include
+-I./src

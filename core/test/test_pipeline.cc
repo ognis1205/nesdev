@@ -5,10 +5,9 @@
  * Trademarks are owned by their respect owners.
  */
 #define BOOST_TEST_MAIN
-#include <boost/test/included/unit_test.hpp>
 #include <functional>
-
-#include "pipeline.h"
+#include <boost/test/included/unit_test.hpp>
+#include "nes/core/pipeline.h"
 
 struct Fixture {
   int acc = 0;
@@ -33,7 +32,7 @@ BOOST_AUTO_TEST_CASE(Push) {
 }
 
 BOOST_AUTO_TEST_CASE(Stage) {
-  BOOST_CHECK(pipeline2.Done());
+  BOOST_CHECK(pipeline1.Done());
   pipeline2.Push(step1);
   pipeline1.Stage(pipeline2);
   BOOST_CHECK(!pipeline1.Done());

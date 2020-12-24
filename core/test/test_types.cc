@@ -5,10 +5,9 @@
  * Trademarks are owned by their respect owners.
  */
 #define BOOST_TEST_MAIN
-#include <boost/test/included/unit_test.hpp>
 #include <functional>
-
-#include "types.h"
+#include <boost/test/included/unit_test.hpp>
+#include "nes/core/types.h"
 
 struct Fixture {
   union {
