@@ -16,10 +16,10 @@ BOOST_FIXTURE_TEST_SUITE(Opcodes, Fixture)
 
 BOOST_AUTO_TEST_CASE(Decode) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
-//    BOOST_CHECK_NO_THROW({
+    BOOST_CHECK_NO_THROW({
       auto opcode = nes::core::Decode(i);
       static_cast<void>(opcode);
-//    });
+    });
   }
 }
 

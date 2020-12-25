@@ -34,7 +34,7 @@ static const std::map<Byte, const Opcode> lookup = {
   {0x0C, {Instruction::TSB, AddressingMode::ABS }}, // ***65C02-***
   {0x0D, {Instruction::ORA, AddressingMode::ABS }},
   {0x0E, {Instruction::ASL, AddressingMode::ABS }},
-  {0x0F, {Instruction::ORA, AddressingMode::ABL }},
+  {0x0F, {Instruction::ORA, AddressingMode::ABL }}, // ***65C816***
   {0x10, {Instruction::BPL, AddressingMode::REL }},
   {0x11, {Instruction::ORA, AddressingMode::IZY }},
   {0x12, {Instruction::ORA, AddressingMode::IDP }}, // ***65C02-***
@@ -196,7 +196,7 @@ static const std::map<Byte, const Opcode> lookup = {
   {0xAE, {Instruction::LDX, AddressingMode::ABS }},
   {0xAF, {Instruction::LDA, AddressingMode::ABL }}, // ***65C816**
   {0xB0, {Instruction::BCS, AddressingMode::REL }},
-  {0xB1, {Instruction::LDA, AddressingMode::IZX }},
+  {0xB1, {Instruction::LDA, AddressingMode::IZY }},
   {0xB2, {Instruction::LDA, AddressingMode::IDP }}, // ***65C02-***
   {0xB3, {Instruction::LDA, AddressingMode::ISY }}, // ***65C816**
   {0xB4, {Instruction::LDY, AddressingMode::ZPX }},
@@ -255,7 +255,7 @@ static const std::map<Byte, const Opcode> lookup = {
   {0xE9, {Instruction::SBC, AddressingMode::IMM }},
   {0xEA, {Instruction::NOP, AddressingMode::IMP }},
   {0xEB, {Instruction::XBA, AddressingMode::IMP }}, // ***65C816**
-  {0xEC, {Instruction::CPX, AddressingMode::ABX }},
+  {0xEC, {Instruction::CPX, AddressingMode::ABS }},
   {0xED, {Instruction::SBC, AddressingMode::ABS }},
   {0xEE, {Instruction::INC, AddressingMode::ABS }},
   {0xEF, {Instruction::SBC, AddressingMode::ABL }}, // ***65C816**
@@ -274,7 +274,7 @@ static const std::map<Byte, const Opcode> lookup = {
   {0xFC, {Instruction::JSR, AddressingMode::IAL }}, // ***65C816**
   {0xFD, {Instruction::SBC, AddressingMode::ABX }},
   {0xFE, {Instruction::INC, AddressingMode::ABX }},
-  {0xFF, {Instruction::SBC, AddressingMode::ALX }},
+  {0xFF, {Instruction::SBC, AddressingMode::ALX }}, // ***65C816**
 };
 
 Opcode Decode(const Byte& byte) noexcept {
