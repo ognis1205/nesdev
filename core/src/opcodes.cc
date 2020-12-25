@@ -169,7 +169,7 @@ static const std::map<Byte, const Opcode> lookup = {
   {0x93, {Instruction::STA, AddressingMode::ISY }}, // ***65C816**
   {0x94, {Instruction::STY, AddressingMode::ZPX }},
   {0x95, {Instruction::STA, AddressingMode::ZPX }},
-  {0x94, {Instruction::STX, AddressingMode::ZPY }},
+  {0x96, {Instruction::STX, AddressingMode::ZPY }},
   {0x97, {Instruction::STA, AddressingMode::IDLY}}, // ***65C816**
   {0x98, {Instruction::TYA, AddressingMode::IMP }},
   {0x99, {Instruction::STA, AddressingMode::ABY }},
@@ -177,6 +177,8 @@ static const std::map<Byte, const Opcode> lookup = {
   {0x9B, {Instruction::TXY, AddressingMode::IMP }}, // ***65C816**
   {0x9C, {Instruction::STZ, AddressingMode::ABS }}, // ***65C02-***
   {0x9D, {Instruction::STA, AddressingMode::ABX }},
+  {0x9E, {Instruction::STZ, AddressingMode::ABX }}, // ***65C02-***
+  {0x9F, {Instruction::STA, AddressingMode::ALX }}, // ***65C816**
   {0xA0, {Instruction::LDY, AddressingMode::IMM }},
   {0xA1, {Instruction::LDA, AddressingMode::IZX }},
   {0xA2, {Instruction::LDX, AddressingMode::IMM }},

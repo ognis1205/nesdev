@@ -40,6 +40,8 @@ target_include_directories (
 
 add_subdirectory (test)
 
+add_test (NAME TestOpcodes COMMAND test_opcodes)
+
 add_test (NAME TestPipeline COMMAND test_pipeline)
 
 add_test (NAME TestTypes COMMAND test_types)
