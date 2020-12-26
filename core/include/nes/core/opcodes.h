@@ -165,7 +165,7 @@ enum class MemoryAccess {
 struct Opcode {
   Instruction instruction;
   AddressingMode addressing_mode;
-//  MemoryAccess memory_access;
+  MemoryAccess memory_access;
 };
 
 class OpcodeHandler {
