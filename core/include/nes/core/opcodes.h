@@ -312,7 +312,7 @@ class OpcodeHandler {
 Opcode Decode(const Byte& opcode) noexcept;
 
 [[nodiscard]]
-std::string_view ToString(const Byte& opcode) noexcept;
+std::string ToString(const Byte& opcode) noexcept;
 
 }  // namespace core
 }  // namespace nes

@@ -19,7 +19,7 @@ namespace core {
  * [SEE] https://undisbeliever.net/snesdev/65816-opcodes.htm
  * [SEE] http://nparker.llx.com/a2/opcodes.html
  */
-static const std::map<Byte, const Opcode> lookup = {
+static const std::map<Byte, Opcode> lookup = {
   {0x00, {Instruction::BRK, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x01, {Instruction::ORA, AddressingMode::IZX,  MemoryAccess::READ             }},
   {0x02, {Instruction::COP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816***
@@ -282,8 +282,142 @@ Opcode Decode(const Byte& byte) noexcept {
   return lookup.at(byte);
 }
 
-//std::string_view ToString(const Byte& byte) noexcept {
-//}
+static std::string ToString(const Instruction& instruction) noexcept {
+  switch (instruction) {
+  case ADC: return "ADC";
+  case AND: return "AND";
+  case ASL: return "ASL";
+  case BCC: return "BCC";
+  case BCS: return "BCS";
+  case BEQ: return "BEQ";
+  case BNE: return "BNE";
+  case BMI: return "BMI";
+  case BPL: return "BPL";
+  case BVC: return "BVC";
+  case BVS: return "BVS";
+  case BRA: return "BRA";
+  case BRL: return "BRL";
+  case BIT: return "BIT";
+  case BRK: return "BRK";
+  case COP: return "COP";
+  case CLC: return "CLC";
+  case CLI: return "CLI";
+  case CLD: return "CLD";
+  case CLV: return "CLV";
+  case CMP: return "CMP";
+  case CPX: return "CPX";
+  case CPY: return "CPY";
+  case DEC: return "DEC";
+  case DEX: return "DEX";
+  case DEY: return "DEY";
+  case EOR: return "EOR";
+  case INC: return "INC";
+  case INX: return "INX";
+  case INY: return "INY";
+  case JMP: return "JMP";
+  case JML: return "JML";
+  case JSR: return "JSR";
+  case JSL: return "JSL";
+  case LDA: return "LDA";
+  case LDX: return "LDX";
+  case LDY: return "LDY";
+  case LSR: return "LSR";
+  case MVN: return "MVN";
+  case MVP: return "MVP";
+  case NOP: return "NOP";
+  case ORA: return "ORA";
+  case PEA: return "PEA";
+  case PEI: return "PEI";
+  case PER: return "PER";
+  case PHA: return "PHA";
+  case PHB: return "PHB";
+  case PHD: return "PHD";
+  case PHK: return "PHK";
+  case PHP: return "PHP";
+  case PHX: return "PHX";
+  case PHY: return "PHY";
+  case PLA: return "PLA";
+  case PLB: return "PLB";
+  case PLD: return "PLD";
+  case PLP: return "PLP";
+  case PLX: return "PLX";
+  case PLY: return "PLY";
+  case REP: return "REP";
+  case ROL: return "ROL";
+  case ROR: return "ROR";
+  case RTI: return "RTI";
+  case RTS: return "RTS";
+  case RTL: return "RTL";
+  case SBC: return "SBC";
+  case SEC: return "SEC";
+  case SEI: return "SEI";
+  case SED: return "SEd";
+  case SEP: return "SEP";
+  case STP: return "STP";
+  case STA: return "STA";
+  case STX: return "STX";
+  case STY: return "STY";
+  case STZ: return "STZ";
+  case TAX: return "TAX";
+  case TAY: return "TAY";
+  case TCD: return "TCD";
+  case TCS: return "TCS";
+  case TDC: return "TDC";
+  case TSC: return "TSC";
+  case TSX: return "TSX";
+  case TXA: return "TXA";
+  case TXS: return "TXS";
+  case TXY: return "TXY";
+  case TYA: return "TYA";
+  case TYX: return "TYX";
+  case TRB: return "TRB";
+  case TSB: return "TSB";
+  case WAI: return "WAI";
+  case WDM: return "WDM";
+  case XBA: return "XBA";
+  case XCE: return "XCE";
+  default:  return "UNKNOWN";
+  }
+}
+
+static std::string ToString(const AddressingMode& addressing_mode) noexcept {
+  switch (addressing_mode) {
+  case ABS:  return "ABS";
+  case ABX:  return "ABX";
+  case ABY:  return "ABY";
+  case ACC:  return "ACC";
+  case IMM:  return "IMM";
+  case IMP:  return "IMP";
+  case IND:  return "IND";
+  case IZX:  return "IZX";
+  case IZY:  return "IZY";
+  case REL:  return "REL";
+  case ZP0:  return "ZP0";
+  case ZPX:  return "ZPX";
+  case ZPY:  return "ZPY";
+  case SR:   return "SR";
+  case DP:   return "DP";
+  case DPX:  return "DPX";
+  case DPY:  return "DPY";
+  case IDP:  return "IDP";
+  case IDX:  return "IDX";
+  case IDY:  return "IDY";
+  case IDL:  return "IDL";
+  case IDLY: return "IDLY";
+  case ISY:  return "ISY";
+  case ABL:  return "ABL";
+  case ALX:  return "ALX";
+  case IAX:  return "IAX";
+  case IAL:  return "IAL";
+  case RELL: return "RELL";
+  case BM:   return "BM";
+  default:   return "UNKNOWN";
+  }
+}
+
+std::string ToString(const Byte& byte) noexcept {
+  return ToString(Decode(byte).instruction) + ", " + ToString(Decode(byte).addressing_mode);
+}
 
 }  // namespace core
 }  // namespace nes
