@@ -38,7 +38,7 @@ target_include_directories (
   PRIVATE
   ${PROJECT_SRC_PATH})
 
-add_subdirectory (test)
+add_subdirectory (tests)
 
 add_test (NAME TestOpcodes COMMAND test_opcodes)
 

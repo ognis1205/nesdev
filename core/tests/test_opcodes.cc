@@ -25,8 +25,7 @@ BOOST_AUTO_TEST_CASE(Decode) {
 
 BOOST_AUTO_TEST_CASE(ToString) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
-    auto s = nes::core::ToString(i);
-    BOOST_CHECK(s != "UNKNOWN, UNKNOWN");
+    BOOST_CHECK(nes::core::ToString(i) != "UNKNOWN, UNKNOWN");
   }
 }
 

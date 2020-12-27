@@ -6,10 +6,11 @@
  */
 #include <functional>
 #include <iterator>
-#include "nes/core/pipeline.h"
+#include "pipeline.h"
 
 namespace nes {
 namespace core {
+namespace impl {
 
 void Pipeline::Push(const std::function<void()>& step) noexcept {
   steps_.emplace_back([step] {
@@ -45,5 +46,6 @@ void Pipeline::Tick() {
   }
 }
 
+}  // namespace impl
 }  // namespace core
 }  // namespace nes

@@ -6,11 +6,8 @@
  */
 #ifndef _NES_CORE_OPCODES_H_
 #define _NES_CORE_OPCODES_H_
-#include <functional>
-#include <map>
 #include <string>
-#include "pipeline.h"
-#include "types.h"
+#include "nes/core/types.h"
 
 namespace nes {
 namespace core {
@@ -166,146 +163,6 @@ struct Opcode {
   Instruction instruction;
   AddressingMode addressing_mode;
   MemoryAccess memory_access;
-};
-
-class OpcodeHandler {
- protected:
-  virtual void With(
-    const AddressingMode& addressing_mode,
-    const MemoryAccess& memory_access,
-    void (OpcodeHandler::*instruction)(Pipeline*),
-    Pipeline* pipeline) = 0;
-
-  virtual void Add(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void And(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void ArithmeticShiftLeft(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Branch(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void TestMemoryBits(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void SoftwareInterrupt(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void ClearStatusFlags(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Compare(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Decrement(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void ExclusiveOr(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Increment(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Jump(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void Load(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void LogicalShiftRight(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  [[maybe_unused]]
-  virtual void BlockMove(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void NoOperation(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Or(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Push(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void Pull(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  [[maybe_unused]]
-  virtual void ResetStatusBits(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void Rotate(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Return(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void Subtract(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  virtual void Set(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept = 0;
-
-  [[maybe_unused]]
-  virtual void Stop(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void Store(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  virtual void Transfer(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  [[maybe_unused]]
-  virtual void Test(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  [[maybe_unused]]
-  virtual void Wait(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  [[maybe_unused]]
-  virtual void Reserved(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
-
-  [[maybe_unused]]
-  virtual void Exchange(
-    const Instruction& instruction,
-    Pipeline* pipeline) = 0;
 };
 
 [[nodiscard]]

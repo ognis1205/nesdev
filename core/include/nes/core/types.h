@@ -22,12 +22,12 @@ struct Bitfield {
 
   template <typename U>
   Bitfield& operator=(U that) {
-    data_ = (data_ & ~(kMask << BitNo)) |
+    value_ = (value_ & ~(kMask << BitNo)) |
             ((Width > 1 ? that & kMask : !!that) << BitNo);
     return *this;
   }
 
-  operator unsigned() const { return (data_ >> BitNo) & kMask; }
+  operator unsigned() const { return (value_ >> BitNo) & kMask; }
 
   Bitfield& operator++() { return *this = *this + 1; }
 
@@ -37,7 +37,7 @@ struct Bitfield {
     return ret;
   }
 
-  T data_;
+  T value_;
 };
 
 }  // namespace core
