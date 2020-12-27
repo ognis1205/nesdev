@@ -4,16 +4,16 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#include "nes/core/memory_bank.h"
+//#include "nes/core/memory_bank.h"
 #include "nes/core/types.h"
-#include "impl/memory_bank.h"
+#include "detail/memory_bank.h"
 
 namespace nes {
 namespace core {
-namespace impl {
+namespace detail {
 
 template <Address From, Address To, Address Size>
-bool MemoryBank<From ,To, Size>::IsAddressInRange(const Address &address) const {
+bool MemoryBank<From, To, Size>::IsAddressInRange(const Address &address) const {
   if constexpr (From == 0) {
     return address <= To;
   } else {
@@ -22,7 +22,7 @@ bool MemoryBank<From ,To, Size>::IsAddressInRange(const Address &address) const 
 }
 
 template <Address From, Address To, Address Size>
-Byte MemoryBank<From ,To, Size>::Read(const Address &address) const {
+Byte MemoryBank<From, To, Size>::Read(const Address &address) const {
   return *GetLocation(address);
 }
 
@@ -38,9 +38,9 @@ Byte* MemoryBank<From, To, Size>::GetLocation(const Address& address) {
 
 template <Address From, Address To, Address Size>
 const Byte* MemoryBank<From, To, Size>::GetLocation(const Address& address) const {
-  return &data_.data()[address % Size];
+  return &bank_.data()[address % Size];
 }
 
-}  // namespace impl
+}  // namespace detail
 }  // namespace core
 }  // namespace nes

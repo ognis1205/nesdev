@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NES_CORE_IMPL_MOS6502_H_
-#define _NES_CORE_IMPL_MOS6502_H_
+#ifndef _NES_CORE_DETAIL_MOS6502_H_
+#define _NES_CORE_DETAIL_MOS6502_H_
 #include "nes/core/cpu.h"
 #include "nes/core/opcodes.h"
 #include "nes/core/types.h"
@@ -13,7 +13,7 @@
 
 namespace nes {
 namespace core {
-namespace impl {
+namespace detail {
 
 class MOS6502 final : public CPU {
  public:
@@ -172,7 +172,7 @@ class MOS6502 final : public CPU {
     Pipeline* pipeline);
 };
 
-}  // namespace impl
+}  // namespace detail
 }  // namespace core
 }  // namespace nes
-#endif  // ifndef _NES_CORE_IMPL_CPU_H_
+#endif  // ifndef _NES_CORE_DETAIL_CPU_H_

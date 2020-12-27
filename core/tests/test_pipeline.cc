@@ -7,19 +7,19 @@
 #define BOOST_TEST_MAIN
 #include <functional>
 #include <boost/test/included/unit_test.hpp>
-#include "impl/pipeline.h"
+#include "detail/pipeline.h"
 
 struct Fixture {
   int acc = 0;
 
-  nes::core::impl::Pipeline pipeline1, pipeline2;
+  nes::core::detail::Pipeline pipeline1, pipeline2;
 
   std::function<void()> step1 = [this]() {
     acc++;
   };
 
-  std::function<nes::core::impl::Pipeline::Status()> step2 = []() {
-    return nes::core::impl::Pipeline::Status::Skip;
+  std::function<nes::core::detail::Pipeline::Status()> step2 = []() {
+    return nes::core::detail::Pipeline::Status::Skip;
   };
 };
 

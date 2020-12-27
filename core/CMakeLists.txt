@@ -42,6 +42,8 @@ add_subdirectory (tests)
 
 add_test (NAME TestOpcodes COMMAND test_opcodes)
 
+add_test (NAME TestMemoryBank COMMAND test_memory_bank)
+
 add_test (NAME TestPipeline COMMAND test_pipeline)
 
 add_test (NAME TestTypes COMMAND test_types)

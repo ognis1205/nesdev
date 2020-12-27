@@ -11,11 +11,11 @@
 
 namespace nes {
 namespace core {
-namespace impl {
+namespace detail {
 
 class MOS6502 : public CPU {
 };
 
-}  // namespace impl
+}  // namespace detail
 }  // namespace core
 }  // namespace nes

@@ -10,7 +10,7 @@
 
 namespace nes {
 namespace core {
-namespace impl {
+namespace detail {
 
 void Pipeline::Push(const std::function<void()>& step) noexcept {
   steps_.emplace_back([step] {
@@ -46,6 +46,6 @@ void Pipeline::Tick() {
   }
 }
 
-}  // namespace impl
+}  // namespace detail
 }  // namespace core
 }  // namespace nes

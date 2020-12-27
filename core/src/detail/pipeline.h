@@ -4,16 +4,16 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NES_CORE_IMPL_PIPELINE_H_
-#define _NES_CORE_IMPL_PIPELINE_H_
+#ifndef _NES_CORE_DETAIL_PIPELINE_H_
+#define _NES_CORE_DETAIL_PIPELINE_H_
 #include <deque>
 #include <functional>
 
 namespace nes {
 namespace core {
-namespace impl {
+namespace detail {
 
-class Pipeline {
+class Pipeline final {
  public:
   enum class Status { Continue, Skip, Stop };
 
@@ -39,7 +39,7 @@ class Pipeline {
   std::deque<Step> steps_ {};
 };
 
-}  // namespace impl
+}  // namespace detail
 }  // namespace core
 }  // namespace nes
-#endif  // ifndef _NES_CORE_IMPL_PIPELINE_H_
+#endif  // ifndef _NES_CORE_DETAIL_PIPELINE_H_
