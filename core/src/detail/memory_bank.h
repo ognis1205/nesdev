@@ -6,6 +6,7 @@
  */
 #ifndef _NES_CORE_DETAIL_MEMORY_BANK_H_
 #define _NES_CORE_DETAIL_MEMORY_BANK_H_
+#include "nes/core/exceptions.h"
 #include "nes/core/memory_bank.h"
 #include "nes/core/types.h"
 #include "macros.h"
@@ -14,17 +15,23 @@ namespace nes {
 namespace core {
 namespace detail {
 
-template <Address From, Address To, Address Size>
+template <Address From, Address To, Address Range>
 class MemoryBank final : public nes::core::MemoryBank {
  public:
-  static_assert(Size > 0u, "Size must be greater than zero.");
-  static_assert(From <= To, "Start address must be greater than end address.");
-  static_assert((To - From + 1u) % Size == 0, "Size does not match address range.");
+  static_assert(
+    Range > 0u,
+    "[nes::core::detail::MemoryBank] Range must be greater than zero.");
+  static_assert(
+    From <= To,
+    "[nes::core::detail::MemoryBank] Start address must be greater than end address.");
+  static_assert(
+    (To - From + 1u) % Range == 0,
+    "[nes::core::detail::MemoryBank] Range does not match address range.");
 
   MemoryBank() = default;
 
   [[nodiscard]]
-  bool IsAddressInRange(const Address& address) const override {
+  bool HasValidAddress(const Address& address) const override {
     if constexpr (From == 0) {
       return address <= To;
     } else {
@@ -33,23 +40,25 @@ class MemoryBank final : public nes::core::MemoryBank {
   }
 
   Byte Read(const Address& address) const override {
-    return *GetLocation(address);
+    if (HasValidAddress(address)) return *PointerTo(address);
+    else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read."));
   }
 
   void Write(const Address& address, const Byte& byte) override {
-    *GetLocation(address) = byte;
+    if (HasValidAddress(address)) *PointerTo(address) = byte;
+    else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write."));
   }
 
  NES_CORE_PRIVATE_UNLESS_TESTED:
-  Byte* GetLocation(const Address& address) {
-    return const_cast<Byte*>(std::as_const(*this).GetLocation(address));
+  Byte* PointerTo(const Address& address) {
+    return const_cast<Byte*>(std::as_const(*this).PointerTo(address));
   }
 
-  const Byte* GetLocation(const Address& address) const {
-    return &bank_.data()[address % Size];
+  const Byte* PointerTo(const Address& address) const {
+    return &bank_.data()[address % Range];
   }
 
-  std::array<Byte, Size> bank_{};
+  std::array<Byte, Range> bank_{};
 };
 
 }  // namespace detail

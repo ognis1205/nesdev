@@ -18,7 +18,7 @@ class MemoryBank {
   virtual ~MemoryBank() = default;
 
   [[nodiscard]]
-  virtual bool IsAddressInRange(const Address& address) const = 0;
+  virtual bool HasValidAddress(const Address& address) const = 0;
 
   virtual Byte Read(const Address& address) const = 0;
 
