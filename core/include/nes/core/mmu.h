@@ -16,7 +16,7 @@ class MMU {
  public:
   virtual ~MMU() = default;
 
-  virtual void Set(MemoryBankList memory_banks) = 0;
+  virtual void Set(MemoryBanks memory_banks) noexcept = 0;
 
   virtual Byte Read(const Address& address) const = 0;
 

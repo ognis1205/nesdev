@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NES_CORE_MACRO_SCOPE_H_
-#define _NES_CORE_MACRO_SCOPE_H_
+#ifndef _NES_CORE_MACROS_H_
+#define _NES_CORE_MACROS_H_
 
 #if (defined(__pp_exceptions) \
      || defined(__EXCEPTIONS) \
@@ -32,4 +32,4 @@
 #  define NES_CORE_PRIVATE_UNLESS_TESTED private
 #endif
 
-#endif  // ifndef _NES_CORE_MACRO_SCOPE_H_
+#endif  // ifndef _NES_CORE_MACROS_H_

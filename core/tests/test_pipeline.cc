@@ -6,70 +6,79 @@
  */
 #define BOOST_TEST_MAIN
 #include <functional>
-#include <boost/test/included/unit_test.hpp>
+#include <time.h>
+#include <gtest/gtest.h>
 #include "detail/pipeline.h"
 
-struct Fixture {
-  int acc = 0;
+class PipelineTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    start_time_ = time(nullptr);
+  }
 
-  nes::core::detail::Pipeline pipeline1, pipeline2;
+  void TearDown() override {
+    const time_t end_time = time(nullptr);
+    EXPECT_TRUE(end_time - start_time_ <= 5) << "The test took too long";
+  }
 
-  std::function<void()> step1 = [this]() {
-    acc++;
+  time_t start_time_;
+
+  int acc_ = 0;
+
+  nes::core::detail::Pipeline pipeline1_, pipeline2_;
+
+  std::function<void()> step1_ = [this]() {
+    acc_++;
   };
 
-  std::function<nes::core::detail::Pipeline::Status()> step2 = []() {
+  std::function<nes::core::detail::Pipeline::Status()> step2_ = []() {
     return nes::core::detail::Pipeline::Status::Skip;
   };
 };
 
-BOOST_FIXTURE_TEST_SUITE(Pipeline, Fixture)
-
-BOOST_AUTO_TEST_CASE(Push) {
-  BOOST_CHECK(pipeline1.Done());
-  pipeline1.Push(step1);
-  BOOST_CHECK(!pipeline1.Done());
+TEST_F(PipelineTest, Push) {
+  EXPECT_TRUE(pipeline1_.Done());
+  pipeline1_.Push(step1_);
+  EXPECT_FALSE(pipeline1_.Done());
 }
 
-BOOST_AUTO_TEST_CASE(Stage) {
-  BOOST_CHECK(pipeline1.Done());
-  pipeline2.Push(step1);
-  pipeline1.Stage(pipeline2);
-  BOOST_CHECK(!pipeline1.Done());
+TEST_F(PipelineTest, Stage) {
+  EXPECT_TRUE(pipeline1_.Done());
+  pipeline2_.Push(step1_);
+  pipeline1_.Stage(pipeline2_);
+  EXPECT_FALSE(pipeline1_.Done());
 }
 
-BOOST_AUTO_TEST_CASE(Done) {
-  BOOST_CHECK(pipeline1.Done());
-  pipeline1.Push(step1);
-  BOOST_CHECK(!pipeline1.Done());
-  BOOST_CHECK(acc == 0);
+TEST_F(PipelineTest, Done) {
+  EXPECT_TRUE(pipeline1_.Done());
+  pipeline1_.Push(step1_);
+  EXPECT_FALSE(pipeline1_.Done());
+  EXPECT_EQ(0, acc_);
 }
 
-BOOST_AUTO_TEST_CASE(Clear) {
-  BOOST_CHECK(pipeline1.Done());
-  pipeline1.Push(step1);
-  BOOST_CHECK(!pipeline1.Done());
-  pipeline1.Clear();
-  BOOST_CHECK(pipeline1.Done());
-  BOOST_CHECK(acc == 0);
+TEST_F(PipelineTest, Clear) {
+  EXPECT_TRUE(pipeline1_.Done());
+  pipeline1_.Push(step1_);
+  EXPECT_FALSE(pipeline1_.Done());
+  pipeline1_.Clear();
+  EXPECT_TRUE(pipeline1_.Done());
+  EXPECT_EQ(0, acc_);
 }
 
-BOOST_AUTO_TEST_CASE(Tick) {
-  BOOST_CHECK(pipeline1.Done());
-  pipeline1.Push(step1);
-  pipeline1.Push(step1);
-  pipeline1.Push(step2);
-  pipeline1.Push(step2);
-  pipeline1.Push(step1);
-  pipeline1.Tick();
-  BOOST_CHECK(acc == 1);
-  BOOST_CHECK(!pipeline1.Done());
-  pipeline1.Tick();
-  BOOST_CHECK(acc == 2);
-  BOOST_CHECK(!pipeline1.Done());
-  pipeline1.Tick();
-  BOOST_CHECK(acc == 3);
-  BOOST_CHECK(pipeline1.Done());
+TEST_F(PipelineTest, Tick) {
+  EXPECT_TRUE(pipeline1_.Done());
+  pipeline1_.Push(step1_);
+  pipeline1_.Push(step1_);
+  pipeline1_.Push(step2_);
+  pipeline1_.Push(step2_);
+  pipeline1_.Push(step1_);
+  pipeline1_.Tick();
+  EXPECT_EQ(1, acc_);
+  EXPECT_FALSE(pipeline1_.Done());
+  pipeline1_.Tick();
+  EXPECT_EQ(2, acc_);
+  EXPECT_FALSE(pipeline1_.Done());
+  pipeline1_.Tick();
+  EXPECT_EQ(3, acc_);
+  EXPECT_TRUE(pipeline1_.Done());
 }
-
-BOOST_AUTO_TEST_SUITE_END()

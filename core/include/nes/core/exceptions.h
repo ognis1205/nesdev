@@ -7,8 +7,11 @@
 #ifndef _NES_CORE_EXCEPTIONS_H_
 #define _NES_CORE_EXCEPTIONS_H_
 #include <exception>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include "nes/core/types.h"
 
 namespace nes {
 namespace core {
@@ -31,8 +34,10 @@ class Exception : public std::exception {
 
 class InvalidAddress : public Exception {
  public:
-  static InvalidAddress Occur(const std::string& what_arg) {
-    return InvalidAddress((Exception::Header("InvalidAddress") + " " + what_arg).c_str());
+  static InvalidAddress Occur(const std::string& what_arg, const Address& address) {
+    std::stringstream ss;
+    ss << "[0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << address << "]";
+    return InvalidAddress((Exception::Header("InvalidAddress") + " " + what_arg + " " + ss.str()).c_str());
   }
 
  private:
@@ -41,8 +46,10 @@ class InvalidAddress : public Exception {
 
 class NotImplemented : public Exception {
  public:
-  static NotImplemented Occur(const std::string& what_arg) {
-    return NotImplemented((Exception::Header("NotImplemented") + " " + what_arg).c_str());
+  static NotImplemented Occur(const std::string& what_arg, const Byte& byte) {
+    std::stringstream ss;
+    ss << "[0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << byte << "]";
+    return NotImplemented((Exception::Header("NotImplemented") + " " + what_arg + " " + ss.str()).c_str());
   }
 
  private:

@@ -6,64 +6,64 @@
  */
 #define BOOST_TEST_MAIN
 #include <memory>
-#include <boost/test/included/unit_test.hpp>
+#include <time.h>
+#include <gtest/gtest.h>
 #include "nes/core/exceptions.h"
 #include "nes/core/types.h"
 #include "detail/memory_bank.h"
 
-struct Fixture {
-  nes::core::detail::MemoryBank<0x0000, 0x1FFF, 0x800> bank;
+class MemoryBankTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    start_time_ = time(nullptr);
+  }
+
+  void TearDown() override {
+    const time_t end_time = time(nullptr);
+    EXPECT_TRUE(end_time - start_time_ <= 5) << "The test took too long";
+  }
+
+  time_t start_time_;
+
+  nes::core::detail::MemoryBank<0x0000, 0x1FFF, 0x800> memory_bank_;
 };
 
-BOOST_FIXTURE_TEST_SUITE(MemoryBank, Fixture)
-
-BOOST_AUTO_TEST_CASE(HasValidAddress) {
+TEST_F(MemoryBankTest, HasValidAddress) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    BOOST_CHECK(bank.HasValidAddress(i));
+    EXPECT_TRUE(memory_bank_.HasValidAddress(i));
   }
   for (auto i = 0x2000u; i <= 0xFFFFu; i++) {
-    BOOST_CHECK(!bank.HasValidAddress(i));
+    EXPECT_FALSE(memory_bank_.HasValidAddress(i));
   }
 }
 
-BOOST_AUTO_TEST_CASE(Read) {
-  auto check = [](const nes::core::InvalidAddress& e) {
-    return e.what() == std::string("[nes::core::InvalidAddress] Invalid Address specified to Read.");
-  };
+TEST_F(MemoryBankTest, Read) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    BOOST_CHECK(bank.Read(i) == 0x00);
+    EXPECT_EQ(0x00, memory_bank_.Read(i));
   }
   for (auto i = 0x2000u; i <= 0xFFFFu; i++) {
-    BOOST_CHECK_EXCEPTION(bank.Read(i), nes::core::InvalidAddress, check);
+    EXPECT_THROW(memory_bank_.Read(i), nes::core::InvalidAddress);
   }
 }
 
-BOOST_AUTO_TEST_CASE(Write) {
-  auto check = [](const nes::core::InvalidAddress& e) {
-    return e.what() == std::string("[nes::core::InvalidAddress] Invalid Address specified to Write.");
-  };
+TEST_F(MemoryBankTest, Write) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    bank.Write(i, static_cast<nes::core::Byte>(i >> 2));
+    memory_bank_.Write(i, static_cast<nes::core::Byte>(i >> 2));
   }
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    BOOST_CHECK(bank.Read(i) == static_cast<nes::core::Byte>(i >> 2));
+    EXPECT_EQ(static_cast<nes::core::Byte>(i >> 2), memory_bank_.Read(i));
   }
   for (auto i = 0x2000u; i <= 0xFFFFu; i++) {
-    BOOST_CHECK_EXCEPTION(bank.Write(i, i >> 2), nes::core::InvalidAddress, check);
+    EXPECT_THROW(memory_bank_.Write(i, static_cast<nes::core::Byte>(i >> 2)), nes::core::InvalidAddress);
   }
 }
 
-BOOST_AUTO_TEST_CASE(PointerTo) {
+TEST_F(MemoryBankTest, PointerTo) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    bank.Write(i, static_cast<nes::core::Byte>(i >> 2));
+    memory_bank_.Write(i, static_cast<nes::core::Byte>(i >> 2));
   }
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    BOOST_CHECK(*(bank.PointerTo(i)) == static_cast<nes::core::Byte>(i >> 2));
-    BOOST_CHECK(*(bank.PointerTo(i)) == *(bank.PointerTo(i % 0x800u)));
+    EXPECT_EQ(static_cast<nes::core::Byte>(i >> 2), *(memory_bank_.PointerTo(i)));
+    EXPECT_EQ(*(memory_bank_.PointerTo(i)), *(memory_bank_.PointerTo(i % 0x800u)));
   }
 }
-
-//BOOST_AUTO_TEST_CASE(ToString) {
-//}
-
-BOOST_AUTO_TEST_SUITE_END()

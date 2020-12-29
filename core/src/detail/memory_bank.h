@@ -20,33 +20,30 @@ class MemoryBank final : public nes::core::MemoryBank {
  public:
   static_assert(
     Range > 0u,
-    "[nes::core::detail::MemoryBank] Range must be greater than zero.");
+    "[nes::core::detail::MemoryBank] Range must be greater than zero");
   static_assert(
     From <= To,
-    "[nes::core::detail::MemoryBank] Start address must be greater than end address.");
+    "[nes::core::detail::MemoryBank] Start address must be greater than end address");
   static_assert(
     (To - From + 1u) % Range == 0,
-    "[nes::core::detail::MemoryBank] Range does not match address range.");
+    "[nes::core::detail::MemoryBank] Range does not match address range");
 
   MemoryBank() = default;
 
   [[nodiscard]]
-  bool HasValidAddress(const Address& address) const override {
-    if constexpr (From == 0) {
-      return address <= To;
-    } else {
-      return address >= From && address <= To;
-    }
+  bool HasValidAddress(const Address& address) const noexcept override {
+    if constexpr (From == 0) return address <= To;
+    else return address >= From && address <= To;
   }
 
   Byte Read(const Address& address) const override {
     if (HasValidAddress(address)) return *PointerTo(address);
-    else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read."));
+    else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
   }
 
   void Write(const Address& address, const Byte& byte) override {
     if (HasValidAddress(address)) *PointerTo(address) = byte;
-    else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write."));
+    else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
   }
 
  NES_CORE_PRIVATE_UNLESS_TESTED:
@@ -58,7 +55,7 @@ class MemoryBank final : public nes::core::MemoryBank {
     return &bank_.data()[address % Range];
   }
 
-  std::array<Byte, Range> bank_{};
+  std::array<Byte, Range> bank_ = {};
 };
 
 }  // namespace detail

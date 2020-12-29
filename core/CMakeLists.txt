@@ -2,9 +2,9 @@ project (nescore)
 
 set (PROJECT_LIBRARY ${PROJECT_NAME})
 
-set (PROJECT_SRC_PATH src)
+set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set (PROJECT_INC_PATH include)
+set (PROJECT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set (PROJECT_COMPILE_FEATURES cxx_std_17)
 
@@ -12,38 +12,10 @@ set (PROJECT_COMPILE_DEFINITIONS "-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_
 
 file (
   GLOB_RECURSE
-  NES_CORE_SRCS
+  NES_CORE_SOURCES
   CONFIGURE_DEPENDS
-  ${PROJECT_SRC_PATH}/*.cc ${PROJECT_SRC_PATH}/*.h ${PROJECT_INC_PATH}/*.h)
+  ${PROJECT_SOURCE_DIR}/*.cc ${PROJECT_SOURCE_DIR}/*.h ${PROJECT_INCLUDE_PATH}/*.h)
 
-add_library (
-  ${PROJECT_LIBRARY}
-  STATIC
-  ${NES_CORE_SRCS})
-
-target_compile_features (
-  ${PROJECT_LIBRARY}
-  PRIVATE
-  ${PROJECT_COMPILE_FEATURES})
-
-target_compile_definitions (
-  ${PROJECT_LIBRARY}
-  PRIVATE
-  ${PROJECT_COMPILE_DEFINITIONS})
-
-target_include_directories (
-  ${PROJECT_LIBRARY}
-  PUBLIC
-  ${PROJECT_INC_PATH}
-  PRIVATE
-  ${PROJECT_SRC_PATH})
+add_subdirectory (src)
 
 add_subdirectory (tests)
-
-add_test (NAME TestOpcodes COMMAND test_opcodes)
-
-add_test (NAME TestMemoryBank COMMAND test_memory_bank)
-
-add_test (NAME TestPipeline COMMAND test_pipeline)
-
-add_test (NAME TestTypes COMMAND test_types)

@@ -6,7 +6,7 @@
  */
 #include <functional>
 #include <iterator>
-#include "pipeline.h"
+#include "detail/pipeline.h"
 
 namespace nes {
 namespace core {

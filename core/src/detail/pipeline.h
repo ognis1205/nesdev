@@ -36,7 +36,7 @@ class Pipeline final {
  private:
   Status status_ = Status::Continue;
 
-  std::deque<Step> steps_ {};
+  std::deque<Step> steps_ = {};
 };
 
 }  // namespace detail

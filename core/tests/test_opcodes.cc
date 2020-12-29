@@ -6,27 +6,34 @@
  */
 #define BOOST_TEST_MAIN
 #include <functional>
-#include <boost/test/included/unit_test.hpp>
+#include <gtest/gtest.h>
 #include "nes/core/opcodes.h"
 
-struct Fixture {
+class OpcodesTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    start_time_ = time(nullptr);
+  }
+
+  void TearDown() override {
+    const time_t end_time = time(nullptr);
+    EXPECT_TRUE(end_time - start_time_ <= 5) << "The test took too long";
+  }
+
+  time_t start_time_;
 };
 
-BOOST_FIXTURE_TEST_SUITE(Opcodes, Fixture)
-
-BOOST_AUTO_TEST_CASE(Decode) {
+TEST_F(OpcodesTest, Decode) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
-    BOOST_CHECK_NO_THROW({
+    EXPECT_NO_THROW({
       auto opcode = nes::core::Decode(i);
       static_cast<void>(opcode);
     });
   }
 }
 
-BOOST_AUTO_TEST_CASE(ToString) {
+TEST_F(OpcodesTest, ToString) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
-    BOOST_CHECK(nes::core::ToString(i) != "UNKNOWN, UNKNOWN");
+    EXPECT_NE("UNKNOWN, UNKNOWN", nes::core::ToString(i));
   }
 }
-
-BOOST_AUTO_TEST_SUITE_END()
