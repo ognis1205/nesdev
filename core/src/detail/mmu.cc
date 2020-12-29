@@ -25,6 +25,9 @@ void MMU::Add(std::unique_ptr<MemoryBank> memory_bank) {
 }
 
 void MMU::Set(MemoryBanks memory_banks) noexcept {
+//  for (std::unique_ptr<nesdev::core::MemoryBank>& memory_bank : memory_banks) {
+//    Add(std::move(memory_bank));
+//  }
   memory_banks_ = std::move(memory_banks);
 }
 

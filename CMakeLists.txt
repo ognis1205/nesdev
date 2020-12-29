@@ -18,6 +18,18 @@ project (
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 
+set (CMAKE_CXX_STANDARD 17)
+
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set (CMAKE_CXX_EXTENSIONS OFF)
+
+set (NESDEV_COMPILE_FEATURES cxx_std_17)
+
+#TODO: Check if GLIBCXX_DEBUG flag can work together with GTest/GMock.
+#set (NESDEV_COMPILE_DEFINITIONS "-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2")
+set (NESDEV_COMPILE_DEFINITIONS "-D_FORTIFY_SOURCE=2")
+
 enable_testing ()
 
 include (cmake/googletest.cmake)

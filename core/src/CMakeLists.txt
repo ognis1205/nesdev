@@ -11,12 +11,12 @@ add_library (
 target_compile_features (
   ${NESDEV_CORE_LIBRARY}
   PRIVATE
-  ${NESDEV_CORE_COMPILE_FEATURES})
+  ${NESDEV_COMPILE_FEATURES})
 
 target_compile_definitions (
   ${NESDEV_CORE_LIBRARY}
   PRIVATE
-  ${NESDEV_CORE_COMPILE_DEFINITIONS})
+  ${NESDEV_COMPILE_DEFINITIONS})
 
 target_include_directories (
   ${NESDEV_CORE_LIBRARY}
