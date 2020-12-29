@@ -6,9 +6,15 @@ if (POLICY CMP0025)
   cmake_policy (SET CMP0025 NEW)
 endif ()
 
-project (nes)
-
-set (NES_VERSION 1.0.0)
+project (
+  nesdev
+  VERSION
+  1.0.0
+  DESCRIPTION
+  "NesDev is a modular cycle-accurate NES emulator development toolkit for C++."
+  HOMEPAGE_URL
+  ""
+  LANGUAGES CXX C)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 

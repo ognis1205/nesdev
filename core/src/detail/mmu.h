@@ -1,21 +1,21 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NES_CORE_DETAIL_MMU_H_
-#define _NES_CORE_DETAIL_MMU_H_
-#include "nes/core/memory_bank.h"
-#include "nes/core/mmu.h"
-#include "nes/core/types.h"
+#ifndef _NESDEV_CORE_DETAIL_MMU_H_
+#define _NESDEV_CORE_DETAIL_MMU_H_
+#include "nesdev/core/memory_bank.h"
+#include "nesdev/core/mmu.h"
+#include "nesdev/core/types.h"
 #include "macros.h"
 
-namespace nes {
+namespace nesdev {
 namespace core {
 namespace detail {
 
-class MMU final : public nes::core::MMU {
+class MMU final : public nesdev::core::MMU {
  public:
   void Clear() noexcept;
 
@@ -27,7 +27,7 @@ class MMU final : public nes::core::MMU {
 
   void Write(const Address& address, const Byte& byte) override;
 
- NES_CORE_PRIVATE_UNLESS_TESTED:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   MemoryBank* Switch(const Address& address) const;
 
   MemoryBanks memory_banks_ = {};
@@ -35,5 +35,5 @@ class MMU final : public nes::core::MMU {
 
 }  // namespace detail
 }  // namespace core
-}  // namespace nes
-#endif  // ifndef _NES_CORE_DETAIL_MMU_H_
+}  // namespace nesdev
+#endif  // ifndef _NESDEV_CORE_DETAIL_MMU_H_

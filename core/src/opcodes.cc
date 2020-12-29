@@ -6,10 +6,10 @@
  */
 #include <map>
 #include <string>
-#include "nes/core/opcodes.h"
-#include "nes/core/types.h"
+#include "nesdev/core/opcodes.h"
+#include "nesdev/core/types.h"
 
-namespace nes {
+namespace nesdev {
 namespace core {
 
 /*
@@ -420,4 +420,4 @@ std::string ToString(const Byte& byte) noexcept {
 }
 
 }  // namespace core
-}  // namespace nes
+}  // namespace nesdev

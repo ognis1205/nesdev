@@ -1,5 +1,5 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
@@ -7,7 +7,7 @@
 #define BOOST_TEST_MAIN
 #include <time.h>
 #include <gtest/gtest.h>
-#include "nes/core/types.h"
+#include "nesdev/core/types.h"
 
 class TypesTest : public testing::Test {
  protected:
@@ -23,21 +23,21 @@ class TypesTest : public testing::Test {
   time_t start_time_;
 
   union {
-    nes::core::Address value;
-    nes::core::Bitfield<0, 8, nes::core::Address> offset;
-    nes::core::Bitfield<8, 8, nes::core::Address> page;
+    nesdev::core::Address value;
+    nesdev::core::Bitfield<0, 8, nesdev::core::Address> offset;
+    nesdev::core::Bitfield<8, 8, nesdev::core::Address> page;
   } pc_ = {0x0000};
 
   union {
-    nes::core::Byte value;
-    nes::core::Bitfield<0, 1, nes::core::Byte> carry;
-    nes::core::Bitfield<1, 1, nes::core::Byte> zero;
-    nes::core::Bitfield<2, 1, nes::core::Byte> irq_disable;
-    nes::core::Bitfield<3, 1, nes::core::Byte> decimal_mode;
-    nes::core::Bitfield<4, 1, nes::core::Byte> brk_command;
-    nes::core::Bitfield<5, 1, nes::core::Byte> unused;
-    nes::core::Bitfield<6, 1, nes::core::Byte> overflow;
-    nes::core::Bitfield<7, 1, nes::core::Byte> negative;
+    nesdev::core::Byte value;
+    nesdev::core::Bitfield<0, 1, nesdev::core::Byte> carry;
+    nesdev::core::Bitfield<1, 1, nesdev::core::Byte> zero;
+    nesdev::core::Bitfield<2, 1, nesdev::core::Byte> irq_disable;
+    nesdev::core::Bitfield<3, 1, nesdev::core::Byte> decimal_mode;
+    nesdev::core::Bitfield<4, 1, nesdev::core::Byte> brk_command;
+    nesdev::core::Bitfield<5, 1, nesdev::core::Byte> unused;
+    nesdev::core::Bitfield<6, 1, nesdev::core::Byte> overflow;
+    nesdev::core::Bitfield<7, 1, nesdev::core::Byte> negative;
   } p_ = {0x00};
 };
 

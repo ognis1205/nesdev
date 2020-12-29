@@ -1,18 +1,18 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
 #include <algorithm>
-#include "nes/core/exceptions.h"
-#include "nes/core/memory_bank.h"
-#include "nes/core/mmu.h"
-#include "nes/core/types.h"
+#include "nesdev/core/exceptions.h"
+#include "nesdev/core/memory_bank.h"
+#include "nesdev/core/mmu.h"
+#include "nesdev/core/types.h"
 #include "macros.h"
 #include "detail/mmu.h"
 
-namespace nes {
+namespace nesdev {
 namespace core {
 namespace detail {
 
@@ -30,12 +30,12 @@ void MMU::Set(MemoryBanks memory_banks) noexcept {
 
 Byte MMU::Read(const Address& address) const {
   if (const MemoryBank* memory_bank = Switch(address)) return memory_bank->Read(address);
-  else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
+  else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
 }
 
 void MMU::Write(const Address& address, const Byte& byte) {
   if (MemoryBank* memory_bank = Switch(address)) return memory_bank->Write(address, byte);
-  else NES_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
+  else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
 }
 
 MemoryBank* MMU::Switch(const Address& address) const {
@@ -49,4 +49,4 @@ MemoryBank* MMU::Switch(const Address& address) const {
 
 }  // namespace detail
 }  // namespace core
-}  // namespace nes
+}  // namespace nesdev

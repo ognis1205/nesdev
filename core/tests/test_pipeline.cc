@@ -1,5 +1,5 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
@@ -25,14 +25,14 @@ class PipelineTest : public testing::Test {
 
   int acc_ = 0;
 
-  nes::core::detail::Pipeline pipeline1_, pipeline2_;
+  nesdev::core::detail::Pipeline pipeline1_, pipeline2_;
 
   std::function<void()> step1_ = [this]() {
     acc_++;
   };
 
-  std::function<nes::core::detail::Pipeline::Status()> step2_ = []() {
-    return nes::core::detail::Pipeline::Status::Skip;
+  std::function<nesdev::core::detail::Pipeline::Status()> step2_ = []() {
+    return nesdev::core::detail::Pipeline::Status::Skip;
   };
 };
 

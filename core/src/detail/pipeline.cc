@@ -1,5 +1,5 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
@@ -8,7 +8,7 @@
 #include <iterator>
 #include "detail/pipeline.h"
 
-namespace nes {
+namespace nesdev {
 namespace core {
 namespace detail {
 
@@ -48,4 +48,4 @@ void Pipeline::Tick() {
 
 }  // namespace detail
 }  // namespace core
-}  // namespace nes
+}  // namespace nesdev

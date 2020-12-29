@@ -1,15 +1,15 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NES_CORE_TYPES_H_
-#define _NES_CORE_TYPES_H_
+#ifndef _NESDEV_CORE_TYPES_H_
+#define _NESDEV_CORE_TYPES_H_
 #include <cstdint>
 #include <cstdlib>
 
-namespace nes {
+namespace nesdev {
 namespace core {
 
 using Byte = std::uint_least8_t;
@@ -41,5 +41,5 @@ struct Bitfield {
 };
 
 }  // namespace core
-}  // namespace nes
-#endif  // ifndef _NES_CORE_TYPES_H_
+}  // namespace nesdev
+#endif  // ifndef _NESDEV_CORE_TYPES_H_

@@ -1,5 +1,5 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
@@ -7,7 +7,7 @@
 #define BOOST_TEST_MAIN
 #include <functional>
 #include <gtest/gtest.h>
-#include "nes/core/opcodes.h"
+#include "nesdev/core/opcodes.h"
 
 class OpcodesTest : public testing::Test {
  protected:
@@ -26,7 +26,7 @@ class OpcodesTest : public testing::Test {
 TEST_F(OpcodesTest, Decode) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
     EXPECT_NO_THROW({
-      auto opcode = nes::core::Decode(i);
+      auto opcode = nesdev::core::Decode(i);
       static_cast<void>(opcode);
     });
   }
@@ -34,6 +34,6 @@ TEST_F(OpcodesTest, Decode) {
 
 TEST_F(OpcodesTest, ToString) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
-    EXPECT_NE("UNKNOWN, UNKNOWN", nes::core::ToString(i));
+    EXPECT_NE("UNKNOWN, UNKNOWN", nesdev::core::ToString(i));
   }
 }

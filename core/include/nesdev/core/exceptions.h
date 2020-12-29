@@ -1,19 +1,19 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NES_CORE_EXCEPTIONS_H_
-#define _NES_CORE_EXCEPTIONS_H_
+#ifndef _NESDEV_CORE_EXCEPTIONS_H_
+#define _NESDEV_CORE_EXCEPTIONS_H_
 #include <exception>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include "nes/core/types.h"
+#include "nesdev/core/types.h"
 
-namespace nes {
+namespace nesdev {
 namespace core {
 
 // TODO: Implement error codes.
@@ -23,7 +23,7 @@ class Exception : public std::exception {
 
  protected:
   static std::string Header(const std::string& name) {
-    return "[nes::core::" + name + "]";
+    return "[nesdev::core::" + name + "]";
   }
 
   Exception(const char* what_arg) : what_arg_{what_arg} {}
@@ -57,5 +57,5 @@ class NotImplemented : public Exception {
 };
 
 }  // namespace core
-}  // namespace nes
-#endif  // ifndef _NES_CORE_EXCEPTIONS_H_
+}  // namespace nesdev
+#endif  // ifndef _NESDEV_CORE_EXCEPTIONS_H_
