@@ -10,7 +10,7 @@
 #if (defined(__pp_exceptions) \
      || defined(__EXCEPTIONS) \
      || defined(_CPPUNWIND)) \
-  && !defined(NESDEV_CORE_NOEXCEPTION)
+  && !defined(NESDEV_CORE_NO_THROW_EXCEPTION)
 #  define NESDEV_CORE_THROW(exception) throw exception
 #  define NESDEV_CORE_TRY try
 #  define NESDEV_CORE_CATCH(exception) catch (exception)
@@ -26,10 +26,14 @@
 #  define NESDEV_CORE_ASSERT(x) assert(x)
 #endif
 
-#if defined(NESDEV_CORE_TESTS_PRIVATE)
-#  define NESDEV_CORE_PRIVATE_UNLESS_TESTED public
+#if defined(NESDEV_CORE_TEST)
+#  define NESDEV_CORE_PRIVATE  public
+#  define NESDEV_CORE_CONST
+#  define NESDEV_CORE_NOEXCEPT
 #else
-#  define NESDEV_CORE_PRIVATE_UNLESS_TESTED private
+#  define NESDEV_CORE_PRIVATE  private
+#  define NESDEV_CORE_CONST    const
+#  define NESDEV_CORE_NOEXCEPT noexcept
 #endif
 
 #endif  // ifndef _NESDEV_CORE_MACROS_H_

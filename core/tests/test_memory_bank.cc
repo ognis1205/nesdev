@@ -4,12 +4,9 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#define BOOST_TEST_MAIN
-#include <memory>
 #include <time.h>
 #include <gtest/gtest.h>
-#include "nesdev/core/exceptions.h"
-#include "nesdev/core/types.h"
+#include <nesdev/core.h>
 #include "detail/memory_bank.h"
 
 class MemoryBankTest : public testing::Test {

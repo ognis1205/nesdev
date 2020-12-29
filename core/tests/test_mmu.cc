@@ -4,12 +4,18 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#define BOOST_TEST_MAIN
 #include <memory>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "nesdev/core/exceptions.h"
-#include "nesdev/core/types.h"
+#include <nesdev/core.h>
 #include "detail/mmu.h"
+
+class MockMemoryBank : public nesdev::core::MemoryBank {
+ public:
+  MOCK_METHOD1(HasValidAddress, bool(const nesdev::core::Address&));
+  MOCK_METHOD1(Read, nesdev::core::Byte(const nesdev::core::Address&));
+  MOCK_METHOD2(Write, void(const nesdev::core::Address&, const nesdev::core::Byte&));
+};
 
 class MMUTest : public testing::Test {
  protected:
@@ -28,5 +34,6 @@ class MMUTest : public testing::Test {
 };
 
 TEST_F(MMUTest, Clear) {
+  MockMemoryBank memory_bank1_, memory_bank2_;
 //  mmu.Add();
 }

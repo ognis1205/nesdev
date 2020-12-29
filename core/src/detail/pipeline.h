@@ -8,6 +8,7 @@
 #define _NESDEV_CORE_DETAIL_PIPELINE_H_
 #include <deque>
 #include <functional>
+#include "nesdev/core/macros.h"
 
 namespace nesdev {
 namespace core {
@@ -21,15 +22,15 @@ class Pipeline final {
 
   Pipeline() = default;
 
-  void Push(const std::function<void()>& step) noexcept;
+  void Push(const std::function<void()>& step) NESDEV_CORE_NOEXCEPT;
 
-  void Push(const Step& step) noexcept;
+  void Push(const Step& step) NESDEV_CORE_NOEXCEPT;
 
-  void Stage(Pipeline& other) noexcept;
+  void Stage(Pipeline& other) NESDEV_CORE_NOEXCEPT;
 
-  bool Done() const noexcept;
+  bool Done() NESDEV_CORE_CONST NESDEV_CORE_NOEXCEPT;
 
-  void Clear() noexcept;
+  void Clear() NESDEV_CORE_NOEXCEPT;
 
   void Tick();
 

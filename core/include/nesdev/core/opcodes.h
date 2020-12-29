@@ -7,6 +7,7 @@
 #ifndef _NESDEV_CORE_OPCODES_H_
 #define _NESDEV_CORE_OPCODES_H_
 #include <string>
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -166,10 +167,10 @@ struct Opcode {
 };
 
 [[nodiscard]]
-Opcode Decode(const Byte& opcode) noexcept;
+Opcode Decode(const Byte& opcode) NESDEV_CORE_NOEXCEPT;
 
 [[nodiscard]]
-std::string ToString(const Byte& opcode) noexcept;
+std::string ToString(const Byte& opcode) NESDEV_CORE_NOEXCEPT;
 
 }  // namespace core
 }  // namespace nesdev
