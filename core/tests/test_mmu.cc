@@ -12,9 +12,12 @@
 
 class MockMemoryBank : public nesdev::core::MemoryBank {
  public:
-  MOCK_METHOD1(HasValidAddress, bool(const nesdev::core::Address&));
-  MOCK_METHOD1(Read, nesdev::core::Byte(const nesdev::core::Address&));
+  MOCK_CONST_METHOD1(MockHasValidAddress, bool(const nesdev::core::Address&));
+  MOCK_CONST_METHOD1(Read, nesdev::core::Byte(const nesdev::core::Address&));
   MOCK_METHOD2(Write, void(const nesdev::core::Address&, const nesdev::core::Byte&));
+  virtual bool HasValidAddress(const nesdev::core::Address& address) const noexcept {
+    return MockHasValidAddress(address);
+  }
 };
 
 class MMUTest : public testing::Test {

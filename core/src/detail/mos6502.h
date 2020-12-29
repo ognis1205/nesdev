@@ -7,9 +7,9 @@
 #ifndef _NESDEV_CORE_DETAIL_MOS6502_H_
 #define _NESDEV_CORE_DETAIL_MOS6502_H_
 #include "nesdev/core/cpu.h"
-#include "nesdev/core/macros.h"
 #include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
+#include "macros.h"
 #include "pipeline.h"
 
 namespace nesdev {
@@ -24,17 +24,17 @@ class MOS6502 final : public CPU {
 
   void Tick() override;
 
-  void Reset() NESDEV_CORE_NOEXCEPT override;
+  void Reset() noexcept override;
 
-  void IRQ() NESDEV_CORE_NOEXCEPT override;
+  void IRQ() noexcept override;
 
-  void NMI() NESDEV_CORE_NOEXCEPT override;
+  void NMI() noexcept override;
 
-  Byte Read(const Address& address) NESDEV_CORE_CONST override;
+  Byte Read(const Address& address) const override;
 
   void Write(const Address& address, const Byte& byte) override;
 
- NESDEV_CORE_PRIVATE:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   void With(
     const AddressingMode& addressing_mode,
     const MemoryAccess& memory_access,
@@ -43,15 +43,15 @@ class MOS6502 final : public CPU {
 
   void Add(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void And(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void ArithmeticShiftLeft(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Branch(
     const Instruction& instruction,
@@ -59,7 +59,7 @@ class MOS6502 final : public CPU {
 
   void TestMemoryBits(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void SoftwareInterrupt(
     const Instruction& instruction,
@@ -67,23 +67,23 @@ class MOS6502 final : public CPU {
 
   void ClearStatusFlags(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Compare(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Decrement(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void ExclusiveOr(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Increment(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Jump(
     const Instruction& instruction,
@@ -91,11 +91,11 @@ class MOS6502 final : public CPU {
 
   void Load(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void LogicalShiftRight(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   [[maybe_unused]]
   void BlockMove(
@@ -104,11 +104,11 @@ class MOS6502 final : public CPU {
 
   void NoOperation(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Or(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Push(
     const Instruction& instruction,
@@ -125,7 +125,7 @@ class MOS6502 final : public CPU {
 
   void Rotate(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Return(
     const Instruction& instruction,
@@ -133,11 +133,11 @@ class MOS6502 final : public CPU {
 
   void Subtract(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   void Set(
     const Instruction& instruction,
-    Pipeline* pipeline) NESDEV_CORE_NOEXCEPT;
+    Pipeline* pipeline) noexcept;
 
   [[maybe_unused]]
   void Stop(

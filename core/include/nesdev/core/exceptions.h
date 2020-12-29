@@ -11,7 +11,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {

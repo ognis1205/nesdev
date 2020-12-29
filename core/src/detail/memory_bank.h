@@ -7,9 +7,9 @@
 #ifndef _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
 #define _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
 #include "nesdev/core/exceptions.h"
-#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/types.h"
+#include "macros.h"
 
 namespace nesdev {
 namespace core {
@@ -31,12 +31,12 @@ class MemoryBank final : public nesdev::core::MemoryBank {
   MemoryBank() = default;
 
   [[nodiscard]]
-  bool HasValidAddress(const Address& address) NESDEV_CORE_CONST NESDEV_CORE_NOEXCEPT override {
+  bool HasValidAddress(const Address& address) const noexcept override {
     if constexpr (From == 0) return address <= To;
     else return address >= From && address <= To;
   }
 
-  Byte Read(const Address& address) NESDEV_CORE_CONST override {
+  Byte Read(const Address& address) const override {
     if (HasValidAddress(address)) return *PointerTo(address);
     else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
   }
@@ -46,7 +46,7 @@ class MemoryBank final : public nesdev::core::MemoryBank {
     else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
   }
 
- NESDEV_CORE_PRIVATE:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Byte* PointerTo(const Address& address) {
     return const_cast<Byte*>(std::as_const(*this).PointerTo(address));
   }

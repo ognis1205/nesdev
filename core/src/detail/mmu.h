@@ -6,10 +6,10 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_MMU_H_
 #define _NESDEV_CORE_DETAIL_MMU_H_
-#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/types.h"
+#include "macros.h"
 
 namespace nesdev {
 namespace core {
@@ -17,18 +17,18 @@ namespace detail {
 
 class MMU final : public nesdev::core::MMU {
  public:
-  void Clear() NESDEV_CORE_NOEXCEPT;
+  void Clear() noexcept;
 
   void Add(std::unique_ptr<MemoryBank> memory_bank);
 
-  void Set(MemoryBanks memory_banks) NESDEV_CORE_NOEXCEPT override;
+  void Set(MemoryBanks memory_banks) noexcept override;
 
-  Byte Read(const Address& address) NESDEV_CORE_CONST override;
+  Byte Read(const Address& address) const override;
 
   void Write(const Address& address, const Byte& byte) override;
 
- NESDEV_CORE_PRIVATE:
-  MemoryBank* Switch(const Address& address) NESDEV_CORE_CONST;
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  MemoryBank* Switch(const Address& address) const;
 
   MemoryBanks memory_banks_ = {};
 };

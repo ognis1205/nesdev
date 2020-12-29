@@ -6,17 +6,17 @@
  */
 #include <algorithm>
 #include "nesdev/core/exceptions.h"
-#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/types.h"
+#include "macros.h"
 #include "detail/mmu.h"
 
 namespace nesdev {
 namespace core {
 namespace detail {
 
-void MMU::Clear() NESDEV_CORE_NOEXCEPT {
+void MMU::Clear() noexcept {
   memory_banks_.clear();
 }
 
@@ -24,12 +24,12 @@ void MMU::Add(std::unique_ptr<MemoryBank> memory_bank) {
   memory_banks_.push_back(std::move(memory_bank));
 }
 
-void MMU::Set(MemoryBanks memory_banks) NESDEV_CORE_NOEXCEPT {
+void MMU::Set(MemoryBanks memory_banks) noexcept {
   memory_banks_ = std::move(memory_banks);
 }
 
-Byte MMU::Read(const Address& address) NESDEV_CORE_CONST {
-  if (NESDEV_CORE_CONST MemoryBank* memory_bank = Switch(address)) return memory_bank->Read(address);
+Byte MMU::Read(const Address& address) const {
+  if (const MemoryBank* memory_bank = Switch(address)) return memory_bank->Read(address);
   else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
 }
 
@@ -38,7 +38,7 @@ void MMU::Write(const Address& address, const Byte& byte) {
   else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
 }
 
-MemoryBank* MMU::Switch(const Address& address) NESDEV_CORE_CONST {
+MemoryBank* MMU::Switch(const Address& address) const {
   auto it = std::find_if(
     begin(memory_banks_),
     end(memory_banks_),

@@ -6,33 +6,33 @@
  */
 #include <functional>
 #include <iterator>
-#include "nesdev/core/macros.h"
 #include "detail/pipeline.h"
+#include "macros.h"
 
 namespace nesdev {
 namespace core {
 namespace detail {
 
-void Pipeline::Push(const std::function<void()>& step) NESDEV_CORE_NOEXCEPT {
+void Pipeline::Push(const std::function<void()>& step) noexcept {
   steps_.emplace_back([step] {
     step();
     return Status::Continue;
   });
 }
 
-void Pipeline::Push(const Step& step) NESDEV_CORE_NOEXCEPT {
+void Pipeline::Push(const Step& step) noexcept {
   steps_.push_back(std::move(step));
 }
 
-void Pipeline::Stage(Pipeline& other) NESDEV_CORE_NOEXCEPT {
+void Pipeline::Stage(Pipeline& other) noexcept {
   std::copy(other.steps_.begin(), other.steps_.end(), std::back_inserter(steps_));
 }
 
-bool Pipeline::Done() NESDEV_CORE_CONST NESDEV_CORE_NOEXCEPT {
+bool Pipeline::Done() const noexcept {
   return steps_.empty() || status_ == Status::Stop;
 }
 
-void Pipeline::Clear() NESDEV_CORE_NOEXCEPT {
+void Pipeline::Clear() noexcept {
   while (!steps_.empty()) {
     steps_.pop_front();
   }

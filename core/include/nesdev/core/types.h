@@ -8,7 +8,6 @@
 #define _NESDEV_CORE_TYPES_H_
 #include <cstdint>
 #include <cstdlib>
-#include "nesdev/core/macros.h"
 
 namespace nesdev {
 namespace core {

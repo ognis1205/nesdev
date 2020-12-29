@@ -10,7 +10,6 @@
 #include "nesdev/core/clock.h"
 #include "nesdev/core/cpu.h"
 #include "nesdev/core/exceptions.h"
-#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/opcodes.h"

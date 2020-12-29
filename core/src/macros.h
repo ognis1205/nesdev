@@ -27,13 +27,9 @@
 #endif
 
 #if defined(NESDEV_CORE_TEST)
-#  define NESDEV_CORE_PRIVATE  public
-#  define NESDEV_CORE_CONST
-#  define NESDEV_CORE_NOEXCEPT
+#  define NESDEV_CORE_PRIVATE_UNLESS_TESTED public
 #else
-#  define NESDEV_CORE_PRIVATE  private
-#  define NESDEV_CORE_CONST    const
-#  define NESDEV_CORE_NOEXCEPT noexcept
+#  define NESDEV_CORE_PRIVATE_UNLESS_TESTED private
 #endif
 
 #endif  // ifndef _NESDEV_CORE_MACROS_H_
