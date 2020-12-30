@@ -34,25 +34,25 @@ class MMUTest : public testing::Test {
 
   time_t start_time_;
 
-  nesdev::core::detail::MMU mmu;
+  nesdev::core::detail::MMU mmu_;
 };
 
 TEST_F(MMUTest, Clear) {
   auto memory_bank = std::make_unique<MockMemoryBank>();
-  mmu.Add(std::move(memory_bank));
-  EXPECT_FALSE(mmu.memory_banks_.empty());
-  mmu.Clear();
-  EXPECT_TRUE(mmu.memory_banks_.empty());
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  mmu_.Clear();
+  EXPECT_TRUE(mmu_.memory_banks_.empty());
 }
 
 TEST_F(MMUTest, Add) {
   auto memory_bank = std::make_unique<MockMemoryBank>();
-  mmu.Add(std::move(memory_bank));
-  EXPECT_FALSE(mmu.memory_banks_.empty());
-  EXPECT_EQ(1, mmu.memory_banks_.size());
-  mmu.Add(std::move(memory_bank));
-  EXPECT_FALSE(mmu.memory_banks_.empty());
-  EXPECT_EQ(2, mmu.memory_banks_.size());
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_EQ(1, mmu_.memory_banks_.size());
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_EQ(2, mmu_.memory_banks_.size());
 }
 
 TEST_F(MMUTest, Set) {
@@ -61,23 +61,67 @@ TEST_F(MMUTest, Set) {
     auto memory_bank = std::make_unique<MockMemoryBank>();
     memory_banks.push_back(std::move(memory_bank));
   }
-  mmu.Set(std::move(memory_banks));
-  EXPECT_FALSE(mmu.memory_banks_.empty());
-  EXPECT_EQ(3, mmu.memory_banks_.size());
+  mmu_.Set(std::move(memory_banks));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_EQ(3, mmu_.memory_banks_.size());
 }
 
-TEST_F(MMUTest, Read) {
+TEST_F(MMUTest, ReadWithValidAddress) {
   auto memory_bank = std::make_unique<MockMemoryBank>();
+
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(true));
-//    .WillOnce(testing::Return(false));
+
   EXPECT_CALL(*memory_bank, Read(testing::_))
     .Times(1)
     .WillOnce(testing::Return(0x01));
-//    .WillOnce(testing::Return(0x02));
-  mmu.Add(std::move(memory_bank));
-  EXPECT_EQ(0x01, mmu.Read(0u));
-//  EXPECT_EQ(0x01, mmu.Read(0u));
-  EXPECT_FALSE(mmu.memory_banks_.empty());
+
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_EQ(0x01, mmu_.Read(0x0000));
+}
+
+TEST_F(MMUTest, ReadWithInvalidAddress) {
+  auto memory_bank = std::make_unique<MockMemoryBank>();
+
+  EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
+    .Times(1)
+    .WillOnce(testing::Return(false));
+
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_THROW(mmu_.Read(0x0000), nesdev::core::InvalidAddress);
+}
+
+TEST_F(MMUTest, WriteWithValidAddress) {
+  nesdev::core::Byte memory = 0x00;
+  auto memory_bank = std::make_unique<MockMemoryBank>();
+
+  EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
+    .Times(1)
+    .WillOnce(testing::Return(true));
+
+  EXPECT_CALL(*memory_bank, Write(testing::_, testing::_))
+    .Times(1)
+    .WillOnce(testing::Assign(&memory, 0x01));
+
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  mmu_.Write(0x0000, 0x01);
+  EXPECT_EQ(0x01, memory);
+}
+
+TEST_F(MMUTest, WriteWithInvalidAddress) {
+  nesdev::core::Byte memory = 0x00;
+  auto memory_bank = std::make_unique<MockMemoryBank>();
+
+  EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
+    .Times(1)
+    .WillOnce(testing::Return(false));
+
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_THROW(mmu_.Write(0x0000, 0x01), nesdev::core::InvalidAddress);
+  EXPECT_EQ(0x00, memory);
 }

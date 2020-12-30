@@ -36,7 +36,13 @@ class InvalidAddress : public Exception {
  public:
   static InvalidAddress Occur(const std::string& what_arg, const Address& address) {
     std::stringstream ss;
-    ss << "[0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << address << "]";
+    ss << "[0x"
+       << std::uppercase
+       << std::setfill('0')
+       << std::setw(4)
+       << std::hex
+       << unsigned(address)
+       << "]";
     return InvalidAddress((Exception::Header("InvalidAddress") + " " + what_arg + " " + ss.str()).c_str());
   }
 
@@ -48,7 +54,13 @@ class NotImplemented : public Exception {
  public:
   static NotImplemented Occur(const std::string& what_arg, const Byte& byte) {
     std::stringstream ss;
-    ss << "[0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << byte << "]";
+    ss << "[0x"
+       << std::uppercase
+       << std::setfill('0')
+       << std::setw(2)
+       << std::hex
+       << unsigned(byte)
+       << "]";
     return NotImplemented((Exception::Header("NotImplemented") + " " + what_arg + " " + ss.str()).c_str());
   }
 
