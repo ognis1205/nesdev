@@ -18,7 +18,6 @@ std::unique_ptr<MMU> MMUFactory::Create() {
 }
 
 std::unique_ptr<MMU> MMUFactory::Create(MemoryBanks memory_banks) {
-  return std::make_unique<detail::MMU>();
   std::unique_ptr<MMU> mmu_ptr = std::make_unique<detail::MMU>();
   auto mmu = static_cast<detail::MMU*>(mmu_ptr.get());
   for (std::unique_ptr<MemoryBank>& memory_bank : memory_banks)
