@@ -68,15 +68,12 @@ TEST_F(MMUTest, Set) {
 
 TEST_F(MMUTest, ReadWithValidAddress) {
   auto memory_bank = std::make_unique<MockMemoryBank>();
-
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(true));
-
   EXPECT_CALL(*memory_bank, Read(testing::_))
     .Times(1)
     .WillOnce(testing::Return(0x01));
-
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   EXPECT_EQ(0x01, mmu_.Read(0x0000));
@@ -84,11 +81,9 @@ TEST_F(MMUTest, ReadWithValidAddress) {
 
 TEST_F(MMUTest, ReadWithInvalidAddress) {
   auto memory_bank = std::make_unique<MockMemoryBank>();
-
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(false));
-
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   EXPECT_THROW(mmu_.Read(0x0000), nesdev::core::InvalidAddress);
@@ -97,15 +92,12 @@ TEST_F(MMUTest, ReadWithInvalidAddress) {
 TEST_F(MMUTest, WriteWithValidAddress) {
   nesdev::core::Byte memory = 0x00;
   auto memory_bank = std::make_unique<MockMemoryBank>();
-
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(true));
-
   EXPECT_CALL(*memory_bank, Write(testing::_, testing::_))
     .Times(1)
     .WillOnce(testing::Assign(&memory, 0x01));
-
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   mmu_.Write(0x0000, 0x01);
@@ -115,13 +107,31 @@ TEST_F(MMUTest, WriteWithValidAddress) {
 TEST_F(MMUTest, WriteWithInvalidAddress) {
   nesdev::core::Byte memory = 0x00;
   auto memory_bank = std::make_unique<MockMemoryBank>();
-
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(false));
-
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   EXPECT_THROW(mmu_.Write(0x0000, 0x01), nesdev::core::InvalidAddress);
   EXPECT_EQ(0x00, memory);
+}
+
+TEST_F(MMUTest, SwitchWithValidAddress) {
+  auto memory_bank = std::make_unique<MockMemoryBank>();
+  EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
+    .Times(1)
+    .WillOnce(testing::Return(true));
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_TRUE(mmu_.Switch(0x0000));
+}
+
+TEST_F(MMUTest, SwitchWithInvalidAddress) {
+  auto memory_bank = std::make_unique<MockMemoryBank>();
+  EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
+    .Times(1)
+    .WillOnce(testing::Return(false));
+  mmu_.Add(std::move(memory_bank));
+  EXPECT_FALSE(mmu_.memory_banks_.empty());
+  EXPECT_FALSE(mmu_.Switch(0x0000));
 }

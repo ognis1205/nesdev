@@ -12,6 +12,7 @@
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/mmu.h"
+#include "nesdev/core/mmu_factory.h"
 #include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
 
