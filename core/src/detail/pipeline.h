@@ -34,7 +34,7 @@ class Pipeline final {
 
   void Tick();
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Status status_ = Status::Continue;
 
   std::deque<Step> steps_ = {};

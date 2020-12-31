@@ -30,12 +30,12 @@ void MMU::Set(MemoryBanks memory_banks) noexcept {
 
 Byte MMU::Read(const Address& address) const {
   if (const MemoryBank* memory_bank = Switch(address)) return memory_bank->Read(address);
-  else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
+  else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
 }
 
 void MMU::Write(const Address& address, const Byte& byte) {
   if (MemoryBank* memory_bank = Switch(address)) return memory_bank->Write(address, byte);
-  else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
+  else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
 }
 
 MemoryBank* MMU::Switch(const Address& address) const {

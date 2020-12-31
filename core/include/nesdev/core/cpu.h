@@ -6,16 +6,22 @@
  */
 #ifndef _NESDEV_CORE_CPU_H_
 #define _NESDEV_CORE_CPU_H_
+#include <cstdlib>
+#include <optional>
+#include "nesdev/core/clock.h"
+#include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
 namespace core {
 
-class CPU {
+class CPU : public Clock {
  public:
   virtual ~CPU() = default;
 
-  virtual void Tick() = 0;
+  virtual void Tick() override = 0;
+
+  virtual void Fetch() = 0;
 
   virtual void Reset() noexcept = 0;
 
@@ -23,9 +29,23 @@ class CPU {
 
   virtual void NMI() noexcept = 0;
 
-  virtual Byte Read(const Address& address) const = 0;
+ protected:
+  struct Context {
+    size_t cycle = 0;
 
-  virtual void Write(const Address& address, const Byte& byte) = 0;
+    std::optional<Opcode> opcode;
+
+    Address program_counter = {0x0000};
+
+    union {
+      Address value;
+      Bitfield<0, 8, Address> lo;
+      Bitfield<8, 8, Address> hi;
+    } effective_address = {0x0000};
+  };
+
+ protected:
+  Context context_;
 };
 
 }  // namespace core

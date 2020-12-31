@@ -50,6 +50,24 @@ class InvalidAddress : public Exception {
   InvalidAddress(const char* what_arg) : Exception(what_arg) {}
 };
 
+class InvalidOpcode : public Exception {
+ public:
+  static InvalidOpcode Occur(const std::string& what_arg, const Byte& byte) {
+    std::stringstream ss;
+    ss << "[0x"
+       << std::uppercase
+       << std::setfill('0')
+       << std::setw(2)
+       << std::hex
+       << unsigned(byte)
+       << "]";
+    return InvalidOpcode((Exception::Header("InvalidOpcode") + " " + what_arg + " " + ss.str()).c_str());
+  }
+
+ private:
+  InvalidOpcode(const char* what_arg) : Exception(what_arg) {}
+};
+
 class NotImplemented : public Exception {
  public:
   static NotImplemented Occur(const std::string& what_arg, const Byte& byte) {

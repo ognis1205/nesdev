@@ -55,6 +55,7 @@ class MemoryBank final : public nesdev::core::MemoryBank {
     return &bank_.data()[address % Range];
   }
 
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   std::array<Byte, Range> bank_ = {};
 };
 

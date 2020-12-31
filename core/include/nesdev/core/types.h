@@ -18,16 +18,16 @@ using Address = std::uint_least16_t;
 
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
 struct Bitfield {
-  static constexpr auto kMask = (1u << Width) - 1u;
+  static constexpr auto mask = (1u << Width) - 1u;
 
   template <typename U>
   Bitfield& operator=(U that) {
-    value_ = (value_ & ~(kMask << BitNo)) |
-            ((Width > 1 ? that & kMask : !!that) << BitNo);
+    value_ = (value_ & ~(mask << BitNo)) |
+            ((Width > 1 ? that & mask : !!that) << BitNo);
     return *this;
   }
 
-  operator unsigned() const { return (value_ >> BitNo) & kMask; }
+  operator unsigned() const { return (value_ >> BitNo) & mask; }
 
   Bitfield& operator++() { return *this = *this + 1; }
 

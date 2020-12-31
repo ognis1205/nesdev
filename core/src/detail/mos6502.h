@@ -7,6 +7,7 @@
 #ifndef _NESDEV_CORE_DETAIL_MOS6502_H_
 #define _NESDEV_CORE_DETAIL_MOS6502_H_
 #include "nesdev/core/cpu.h"
+#include "nesdev/core/mmu.h"
 #include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
 #include "macros.h"
@@ -18,11 +19,56 @@ namespace detail {
 
 class MOS6502 final : public CPU {
  public:
-  MOS6502();
+  static const Address kBRKAddress = {0xFFFE};
+
+  struct Registers {
+    // Accumulator
+    union {
+      Byte value;
+    } a = {0x00};
+    // X index register
+    union {
+      Byte value;
+    } x = {0x00};
+    // Y index register
+    union {
+      Byte value;
+    } y = {0x00};
+    // Stack pointer
+    union {
+      Byte value;
+    } s = {0x00};
+    // Program counter
+    union {
+      Address value;
+      Bitfield<0, 8, Address> lo;
+      Bitfield<8, 8, Address> hi;
+    } pc = {0x0000};
+    // Status register
+    union {
+      Byte value;
+      Bitfield<0, 1, Byte> carry;
+      Bitfield<1, 1, Byte> zero;
+      Bitfield<2, 1, Byte> irq_disable;
+      Bitfield<3, 1, Byte> decimal_mode;
+      Bitfield<4, 1, Byte> brk_command;
+      Bitfield<5, 1, Byte> unused;
+      Bitfield<6, 1, Byte> overflow;
+      Bitfield<7, 1, Byte> negative;
+    } p = {0x00};
+
+    const Byte kCarry = 1u << 0u;
+    const Byte kZeor = 1u << 1u;
+  };
+
+ public:
+  MOS6502(Registers* const registers, MMU* const mmu);
 
   ~MOS6502();
 
   void Tick() override;
+
+  void Fetch() override;
 
   void Reset() noexcept override;
 
@@ -30,147 +76,31 @@ class MOS6502 final : public CPU {
 
   void NMI() noexcept override;
 
-  Byte Read(const Address& address) const override;
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  class Stack {
+   public:
+    static const Address kOffset = {0x0100};
 
-  void Write(const Address& address, const Byte& byte) override;
+    Stack(Registers* const registers, MMU* const mmu);
+
+    Byte Pull() const;
+
+    void Push(const Byte& byte);
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    Registers* const registers_;
+
+    MMU* const mmu_;
+  };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  void With(
-    const AddressingMode& addressing_mode,
-    const MemoryAccess& memory_access,
-    Pipeline* pipeline,
-    void (MOS6502::*instruction)(Pipeline*));
+  Registers* const registers_;
 
-  void Add(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
+  MMU* const mmu_;
 
-  void And(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
+  Stack stack_;
 
-  void ArithmeticShiftLeft(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Branch(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void TestMemoryBits(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void SoftwareInterrupt(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void ClearStatusFlags(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Compare(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Decrement(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void ExclusiveOr(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Increment(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Jump(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void Load(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void LogicalShiftRight(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  [[maybe_unused]]
-  void BlockMove(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void NoOperation(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Or(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Push(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void Pull(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  [[maybe_unused]]
-  void ResetStatusBits(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void Rotate(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Return(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void Subtract(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  void Set(
-    const Instruction& instruction,
-    Pipeline* pipeline) noexcept;
-
-  [[maybe_unused]]
-  void Stop(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void Store(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  void Transfer(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  [[maybe_unused]]
-  void Test(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  [[maybe_unused]]
-  void Wait(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  [[maybe_unused]]
-  void Reserved(
-    const Instruction& instruction,
-    Pipeline* pipeline);
-
-  [[maybe_unused]]
-  void Exchange(
-    const Instruction& instruction,
-    Pipeline* pipeline);
+  Pipeline pipeline_;
 };
 
 }  // namespace detail

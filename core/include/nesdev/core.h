@@ -7,13 +7,13 @@
 #ifndef _NESDEV_CORE_H_
 #define _NESDEV_CORE_H_
 
-#include "nesdev/core/clock.h"
-#include "nesdev/core/cpu.h"
-#include "nesdev/core/exceptions.h"
-#include "nesdev/core/memory_bank.h"
-#include "nesdev/core/mmu.h"
-#include "nesdev/core/mmu_factory.h"
-#include "nesdev/core/opcodes.h"
-#include "nesdev/core/types.h"
+#include "core/clock.h"
+#include "core/cpu.h"
+#include "core/exceptions.h"
+#include "core/memory_bank.h"
+#include "core/mmu.h"
+#include "core/mmu_factory.h"
+#include "core/opcodes.h"
+#include "core/types.h"
 
 #endif  // ifndef _NESDEV_CORE_H_
