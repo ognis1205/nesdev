@@ -278,11 +278,11 @@ static const std::map<Byte, Opcode> lookup = {
   {0xFF, {Instruction::SBC, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
 };
 
-Opcode Decode(const Byte& byte) noexcept {
+Opcode Decode(Byte byte) noexcept {
   return lookup.at(byte);
 }
 
-static std::string ToString(const Instruction& instruction) noexcept {
+static std::string ToString(Instruction instruction) noexcept {
   switch (instruction) {
   case ADC: return "ADC";
   case AND: return "AND";
@@ -380,7 +380,7 @@ static std::string ToString(const Instruction& instruction) noexcept {
   }
 }
 
-static std::string ToString(const AddressingMode& addressing_mode) noexcept {
+static std::string ToString(AddressingMode addressing_mode) noexcept {
   switch (addressing_mode) {
   case ABS:  return "ABS";
   case ABX:  return "ABX";
@@ -415,7 +415,7 @@ static std::string ToString(const AddressingMode& addressing_mode) noexcept {
   }
 }
 
-std::string ToString(const Byte& byte) noexcept {
+std::string ToString(Byte byte) noexcept {
   return ToString(Decode(byte).instruction) + ", " + ToString(Decode(byte).addressing_mode);
 }
 

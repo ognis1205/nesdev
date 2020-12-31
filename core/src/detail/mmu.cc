@@ -28,17 +28,17 @@ void MMU::Set(MemoryBanks memory_banks) noexcept {
   memory_banks_ = std::move(memory_banks);
 }
 
-Byte MMU::Read(const Address& address) const {
+Byte MMU::Read(Address address) const {
   if (const MemoryBank* memory_bank = Switch(address)) return memory_bank->Read(address);
   else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
 }
 
-void MMU::Write(const Address& address, const Byte& byte) {
+void MMU::Write(Address address, Byte byte) {
   if (MemoryBank* memory_bank = Switch(address)) return memory_bank->Write(address, byte);
   else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
 }
 
-MemoryBank* MMU::Switch(const Address& address) const {
+MemoryBank* MMU::Switch(Address address) const {
   auto it = std::find_if(
     begin(memory_banks_),
     end(memory_banks_),

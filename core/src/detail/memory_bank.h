@@ -31,27 +31,27 @@ class MemoryBank final : public nesdev::core::MemoryBank {
   MemoryBank() = default;
 
   [[nodiscard]]
-  bool HasValidAddress(const Address& address) const noexcept override {
+  bool HasValidAddress(Address address) const noexcept override {
     if constexpr (From == 0) return address <= To;
     else return address >= From && address <= To;
   }
 
-  Byte Read(const Address& address) const override {
+  Byte Read(Address address) const override {
     if (HasValidAddress(address)) return *PointerTo(address);
     else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
   }
 
-  void Write(const Address& address, const Byte& byte) override {
+  void Write(Address address, Byte byte) override {
     if (HasValidAddress(address)) *PointerTo(address) = byte;
     else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  Byte* PointerTo(const Address& address) {
+  Byte* PointerTo(Address address) {
     return const_cast<Byte*>(std::as_const(*this).PointerTo(address));
   }
 
-  const Byte* PointerTo(const Address& address) const {
+  const Byte* PointerTo(Address address) const {
     return &bank_.data()[address % Range];
   }
 

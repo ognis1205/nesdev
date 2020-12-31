@@ -13,10 +13,10 @@
 
 class MockMemoryBank : public nesdev::core::MemoryBank {
  public:
-  MOCK_CONST_METHOD1(MockHasValidAddress, bool(const nesdev::core::Address&));
-  MOCK_CONST_METHOD1(Read, nesdev::core::Byte(const nesdev::core::Address&));
-  MOCK_METHOD2(Write, void(const nesdev::core::Address&, const nesdev::core::Byte&));
-  virtual bool HasValidAddress(const nesdev::core::Address& address) const noexcept {
+  MOCK_CONST_METHOD1(MockHasValidAddress, bool(nesdev::core::Address));
+  MOCK_CONST_METHOD1(Read, nesdev::core::Byte(nesdev::core::Address));
+  MOCK_METHOD2(Write, void(nesdev::core::Address, nesdev::core::Byte));
+  virtual bool HasValidAddress(nesdev::core::Address address) const noexcept {
     return MockHasValidAddress(address);
   }
 };

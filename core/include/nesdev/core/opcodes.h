@@ -166,10 +166,10 @@ struct Opcode {
 };
 
 [[nodiscard]]
-Opcode Decode(const Byte& opcode) noexcept;
+Opcode Decode(Byte opcode) noexcept;
 
 [[nodiscard]]
-std::string ToString(const Byte& opcode) noexcept;
+std::string ToString(Byte opcode) noexcept;
 
 }  // namespace core
 }  // namespace nesdev

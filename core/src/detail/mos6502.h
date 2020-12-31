@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_MOS6502_H_
 #define _NESDEV_CORE_DETAIL_MOS6502_H_
+#include <functional>
 #include "nesdev/core/cpu.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/opcodes.h"
@@ -56,9 +57,6 @@ class MOS6502 final : public CPU {
       Bitfield<6, 1, Byte> overflow;
       Bitfield<7, 1, Byte> negative;
     } p = {0x00};
-
-    const Byte kCarry = 1u << 0u;
-    const Byte kZeor = 1u << 1u;
   };
 
  public:
@@ -85,13 +83,46 @@ class MOS6502 final : public CPU {
 
     Byte Pull() const;
 
-    void Push(const Byte& byte);
+    void Push(Byte byte);
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Registers* const registers_;
 
     MMU* const mmu_;
   };
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  void Stage(const std::function<void()>& step) noexcept {
+    pipeline_.Push(step);
+  }
+
+  bool ClearWhenCompletion() noexcept {
+    if (pipeline_.Done()) {
+      pipeline_.Clear();
+      return true;
+    }
+    return false;
+  }
+
+  void Execute() {
+    pipeline_.Tick();
+  }
+
+  Byte Pull() const {
+    return stack_.Pull();
+  }
+
+  void Push(Byte byte) {
+    stack_.Push(byte);
+  }
+
+  Byte Read(Address address) const {
+    return mmu_->Read(address);
+  }
+
+  void Write(Address address, Byte byte) {
+    mmu_->Write(address, byte);
+  }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;

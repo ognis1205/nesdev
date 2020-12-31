@@ -23,12 +23,12 @@ class MMU final : public nesdev::core::MMU {
 
   void Set(MemoryBanks memory_banks) noexcept override;
 
-  Byte Read(const Address& address) const override;
+  Byte Read(Address address) const override;
 
-  void Write(const Address& address, const Byte& byte) override;
+  void Write(Address address, Byte byte) override;
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  MemoryBank* Switch(const Address& address) const;
+  MemoryBank* Switch(Address address) const;
 
   MemoryBanks memory_banks_ = {};
 };

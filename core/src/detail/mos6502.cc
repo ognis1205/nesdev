@@ -24,7 +24,7 @@ Byte MOS6502::Stack::Pull() const {
   return mmu_->Read(Stack::kOffset + ++registers_->s.value);
 }
 
-void MOS6502::Stack::Push(const Byte& byte) {
+void MOS6502::Stack::Push(Byte byte) {
   mmu_->Write(Stack::kOffset + registers_->s.value--, byte);
 }
 
@@ -34,17 +34,16 @@ MOS6502::MOS6502(MOS6502::Registers* const registers, MMU* const mmu)
 MOS6502::~MOS6502() {}
 
 void MOS6502::Tick() {
-  if (pipeline_.Done()) {
+  if (ClearWhenCompletion()) {
 //    if (nmi_) {
 //      pipeline_ = create_nmi();
 //      nmi_ = false;
 //    } else {
       //TODO: Clear all context? pipeline...
-      pipeline_.Clear();
-      Fetch();
+    Fetch();
 //    }
   } else {
-    pipeline_.Tick();
+    Execute();
   }
   //++state_.cycle;
 }
@@ -53,7 +52,7 @@ void MOS6502::Tick() {
  * SEE: https://robinli.eu/f/6502_cpu.txt
  */
 void MOS6502::Fetch() {
-  auto opcode = mmu_->Read(registers_->pc.value++);
+  auto opcode = Read(registers_->pc.value++);
   context_.opcode = Decode(opcode);
 
   // The following addressing modes are not supported on MOS6502 archetecture.
@@ -84,121 +83,67 @@ void MOS6502::Fetch() {
   // Handle instructions addressing stack.
   switch (context_.opcode->instruction) {
   case Instruction::BRK:
-    pipeline_.Push([this] {
-      registers_->p.value |= registers_->p.irq_disable.mask;
-      mmu_->Read(registers_->pc.value++);
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->pc.hi);
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->pc.lo);
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->p.value | registers_->p.brk_command.mask);
-    });
-    pipeline_.Push([this] {
-      registers_->pc.lo = mmu_->Read(MOS6502::kBRKAddress);
-    });
-    pipeline_.Push([this] {
-      registers_->pc.hi = mmu_->Read(MOS6502::kBRKAddress + 1);
-    });
+    Stage([this] { registers_->p.value |= registers_->p.irq_disable.mask;
+                   Read(registers_->pc.value++); });
+    Stage([this] { Push(registers_->pc.hi); });
+    Stage([this] { Push(registers_->pc.lo); });
+    Stage([this] { Push(registers_->p.value | registers_->p.brk_command.mask); });
+    Stage([this] { registers_->pc.lo = Read(MOS6502::kBRKAddress); });
+    Stage([this] { registers_->pc.hi = Read(MOS6502::kBRKAddress + 1); });
     return;
+
   case Instruction::RTI:
-    pipeline_.Push([this] {
-      mmu_->Read(registers_->pc.value);
-    });
-    pipeline_.Push([    ] {
-      /* Increment stack pointer. Done in Pull. */
-    });
-    pipeline_.Push([this] {
-      registers_->p.value = stack_.Pull();
-      registers_->p.value &= ~(registers_->p.brk_command.mask | registers_->p.unused.mask);
-    });
-    pipeline_.Push([this] {
-      registers_->pc.lo = stack_.Pull();
-    });
-    pipeline_.Push([this] {
-      registers_->pc.hi = stack_.Pull();
-    });
+    Stage([this] { Read(registers_->pc.value); });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { registers_->p.value = Pull();
+                   registers_->p.value &= ~(registers_->p.brk_command.mask | registers_->p.unused.mask); });
+    Stage([this] { registers_->pc.lo = Pull(); });
+    Stage([this] { registers_->pc.hi = Pull(); });
     return;
+
   case Instruction::RTS:
-    pipeline_.Push([this] {
-      mmu_->Read(registers_->pc.value);
-    });
-    pipeline_.Push([    ] {
-      /* Increment stack pointer. Done in Pull. */
-    });
-    pipeline_.Push([this] {
-      registers_->pc.lo = stack_.Pull();
-    });
-    pipeline_.Push([this] {
-      registers_->pc.hi = stack_.Pull();
-    });
-    pipeline_.Push([this] {
-      registers_->pc.value++;
-    });
+    Stage([this] { Read(registers_->pc.value); });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { registers_->pc.lo = Pull(); });
+    Stage([this] { registers_->pc.hi = Pull(); });
+    Stage([this] { registers_->pc.value++; });
     return;
+
   case Instruction::PHA:
-    pipeline_.Push([this] {
-      mmu_->Read(registers_->pc.value);
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->a.value);
-    });
+    Stage([this] { Read(registers_->pc.value); });
+    Stage([this] { Push(registers_->a.value); });
     return;
+
   case Instruction::PHP:
-    pipeline_.Push([this] {
-      mmu_->Read(registers_->pc.value);
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->p.value | registers_->p.brk_command.mask | registers_->p.unused.mask);
-      registers_->p.value &= ~(registers_->p.brk_command.mask | registers_->p.unused.mask);
-    });
+    Stage([this] { Read(registers_->pc.value); });
+    Stage([this] { Push(registers_->p.value | registers_->p.brk_command.mask | registers_->p.unused.mask);
+                   registers_->p.value &= ~(registers_->p.brk_command.mask | registers_->p.unused.mask); });
     return;
+
   case Instruction::PLA:
-    pipeline_.Push([this] {
-      mmu_->Read(registers_->pc.value);
-    });
-    pipeline_.Push([    ] {
-      /* Increment stack pointer. Done in Pull. */
-    });
-    pipeline_.Push([this] {
-      registers_->a.value = stack_.Pull();
-      if (registers_->a.value == 0x00) registers_->p.value |= registers_->p.zero.mask;
-      if (registers_->a.value & 0x80)  registers_->p.value |= registers_->p.negative.mask;
-    });
+    Stage([this] { Read(registers_->pc.value); });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { registers_->a.value = Pull();
+                   if (registers_->a.value == 0x00) registers_->p.value |= registers_->p.zero.mask;
+                   if (registers_->a.value & 0x80)  registers_->p.value |= registers_->p.negative.mask; });
     return;
+
   case Instruction::PLP:
-    pipeline_.Push([this] {
-      mmu_->Read(registers_->pc.value);
-    });
-    pipeline_.Push([    ] {
-      /* Increment stack pointer. Done in Pull. */
-    });
-    pipeline_.Push([this] {
-      registers_->p.value = stack_.Pull();
-      registers_->p.value |= registers_->p.unused.mask;
-    });
+    Stage([this] { Read(registers_->pc.value); });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { registers_->p.value = Pull();
+                   registers_->p.value |= registers_->p.unused.mask; });
     return;
+
   case Instruction::JSR:
-    pipeline_.Push([this] {
-      context_.effective_address.lo = mmu_->Read(registers_->pc.value++);
-    });
-    pipeline_.Push([    ] {
-      /* Internal operation (predecrement S?). */
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->pc.hi);
-    });
-    pipeline_.Push([this] {
-      stack_.Push(registers_->pc.lo);
-    });
-    pipeline_.Push([this] {
-      context_.effective_address.hi = mmu_->Read(registers_->pc.value);
-      registers_->pc.value = context_.effective_address.value;
-    });
+    Stage([this] { context_.effective_address.lo = Read(registers_->pc.value++); });
+    Stage([    ] { /* Internal operation (predecrement S?). */ });
+    Stage([this] { Push(registers_->pc.hi); });
+    Stage([this] { Push(registers_->pc.lo); });
+    Stage([this] { context_.effective_address.hi = Read(registers_->pc.value);
+                   registers_->pc.value = context_.effective_address.value; });
     return;
+
   default:
     break;
   }
@@ -206,14 +151,14 @@ void MOS6502::Fetch() {
 //  switch (context_.opcode->addressing_mode) {
 //  case AddressingMode::ACC:
 //  case AddressingMode::IMP:
-//    pipeline_.Push([this] { mmu_->Read(registers_->pc.value); });
+//    Stage([this] { Read(registers_->pc.value); });
 //    break;
 //  case AddressingMode::IMM:
-//    pipeline_.Push([this] { context_.effective_address.value = registers_->pc.value++; });
+//    Stage([this] { context_.effective_address.value = registers_->pc.value++; });
 //    break;
 //  case AddressingMode::ABS:
-//    pipeline_.Push([this] { context_.effective_address.lo = registers_->pc.value++; });
-//    pipeline_.Push([this] { context_.effective_address.hi = registers_->pc.value++; });
+//    Stage([this] { context_.effective_address.lo = registers_->pc.value++; });
+//    Stage([this] { context_.effective_address.hi = registers_->pc.value++; });
 //    break;
 //  default:
 //    break;
@@ -229,3 +174,4 @@ void MOS6502::NMI() noexcept {}
 }  // namespace detail
 }  // namespace core
 }  // namespace nesdev
+
