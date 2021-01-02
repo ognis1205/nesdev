@@ -169,3 +169,65 @@ TEST_F(TypesTest, Bitfield) {
   EXPECT_EQ(0b0, p_.overflow);
   EXPECT_EQ(0b0, p_.negative);
 }
+
+TEST_F(TypesTest, BitwiseAlithmetics) {
+  pc_.value <<= 1;
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+  EXPECT_FALSE(pc_.offset);
+
+  pc_.value >>= 1;
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+  EXPECT_FALSE(pc_.page);
+
+  pc_.offset = 0b10100000;
+  pc_.value <<= 1;
+  EXPECT_TRUE(pc_.page);
+  EXPECT_EQ(0b00000001, pc_.page);
+  EXPECT_EQ(0b01000000, pc_.offset);
+  EXPECT_EQ(0b0000000101000000, pc_.value);
+
+  pc_.page = 0b00000101;
+  pc_.offset = 0b00000101;
+  pc_.offset |= 0b00000010;
+  EXPECT_EQ(0b00000101, pc_.page);
+  EXPECT_EQ(0b00000111, pc_.offset);
+  EXPECT_EQ(0b0000010100000111, pc_.value);
+
+  pc_.value |= 0b1100000011000000;
+  EXPECT_EQ(0b11000101, pc_.page);
+  EXPECT_EQ(0b11000111, pc_.offset);
+  EXPECT_EQ(0b1100010111000111, pc_.value);
+
+  pc_.page = 0b00000101;
+  pc_.offset = 0b00000101;
+  pc_.offset &= 0b00000100;
+  EXPECT_EQ(0b00000101, pc_.page);
+  EXPECT_EQ(0b00000100, pc_.offset);
+  EXPECT_EQ(0b0000010100000100, pc_.value);
+
+  pc_.value &= 0b0000010100000000;
+  EXPECT_EQ(0b00000101, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000010100000000, pc_.value);
+}
+
+TEST_F(TypesTest, InDecrement) {
+  pc_.value = 0x0000;
+  EXPECT_EQ(0, pc_.value++);
+  EXPECT_EQ(1, pc_.value);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b00000001, pc_.offset);
+  EXPECT_EQ(1, pc_.value--);
+  EXPECT_EQ(0, pc_.value);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+
+  EXPECT_EQ(1, ++pc_.value);
+  EXPECT_EQ(1, pc_.value);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b00000001, pc_.offset);
+  EXPECT_EQ(0, --pc_.value);
+  EXPECT_EQ(0, pc_.value);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+}

@@ -28,8 +28,29 @@ void MOS6502::Stack::Push(Byte byte) {
   mmu_->Write(Stack::kOffset + registers_->s.value--, byte);
 }
 
+MOS6502::ALU::ALU(Registers* const registers)
+  : registers_{registers} {}
+
+Byte MOS6502::ALU::ShiftLeft(MOS6502::ALU::Operands operands, bool carry_bit) {
+  operands.bus <<= 1;
+  operands.lo |= carry_bit ? registers_->p.carry : 0x00;
+  if (operands.hi)        registers_->p.value |= registers_->p.carry.mask;
+  if (!operands.lo)       registers_->p.value |= registers_->p.zero.mask;
+  if (operands.lo & 0x80) registers_->p.value |= registers_->p.negative.mask;
+  return operands.lo;
+}
+
+Byte MOS6502::ALU::ShiftRight(MOS6502::ALU::Operands operands, bool carry_bit) {
+  operands.bus >>= 1;
+  operands.bus |= carry_bit ? registers_->p.carry << 7 : 0x00;
+  if (operands.lo & 0x80) registers_->p.value |= registers_->p.carry.mask;
+  if (!operands.hi)       registers_->p.value |= registers_->p.zero.mask;
+  if (operands.hi & 0x80) registers_->p.value |= registers_->p.negative.mask;
+  return operands.hi;
+}
+
 MOS6502::MOS6502(MOS6502::Registers* const registers, MMU* const mmu)
-  : registers_{registers}, mmu_{mmu}, stack_{registers, mmu} {}
+  : registers_{registers}, mmu_{mmu}, stack_{registers, mmu}, alu_{registers} {}
 
 MOS6502::~MOS6502() {}
 
@@ -124,7 +145,7 @@ void MOS6502::Fetch() {
     Stage([this] { Read(registers_->pc.value); });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
     Stage([this] { registers_->a.value = Pull();
-                   if (registers_->a.value == 0x00) registers_->p.value |= registers_->p.zero.mask;
+                   if (!registers_->a.value)        registers_->p.value |= registers_->p.zero.mask;
                    if (registers_->a.value & 0x80)  registers_->p.value |= registers_->p.negative.mask; });
     return;
 
@@ -136,33 +157,53 @@ void MOS6502::Fetch() {
     return;
 
   case Instruction::JSR:
-    Stage([this] { context_.effective_address.lo = Read(registers_->pc.value++); });
+    Stage([this] { context_.address.lo = Read(registers_->pc.value++); });
     Stage([    ] { /* Internal operation (predecrement S?). */ });
     Stage([this] { Push(registers_->pc.hi); });
     Stage([this] { Push(registers_->pc.lo); });
-    Stage([this] { context_.effective_address.hi = Read(registers_->pc.value);
-                   registers_->pc.value = context_.effective_address.value; });
+    Stage([this] { context_.address.hi = Read(registers_->pc.value);
+                   registers_->pc.value = context_.address.effective; });
     return;
 
   default:
     break;
   }
 
-//  switch (context_.opcode->addressing_mode) {
-//  case AddressingMode::ACC:
-//  case AddressingMode::IMP:
-//    Stage([this] { Read(registers_->pc.value); });
-//    break;
-//  case AddressingMode::IMM:
-//    Stage([this] { context_.effective_address.value = registers_->pc.value++; });
-//    break;
-//  case AddressingMode::ABS:
-//    Stage([this] { context_.effective_address.lo = registers_->pc.value++; });
-//    Stage([this] { context_.effective_address.hi = registers_->pc.value++; });
-//    break;
-//  default:
-//    break;
-//  }
+  // Handle Accumulator or implied addressing mode.
+  switch (context_.opcode->addressing_mode) {
+  case AddressingMode::ACC:
+  case AddressingMode::IMP:
+    Stage(&MOS6502::ACC, context_.opcode->instruction, context_.opcode->memory_access, opcode);
+    return;
+
+  case AddressingMode::IMM:
+    Stage(&MOS6502::ACC, context_.opcode->instruction, context_.opcode->memory_access, opcode);
+    return;
+
+  default:
+    break;
+  }
+}
+
+Pipeline MOS6502::ACC(Instruction instruction, MemoryAccess memory_access, const Byte& opcode) {
+  Pipeline pipeline;
+  switch (instruction) {
+  case Instruction::ASL:
+    pipeline.Push([this] { registers_->a.value = ShiftLeft(registers_->a.value, false); });
+    break;
+  case Instruction::ROL:
+    pipeline.Push([this] { registers_->a.value = ShiftLeft(registers_->a.value, true); });
+    break;
+  case Instruction::LSR:
+    break;
+  case Instruction::ROR:
+    break;
+  default:
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+  }
+
+  static_cast<void>(memory_access);
+  return pipeline;
 }
 
 void MOS6502::Reset() noexcept {}

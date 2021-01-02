@@ -91,9 +91,36 @@ class MOS6502 final : public CPU {
     MMU* const mmu_;
   };
 
+  class ALU {
+   public:
+    union Operands {
+      ALUBus bus;
+      Bitfield<0, 8, ALUBus> b;
+      Bitfield<8, 8, ALUBus> a;
+      Bitfield<0, 8, ALUBus> lo;
+      Bitfield<8, 8, ALUBus> hi;
+    };
+
+    ALU(Registers* const registers);
+
+    Byte ShiftLeft(Operands operands, bool carry_bit);
+
+    Byte ShiftRight(Operands operands, bool carry_bit);
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    Registers* const registers_;
+  };
+
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   void Stage(const std::function<void()>& step) noexcept {
     pipeline_.Push(step);
+  }
+
+  void Stage(Pipeline(MOS6502::*addressing_mode)(Instruction, MemoryAccess, const Byte&),
+	     Instruction instruction,
+	     MemoryAccess memory_access,
+	     const Byte& opcode) {
+    pipeline_.Append(std::forward<Pipeline>((this->*addressing_mode)(instruction, memory_access, opcode)));
   }
 
   bool ClearWhenCompletion() noexcept {
@@ -108,14 +135,6 @@ class MOS6502 final : public CPU {
     pipeline_.Tick();
   }
 
-  Byte Pull() const {
-    return stack_.Pull();
-  }
-
-  void Push(Byte byte) {
-    stack_.Push(byte);
-  }
-
   Byte Read(Address address) const {
     return mmu_->Read(address);
   }
@@ -124,12 +143,38 @@ class MOS6502 final : public CPU {
     mmu_->Write(address, byte);
   }
 
+  Byte Pull() const {
+    return stack_.Pull();
+  }
+
+  void Push(Byte byte) {
+    stack_.Push(byte);
+  }
+
+  Byte ShiftLeft(Byte operand, bool carry_bit) {
+    ALU::Operands operands;
+    operands.lo = operand;
+    return alu_.ShiftLeft(operands, carry_bit);
+  }
+
+  Byte ShiftRight(Byte operand, bool carry_bit) {
+    ALU::Operands operands;
+    operands.hi = operand;
+    return alu_.ShiftRight(operands, carry_bit);
+  }
+
+  Pipeline ACC(Instruction instruction, MemoryAccess memory_access, const Byte& opcode);
+
+  Pipeline IMP(Instruction instruction, MemoryAccess memory_access, const Byte& opcode);
+
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;
 
   MMU* const mmu_;
 
   Stack stack_;
+
+  ALU alu_;
 
   Pipeline pipeline_;
 };

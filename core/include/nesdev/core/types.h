@@ -12,9 +12,11 @@
 namespace nesdev {
 namespace core {
 
-using Byte = std::uint_least8_t;
+using Byte    = std::uint_least8_t;
 
 using Address = std::uint_least16_t;
+
+using ALUBus  = std::uint_least16_t;
 
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
 struct Bitfield {
@@ -24,6 +26,22 @@ struct Bitfield {
   Bitfield& operator=(U that) {
     value_ = (value_ & ~(mask << BitNo)) |
             ((Width > 1 ? that & mask : !!that) << BitNo);
+    return *this;
+  }
+
+  template <typename U>
+  Bitfield& operator|=(U that) {
+    unsigned value = *this;
+    value_ = (value_ & ~(mask << BitNo)) |
+            ((Width > 1 ? (value | (that & mask)) : (value | !!that)) << BitNo);
+    return *this;
+  }
+
+  template <typename U>
+  Bitfield& operator&=(U that) {
+    unsigned value = *this;
+    value_ = (value_ & ~(mask << BitNo)) |
+            ((Width > 1 ? (value & (that & mask)) : (value & !!that)) << BitNo);
     return *this;
   }
 

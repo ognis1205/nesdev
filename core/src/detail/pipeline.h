@@ -26,7 +26,7 @@ class Pipeline final {
 
   void Push(const Step& step) noexcept;
 
-  void Stage(Pipeline& other) noexcept;
+  void Append(const Pipeline& other) noexcept;
 
   bool Done() const noexcept;
 

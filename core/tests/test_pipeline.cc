@@ -41,10 +41,10 @@ TEST_F(PipelineTest, Push) {
   EXPECT_FALSE(pipeline1_.Done());
 }
 
-TEST_F(PipelineTest, Stage) {
+TEST_F(PipelineTest, Append) {
   EXPECT_TRUE(pipeline1_.Done());
   pipeline2_.Push(step1_);
-  pipeline1_.Stage(pipeline2_);
+  pipeline1_.Append(pipeline2_);
   EXPECT_FALSE(pipeline1_.Done());
 }
 

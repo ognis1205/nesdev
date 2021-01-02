@@ -24,7 +24,7 @@ void Pipeline::Push(const Step& step) noexcept {
   steps_.push_back(std::move(step));
 }
 
-void Pipeline::Stage(Pipeline& other) noexcept {
+void Pipeline::Append(const Pipeline& other) noexcept {
   std::copy(other.steps_.begin(), other.steps_.end(), std::back_inserter(steps_));
 }
 

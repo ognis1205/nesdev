@@ -38,10 +38,10 @@ class CPU : public Clock {
     Address program_counter = {0x0000};
 
     union {
-      Address value;
+      Address effective;
       Bitfield<0, 8, Address> lo;
       Bitfield<8, 8, Address> hi;
-    } effective_address = {0x0000};
+    } address {0x0000};
   };
 
  protected:
