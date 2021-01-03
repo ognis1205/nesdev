@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_MOS6502_H_
 #define _NESDEV_CORE_DETAIL_MOS6502_H_
+#include <cstdint>
 #include <functional>
 #include "nesdev/core/cpu.h"
 #include "nesdev/core/mmu.h"
@@ -93,19 +94,17 @@ class MOS6502 final : public CPU {
 
   class ALU {
    public:
-    union Operands {
-      ALUBus bus;
-      Bitfield<0, 8, ALUBus> b;
-      Bitfield<8, 8, ALUBus> a;
-      Bitfield<0, 8, ALUBus> lo;
-      Bitfield<8, 8, ALUBus> hi;
+    union Bus {
+      std::uint_least16_t concat;
+      Bitfield<0, 8, std::uint_least16_t> b;
+      Bitfield<8, 8, std::uint_least16_t> a;
     };
 
     ALU(Registers* const registers);
 
-    Byte ShiftLeft(Operands operands, bool carry_bit);
+    Byte ShiftL(Bus bus, bool rotate_carry);
 
-    Byte ShiftRight(Operands operands, bool carry_bit);
+    Byte ShiftR(Bus bus, bool rotate_carry);
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Registers* const registers_;
@@ -151,21 +150,21 @@ class MOS6502 final : public CPU {
     stack_.Push(byte);
   }
 
-  Byte ShiftLeft(Byte operand, bool carry_bit) {
-    ALU::Operands operands;
-    operands.lo = operand;
-    return alu_.ShiftLeft(operands, carry_bit);
+  Byte ShiftL(Byte operand, bool carry_bit) {
+    ALU::Bus bus;
+    bus.b = operand;
+    return alu_.ShiftL(bus, carry_bit);
   }
 
-  Byte ShiftRight(Byte operand, bool carry_bit) {
-    ALU::Operands operands;
-    operands.hi = operand;
-    return alu_.ShiftRight(operands, carry_bit);
+  Byte ShiftR(Byte operand, bool carry_bit) {
+    ALU::Bus bus;
+    bus.a = operand;
+    return alu_.ShiftR(bus, carry_bit);
   }
 
-  Pipeline ACC(Instruction instruction, MemoryAccess memory_access, const Byte& opcode);
+  Pipeline ACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
-  Pipeline IMP(Instruction instruction, MemoryAccess memory_access, const Byte& opcode);
+  Pipeline IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;

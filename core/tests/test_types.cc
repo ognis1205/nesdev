@@ -40,7 +40,7 @@ class TypesTest : public testing::Test {
   } p_ = {0x00};
 };
 
-TEST_F(TypesTest, Bitfield) {
+TEST_F(TypesTest, Assignment) {
   EXPECT_EQ(0x0000, pc_.value);
   EXPECT_EQ(0x00, pc_.offset);
   EXPECT_EQ(0x00, pc_.page);
@@ -148,6 +148,117 @@ TEST_F(TypesTest, Bitfield) {
   EXPECT_EQ(0b0, p_.negative);
 
   p_.negative = true;
+  EXPECT_EQ(0b11111111, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b1, p_.irq_disable);
+  EXPECT_EQ(0b1, p_.decimal_mode);
+  EXPECT_EQ(0b1, p_.brk_command);
+  EXPECT_EQ(0b1, p_.unused);
+  EXPECT_EQ(0b1, p_.overflow);
+  EXPECT_EQ(0b1, p_.negative);
+
+  p_.value = false;
+  EXPECT_EQ(0b00000000, p_.value);
+  EXPECT_EQ(0b0, p_.carry);
+  EXPECT_EQ(0b0, p_.zero);
+  EXPECT_EQ(0b0, p_.irq_disable);
+  EXPECT_EQ(0b0, p_.decimal_mode);
+  EXPECT_EQ(0b0, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+}
+
+TEST_F(TypesTest, Mask) {
+  EXPECT_EQ(0b00000000, p_.value);
+  EXPECT_EQ(0b0, p_.carry);
+  EXPECT_EQ(0b0, p_.zero);
+  EXPECT_EQ(0b0, p_.irq_disable);
+  EXPECT_EQ(0b0, p_.decimal_mode);
+  EXPECT_EQ(0b0, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.carry.mask;
+  EXPECT_EQ(0b00000001, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b0, p_.zero);
+  EXPECT_EQ(0b0, p_.irq_disable);
+  EXPECT_EQ(0b0, p_.decimal_mode);
+  EXPECT_EQ(0b0, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.zero.mask;
+  EXPECT_EQ(0b00000011, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b0, p_.irq_disable);
+  EXPECT_EQ(0b0, p_.decimal_mode);
+  EXPECT_EQ(0b0, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.irq_disable.mask;
+  EXPECT_EQ(0b00000111, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b1, p_.irq_disable);
+  EXPECT_EQ(0b0, p_.decimal_mode);
+  EXPECT_EQ(0b0, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.decimal_mode.mask;
+  EXPECT_EQ(0b00001111, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b1, p_.irq_disable);
+  EXPECT_EQ(0b1, p_.decimal_mode);
+  EXPECT_EQ(0b0, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.brk_command.mask;
+  EXPECT_EQ(0b00011111, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b1, p_.irq_disable);
+  EXPECT_EQ(0b1, p_.decimal_mode);
+  EXPECT_EQ(0b1, p_.brk_command);
+  EXPECT_EQ(0b0, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.unused.mask;
+  EXPECT_EQ(0b00111111, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b1, p_.irq_disable);
+  EXPECT_EQ(0b1, p_.decimal_mode);
+  EXPECT_EQ(0b1, p_.brk_command);
+  EXPECT_EQ(0b1, p_.unused);
+  EXPECT_EQ(0b0, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.overflow.mask;
+  EXPECT_EQ(0b01111111, p_.value);
+  EXPECT_EQ(0b1, p_.carry);
+  EXPECT_EQ(0b1, p_.zero);
+  EXPECT_EQ(0b1, p_.irq_disable);
+  EXPECT_EQ(0b1, p_.decimal_mode);
+  EXPECT_EQ(0b1, p_.brk_command);
+  EXPECT_EQ(0b1, p_.unused);
+  EXPECT_EQ(0b1, p_.overflow);
+  EXPECT_EQ(0b0, p_.negative);
+
+  p_.value |= p_.negative.mask;
   EXPECT_EQ(0b11111111, p_.value);
   EXPECT_EQ(0b1, p_.carry);
   EXPECT_EQ(0b1, p_.zero);
