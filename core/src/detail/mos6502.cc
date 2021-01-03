@@ -124,7 +124,7 @@ void MOS6502::Fetch() {
     Stage(&MOS6502::IMP, context_.opcode->instruction, context_.opcode->memory_access, opcode);
     return;
   case AddressingMode::IMM:
-    Stage(&MOS6502::ACC, context_.opcode->instruction, context_.opcode->memory_access, opcode);
+    Stage(&MOS6502::IMM, context_.opcode->instruction, context_.opcode->memory_access, opcode);
     return;
   default:
     break;
@@ -273,6 +273,29 @@ Pipeline MOS6502::IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     break;
   case Instruction::SED:
     pipeline.Push([this] { registers_->p.value |= registers_->p.decimal_mode.mask; });
+    break;
+  default:
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+  }
+
+  return pipeline;
+}
+
+Pipeline MOS6502::IMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode) {
+  Pipeline pipeline;
+
+  switch (instruction) {
+  case Instruction::ASL:
+    pipeline.Push([this] { registers_->a.value = ShiftL(registers_->a.value, false); });
+    break;
+  case Instruction::ROL:
+    pipeline.Push([this] { registers_->a.value = ShiftL(registers_->a.value, true); });
+    break;
+  case Instruction::LSR:
+    pipeline.Push([this] { registers_->a.value = ShiftR(registers_->a.value, false); });
+    break;
+  case Instruction::ROR:
+    pipeline.Push([this] { registers_->a.value = ShiftR(registers_->a.value, true); });
     break;
   default:
     NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));

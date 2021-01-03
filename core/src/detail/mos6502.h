@@ -23,6 +23,10 @@ class MOS6502 final : public CPU {
  public:
   static const Address kBRKAddress = {0xFFFE};
 
+  static const Address kResetAddress = 0xFFFC;
+
+  static const Address kNMIAddress = 0xFFFA;
+
   struct Registers {
     // Accumulator
     union {
@@ -79,6 +83,8 @@ class MOS6502 final : public CPU {
   class Stack {
    public:
     static const Address kOffset = {0x0100};
+
+    static const Byte kHead = 0xFD;
 
     Stack(Registers* const registers, MMU* const mmu);
 
@@ -165,6 +171,8 @@ class MOS6502 final : public CPU {
   Pipeline ACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
   Pipeline IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+
+  Pipeline IMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;
