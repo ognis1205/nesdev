@@ -33,9 +33,11 @@ class CPU : public Clock {
   struct Context {
     size_t cycle = 0;
 
-    std::optional<Opcode> opcode;
+    Byte opcode_byte;
 
     Address program_counter = {0x0000};
+
+    std::optional<Opcode> opcode;    
 
     union {
       Address effective;
@@ -43,6 +45,38 @@ class CPU : public Clock {
       Bitfield<8, 8, Address> hi;
     } address {0x0000};
   };
+
+  Byte GetOpcode() const noexcept {
+    return context_.opcode_byte;
+  }
+
+  Instruction GetInstruction() const noexcept {
+    return context_.opcode->instruction;
+  }
+
+  AddressingMode GetAddressingMode() const noexcept {
+    return context_.opcode->addressing_mode;
+  }
+
+  MemoryAccess GetMemoryAccess() const noexcept {
+    return context_.opcode->memory_access;
+  }
+
+  Address GetAddress() const noexcept {
+    return context_.address.effective;
+  }
+
+  void SetAddress(Address address) noexcept {
+    context_.address.effective = address;
+  }
+
+  void SetAddressLo(Byte lo) noexcept {
+    context_.address.lo = lo;
+  }
+
+  void SetAddressHi(Byte hi) noexcept {
+    context_.address.hi = hi;
+  }
 
  protected:
   Context context_;
