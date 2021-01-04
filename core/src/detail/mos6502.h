@@ -218,13 +218,6 @@ class MOS6502 final : public CPU {
     pipeline_.Push(step);
   }
 
-  void Stage(Pipeline(MOS6502::*addressing_mode)(Instruction, MemoryAccess, const Byte&),
-	     Instruction instruction,
-	     MemoryAccess memory_access,
-	     const Byte& opcode) {
-    pipeline_.Append(std::forward<Pipeline>((this->*addressing_mode)(instruction, memory_access, opcode)));
-  }
-
   bool ClearWhenCompleted() noexcept {
     if (pipeline_.Done()) {
       pipeline_.Clear();
@@ -297,11 +290,11 @@ class MOS6502 final : public CPU {
     return alu_.Cmp(ALU::Load(a, b));
   }
 
-  Pipeline ACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+  void WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
-  Pipeline IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+  void WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
-  Pipeline IMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+  void WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;
