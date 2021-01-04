@@ -17,45 +17,13 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-MOS6502::Stack::Stack(Registers* const registers, MMU* const mmu)
-  : registers_{registers}, mmu_{mmu} {}
-
-Byte MOS6502::Stack::Pull() const {
-  return mmu_->Read(Stack::kOffset + ++registers_->s.value);
-}
-
-void MOS6502::Stack::Push(Byte byte) {
-  mmu_->Write(Stack::kOffset + registers_->s.value--, byte);
-}
-
-MOS6502::ALU::ALU(Registers* const registers)
-  : registers_{registers} {}
-
-Byte MOS6502::ALU::ShiftL(MOS6502::ALU::Bus bus, bool rotate_carry) {
-  bus.concat <<= 1;
-  bus.b |= rotate_carry ? registers_->p.carry : 0x00;
-  registers_->p.carry    = bus.a & 0x01;
-  registers_->p.zero     = bus.b == 0x00;
-  registers_->p.negative = bus.b & 0x80;
-  return bus.b;
-}
-
-Byte MOS6502::ALU::ShiftR(MOS6502::ALU::Bus bus, bool rotate_carry) {
-  bus.concat >>= 1;
-  bus.a |= rotate_carry ? registers_->p.carry << 7 : 0x00;
-  registers_->p.carry    = bus.b & 0x80;
-  registers_->p.zero     = bus.a == 0x00;
-  registers_->p.negative = bus.a & 0x80;
-  return bus.a;
-}
-
 MOS6502::MOS6502(MOS6502::Registers* const registers, MMU* const mmu)
   : registers_{registers}, mmu_{mmu}, stack_{registers, mmu}, alu_{registers} {}
 
 MOS6502::~MOS6502() {}
 
 void MOS6502::Tick() {
-  if (ClearWhenCompletion()) {
+  if (ClearWhenCompleted()) {
 //    if (nmi_) {
 //      pipeline_ = create_nmi();
 //      nmi_ = false;
@@ -159,12 +127,13 @@ Pipeline MOS6502::IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
 
   switch (instruction) {
   case Instruction::BRK:
-    pipeline.Push([this] { registers_->p.value |= registers_->p.irq_disable.mask; Read(registers_->pc.value++); });
+    pipeline.Push([this] { registers_->p.value |= registers_->p.irq_disable.mask;
+                           Read(registers_->pc.value++); });
     pipeline.Push([this] { Push(registers_->pc.hi); });
     pipeline.Push([this] { Push(registers_->pc.lo); });
     pipeline.Push([this] { Push(registers_->p.value | registers_->p.brk_command.mask); });
-    pipeline.Push([this] { registers_->pc.lo = Read(MOS6502::kBRKAddress); });
-    pipeline.Push([this] { registers_->pc.hi = Read(MOS6502::kBRKAddress + 1); });
+    pipeline.Push([this] { registers_->pc.lo = PassThrough(Read(MOS6502::kBRKAddress), false); });
+    pipeline.Push([this] { registers_->pc.hi = PassThrough(Read(MOS6502::kBRKAddress + 1), false); });
     break;
   case Instruction::PHP:
     pipeline.Push([this] { Read(registers_->pc.value); });
@@ -177,7 +146,7 @@ Pipeline MOS6502::IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   case Instruction::PLP:
     pipeline.Push([this] { Read(registers_->pc.value); });
     pipeline.Push([    ] { /* Increment stack pointer. Done in Pull. */ });
-    pipeline.Push([this] { registers_->p.value = Pull();
+    pipeline.Push([this] { registers_->p.value = PassThrough(Pull(), false);
                            registers_->p.value |= registers_->p.unused.mask; });
     break;
   case Instruction::SEC:
@@ -186,10 +155,10 @@ Pipeline MOS6502::IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   case Instruction::RTI:
     pipeline.Push([this] { Read(registers_->pc.value); });
     pipeline.Push([    ] { /* Increment stack pointer. Done in Pull. */ });
-    pipeline.Push([this] { registers_->p.value = Pull();
+    pipeline.Push([this] { registers_->p.value = PassThrough(Pull(), false);
                            registers_->p.value &= ~(registers_->p.brk_command.mask | registers_->p.unused.mask); });
-    pipeline.Push([this] { registers_->pc.lo = Pull(); });
-    pipeline.Push([this] { registers_->pc.hi = Pull(); });
+    pipeline.Push([this] { registers_->pc.lo = PassThrough(Pull(), false); });
+    pipeline.Push([this] { registers_->pc.hi = PassThrough(Pull(), false); });
     break;
   case Instruction::PHA:
     pipeline.Push([this] { Read(registers_->pc.value); });
@@ -201,75 +170,55 @@ Pipeline MOS6502::IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   case Instruction::RTS:
     pipeline.Push([this] { Read(registers_->pc.value); });
     pipeline.Push([    ] { /* Increment stack pointer. Done in Pull. */ });
-    pipeline.Push([this] { registers_->pc.lo = Pull(); });
-    pipeline.Push([this] { registers_->pc.hi = Pull(); });
+    pipeline.Push([this] { registers_->pc.lo = PassThrough(Pull(), false); });
+    pipeline.Push([this] { registers_->pc.hi = PassThrough(Pull(), false); });
     pipeline.Push([this] { registers_->pc.value++; });
     break;
   case Instruction::PLA:
     pipeline.Push([    ] { /* Increment stack pointer. Done in Pull. */ });
-    pipeline.Push([this] { registers_->a.value = Pull();
-                           registers_->p.zero     = registers_->a.value == 0x00;
-                           registers_->p.negative = registers_->a.value & 0x80; });
+    pipeline.Push([this] { registers_->a.value = PassThrough(Pull(), true); });
     break;
   case Instruction::SEI:
     pipeline.Push([this] { registers_->p.value |= registers_->p.irq_disable.mask; });
     break;
   case Instruction::DEY:
-    pipeline.Push([this] { --registers_->y.value;
-                           registers_->p.zero     = registers_->y.value == 0x00;
-                           registers_->p.negative = registers_->y.value & 0x80; });
+    pipeline.Push([this] { registers_->y.value = Decrement(registers_->y.value); });
     break;
   case Instruction::TXA:
-    pipeline.Push([this] { registers_->a.value = registers_->x.value;
-                           registers_->p.zero     = registers_->a.value == 0x00;
-                           registers_->p.negative = registers_->a.value & 0x80; });
+    pipeline.Push([this] { registers_->a.value = PassThrough(registers_->x.value, true); });
     break;
   case Instruction::TYA:
-    pipeline.Push([this] { registers_->a.value = registers_->y.value;
-                           registers_->p.zero     = registers_->a.value == 0x00;
-                           registers_->p.negative = registers_->a.value & 0x80; });
+    pipeline.Push([this] { registers_->a.value = PassThrough(registers_->y.value, true); });
     break;
   case Instruction::TXS:
-    pipeline.Push([this] { registers_->s.value = registers_->x.value; });
+    pipeline.Push([this] { registers_->s.value = PassThrough(registers_->x.value, false); });
     break;
   case Instruction::TAY:
-    pipeline.Push([this] { registers_->y.value = registers_->a.value;
-                           registers_->p.zero     = registers_->y.value == 0x00;
-                           registers_->p.negative = registers_->y.value & 0x80; });
+    pipeline.Push([this] { registers_->y.value = PassThrough(registers_->a.value, true); });
     break;
   case Instruction::TAX:
-    pipeline.Push([this] { registers_->x.value = registers_->a.value;
-                           registers_->p.zero     = registers_->x.value == 0x00;
-                           registers_->p.negative = registers_->x.value & 0x80; });
+    pipeline.Push([this] { registers_->x.value = PassThrough(registers_->a.value, true); });
     break;
   case Instruction::CLV:
     pipeline.Push([this] { registers_->p.value &= ~registers_->p.overflow.mask; });
     break;
   case Instruction::TSX:
-    pipeline.Push([this] { registers_->x.value = registers_->s.value;
-                           registers_->p.zero     = registers_->x.value == 0x00;
-                           registers_->p.negative = registers_->x.value & 0x80; });
+    pipeline.Push([this] { registers_->x.value = PassThrough(registers_->s.value, true); });
     break;
   case Instruction::INY:
-    pipeline.Push([this] { ++registers_->y.value;
-                           registers_->p.zero     = registers_->y.value == 0x00;
-                           registers_->p.negative = registers_->y.value & 0x80; });
+    pipeline.Push([this] { registers_->y.value = Increment(registers_->y.value); });
     break;
   case Instruction::DEX:
-    pipeline.Push([this] { --registers_->x.value;
-                           registers_->p.zero     = registers_->x.value == 0x00;
-                           registers_->p.negative = registers_->x.value & 0x80; });
+    pipeline.Push([this] { registers_->x.value = Decrement(registers_->x.value); });
     break;
   case Instruction::CLD:
     pipeline.Push([this] { registers_->p.value &= ~registers_->p.decimal_mode.mask; });
     break;
   case Instruction::INX:
-    pipeline.Push([this] { ++registers_->x.value;
-                           registers_->p.zero     = registers_->x.value == 0x00;
-                           registers_->p.negative = registers_->x.value & 0x80; });
+    pipeline.Push([this] { registers_->x.value = Increment(registers_->x.value); });
     break;
   case Instruction::NOP:
-    Stage([    ] { /* Do nothing. */ });
+    pipeline.Push([    ] { /* Do nothing. */ });
     break;
   case Instruction::SED:
     pipeline.Push([this] { registers_->p.value |= registers_->p.decimal_mode.mask; });
@@ -284,18 +233,41 @@ Pipeline MOS6502::IMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
 Pipeline MOS6502::IMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode) {
   Pipeline pipeline;
 
+  context_.address.effective = registers_->pc.value++;
+
   switch (instruction) {
-  case Instruction::ASL:
-    pipeline.Push([this] { registers_->a.value = ShiftL(registers_->a.value, false); });
+  case Instruction::ORA:
+    pipeline.Push([this] { registers_->a.value = Or(registers_->a.value, Read(context_.address.effective)); });
     break;
-  case Instruction::ROL:
-    pipeline.Push([this] { registers_->a.value = ShiftL(registers_->a.value, true); });
+  case Instruction::AND:
+    pipeline.Push([this] { registers_->a.value = And(registers_->a.value, Read(context_.address.effective)); });
     break;
-  case Instruction::LSR:
-    pipeline.Push([this] { registers_->a.value = ShiftR(registers_->a.value, false); });
+  case Instruction::EOR:
+    pipeline.Push([this] { registers_->a.value = Xor(registers_->a.value, Read(context_.address.effective)); });
     break;
-  case Instruction::ROR:
-    pipeline.Push([this] { registers_->a.value = ShiftR(registers_->a.value, true); });
+  case Instruction::ADC:
+    pipeline.Push([this] { registers_->a.value = Add(registers_->a.value, Read(context_.address.effective)); });
+    break;
+  case Instruction::LDY:
+    pipeline.Push([this] { registers_->y.value = PassThrough(Read(context_.address.effective), true); });
+    break;
+  case Instruction::LDX:
+    pipeline.Push([this] { registers_->x.value = PassThrough(Read(context_.address.effective), true); });
+    break;
+  case Instruction::LDA:
+    pipeline.Push([this] { registers_->a.value = PassThrough(Read(context_.address.effective), true); });
+    break;
+  case Instruction::CPY:
+    pipeline.Push([this] { Cmp(registers_->y.value, Read(context_.address.effective)); });
+    break;
+  case Instruction::CMP:
+    pipeline.Push([this] { Cmp(registers_->a.value, Read(context_.address.effective)); });
+    break;
+  case Instruction::CPX:
+    pipeline.Push([this] { Cmp(registers_->x.value, Read(context_.address.effective)); });
+    break;
+  case Instruction::SBC:
+    pipeline.Push([this] { registers_->a.value = Sub(registers_->a.value, Read(context_.address.effective)); });
     break;
   default:
     NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));

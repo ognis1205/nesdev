@@ -23,9 +23,9 @@ class MOS6502 final : public CPU {
  public:
   static const Address kBRKAddress = {0xFFFE};
 
-  static const Address kResetAddress = 0xFFFC;
+  static const Address kRSTAddress = {0xFFFC};
 
-  static const Address kNMIAddress = 0xFFFA;
+  static const Address kNMIAddress = {0xFFFA};
 
   struct Registers {
     // Accumulator
@@ -86,11 +86,16 @@ class MOS6502 final : public CPU {
 
     static const Byte kHead = 0xFD;
 
-    Stack(Registers* const registers, MMU* const mmu);
+    Stack(Registers* const registers, MMU* const mmu)
+      : registers_{registers}, mmu_{mmu} {}
 
-    Byte Pull() const;
+    Byte Pull() const {
+      return mmu_->Read(Stack::kOffset + ++registers_->s.value);
+    }
 
-    void Push(Byte byte);
+    void Push(Byte byte) {
+      mmu_->Write(Stack::kOffset + registers_->s.value--, byte);
+    }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Registers* const registers_;
@@ -101,16 +106,108 @@ class MOS6502 final : public CPU {
   class ALU {
    public:
     union Bus {
-      std::uint_least16_t concat;
-      Bitfield<0, 8, std::uint_least16_t> b;
-      Bitfield<8, 8, std::uint_least16_t> a;
+      Word concat;
+      Bitfield<0, 8, Word> b;
+      Bitfield<8, 8, Word> a;
     };
 
-    ALU(Registers* const registers);
+    static Bus Load(Byte a, Byte b) {
+      return {(Word)(a << 8 | b)};
+    };
 
-    Byte ShiftL(Bus bus, bool rotate_carry);
+    ALU(Registers* const registers)
+      : registers_{registers} {}
 
-    Byte ShiftR(Bus bus, bool rotate_carry);
+    Byte ShiftL(Bus bus, bool rotate_carry) {
+      bus.concat <<= 1;
+      bus.b |= rotate_carry ? registers_->p.carry : 0x00;
+      registers_->p.carry    = bus.a  & 0x01;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte ShiftR(Bus bus, bool rotate_carry) {
+      bus.concat >>= 1;
+      bus.a |= rotate_carry ? registers_->p.carry << 7 : 0x00;
+      registers_->p.carry    = bus.b  & 0x80;
+      registers_->p.zero     = bus.a == 0x00;
+      registers_->p.negative = bus.a  & 0x80;
+      return bus.a;
+    }
+
+    Byte Increment(Bus bus) {
+      ++bus.b;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte Decrement(Bus bus) {
+      --bus.b;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte PassThrough(Bus bus, bool check_zero_or_negative) {
+      if (check_zero_or_negative) {
+	registers_->p.zero     = bus.b == 0x00;
+	registers_->p.negative = bus.b  & 0x80;
+      }
+      return bus.b;
+    }
+
+    Byte Or(Bus bus) {
+      bus.b |= bus.a;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte And(Bus bus) {
+      bus.b &= bus.a;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte Xor(Bus bus) {
+      bus.b ^= bus.a;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte Add(Bus bus) {
+      bus.concat = CheckOverflow(bus.a, bus.b, bus.a + bus.b + registers_->p.carry);
+      registers_->p.carry    = bus.a  & 0x01;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    Byte Sub(Bus bus) {
+      bus.concat = CheckOverflow(bus.a, ~bus.b, bus.a + ~bus.b + registers_->p.carry);
+      registers_->p.carry    = bus.a  & 0x01;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+      return bus.b;
+    }
+
+    void Cmp(Bus bus) {
+      registers_->p.carry    = bus.a >= bus.b;
+      bus.concat = bus.a - bus.b;
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    // [SEE] http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+    Word CheckOverflow(Byte a, Byte b, Word r) {
+      registers_->p.overflow = (a ^ r) & (b ^ r) & 0x80;
+      return r;
+    };
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Registers* const registers_;
@@ -128,7 +225,7 @@ class MOS6502 final : public CPU {
     pipeline_.Append(std::forward<Pipeline>((this->*addressing_mode)(instruction, memory_access, opcode)));
   }
 
-  bool ClearWhenCompletion() noexcept {
+  bool ClearWhenCompleted() noexcept {
     if (pipeline_.Done()) {
       pipeline_.Clear();
       return true;
@@ -156,16 +253,48 @@ class MOS6502 final : public CPU {
     stack_.Push(byte);
   }
 
-  Byte ShiftL(Byte operand, bool carry_bit) {
-    ALU::Bus bus;
-    bus.b = operand;
-    return alu_.ShiftL(bus, carry_bit);
+  Byte ShiftL(Byte b, bool rotate_carry) {
+    return alu_.ShiftL(ALU::Load(0x00, b), rotate_carry);
   }
 
-  Byte ShiftR(Byte operand, bool carry_bit) {
-    ALU::Bus bus;
-    bus.a = operand;
-    return alu_.ShiftR(bus, carry_bit);
+  Byte ShiftR(Byte a, bool rotate_carry) {
+    return alu_.ShiftR(ALU::Load(a, 0x00), rotate_carry);
+  }
+
+  Byte Increment(Byte b) {
+    return alu_.Increment(ALU::Load(0x00, b));
+  }
+
+  Byte Decrement(Byte b) {
+    return alu_.Decrement(ALU::Load(0x00, b));
+  }
+
+  Byte PassThrough(Byte b, bool check_zero_or_negative) {
+    return alu_.PassThrough(ALU::Load(0x00, b), check_zero_or_negative);
+  }
+
+  Byte Or(Byte a, Byte b) {
+    return alu_.Or(ALU::Load(a, b));
+  }
+
+  Byte And(Byte a, Byte b) {
+    return alu_.And(ALU::Load(a, b));
+  }
+
+  Byte Xor(Byte a, Byte b) {
+    return alu_.Xor(ALU::Load(a, b));
+  }
+
+  Byte Add(Byte a, Byte b) {
+    return alu_.Add(ALU::Load(a, b));
+  }
+
+  Byte Sub(Byte a, Byte b) {
+    return alu_.Sub(ALU::Load(a, b));
+  }
+
+  void Cmp(Byte a, Byte b) {
+    return alu_.Cmp(ALU::Load(a, b));
   }
 
   Pipeline ACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);

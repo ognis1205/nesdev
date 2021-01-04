@@ -14,6 +14,8 @@ namespace core {
 
 using Byte = std::uint_least8_t;
 
+using Word = std::uint_least16_t;
+
 using Address = std::uint_least16_t;
 
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
@@ -47,6 +49,16 @@ struct Bitfield {
     return *this;
   }
 
+  template <typename U>
+  Bitfield& operator^=(U that) {
+    unsigned value = *this;
+    value_ =
+        (value_ & ~mask) |
+        ((Width > 1 ? (value ^ (that & (mask >> BitNo))) : (value ^ !!that))
+         << BitNo);
+    return *this;
+  }
+
   operator unsigned() const { return (value_ & mask) >> BitNo; }
 
   Bitfield& operator++() { return *this = *this + 1; }
@@ -54,6 +66,14 @@ struct Bitfield {
   unsigned operator++(int) {
     unsigned ret = *this;
     ++*this;
+    return ret;
+  }
+
+  Bitfield& operator--() { return *this = *this - 1; }
+
+  unsigned operator--(int) {
+    unsigned ret = *this;
+    --*this;
     return ret;
   }
 

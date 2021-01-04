@@ -320,6 +320,18 @@ TEST_F(TypesTest, BitwiseAlithmetics) {
   EXPECT_EQ(0b00000101, pc_.page);
   EXPECT_EQ(0b00000000, pc_.offset);
   EXPECT_EQ(0b0000010100000000, pc_.value);
+
+  pc_.page = 0b00000101;
+  pc_.offset = 0b00000101;
+  pc_.offset ^= 0b00000100;
+  EXPECT_EQ(0b00000101, pc_.page);
+  EXPECT_EQ(0b00000001, pc_.offset);
+  EXPECT_EQ(0b0000010100000001, pc_.value);
+
+  pc_.value ^= 0b0000010100000000;
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b00000001, pc_.offset);
+  EXPECT_EQ(0b0000000000000001, pc_.value);
 }
 
 TEST_F(TypesTest, InDecrement) {
@@ -341,4 +353,80 @@ TEST_F(TypesTest, InDecrement) {
   EXPECT_EQ(0, pc_.value);
   EXPECT_EQ(0b00000000, pc_.page);
   EXPECT_EQ(0b00000000, pc_.offset);
+
+  pc_.value = 0x0000;
+  EXPECT_EQ(0, pc_.page++);
+  EXPECT_EQ(1, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000000100000000, pc_.value);
+  EXPECT_EQ(1, pc_.page--);
+  EXPECT_EQ(0, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+
+  EXPECT_EQ(1, ++pc_.page);
+  EXPECT_EQ(1, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000000100000000, pc_.value);
+  EXPECT_EQ(0, --pc_.page);
+  EXPECT_EQ(0, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+
+  pc_.value = 0x0000;
+  EXPECT_EQ(0, pc_.offset++);
+  EXPECT_EQ(1, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000000000001, pc_.value);
+  EXPECT_EQ(1, pc_.offset--);
+  EXPECT_EQ(0, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+
+  EXPECT_EQ(1, ++pc_.offset);
+  EXPECT_EQ(1, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000000000001, pc_.value);
+  EXPECT_EQ(0, --pc_.offset);
+  EXPECT_EQ(0, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+
+  pc_.value = 0xFF00;
+  EXPECT_EQ(0xFF, pc_.page++);
+  EXPECT_EQ(0, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+  EXPECT_EQ(0, pc_.page--);
+  EXPECT_EQ(0xFF, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b1111111100000000, pc_.value);
+
+  EXPECT_EQ(0, ++pc_.page);
+  EXPECT_EQ(0, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+  EXPECT_EQ(0xFF, --pc_.page);
+  EXPECT_EQ(0xFF, pc_.page);
+  EXPECT_EQ(0b00000000, pc_.offset);
+  EXPECT_EQ(0b1111111100000000, pc_.value);
+
+  pc_.value = 0x00FF;
+  EXPECT_EQ(0xFF, pc_.offset++);
+  EXPECT_EQ(0, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+  EXPECT_EQ(0, pc_.offset--);
+  EXPECT_EQ(0xFF, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000011111111, pc_.value);
+
+  EXPECT_EQ(0, ++pc_.offset);
+  EXPECT_EQ(0, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000000000000, pc_.value);
+  EXPECT_EQ(0xFF, --pc_.offset);
+  EXPECT_EQ(0xFF, pc_.offset);
+  EXPECT_EQ(0b00000000, pc_.page);
+  EXPECT_EQ(0b0000000011111111, pc_.value);
 }
