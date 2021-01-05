@@ -310,6 +310,8 @@ class MOS6502 final : public CPU {
 
   void ABS();
 
+  void ZP0();
+
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;
 

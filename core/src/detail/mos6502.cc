@@ -239,6 +239,13 @@ void MOS6502::ABS() {
   }
 }
 
+void MOS6502::ZP0() {
+  switch (GetInstruction()) {
+  case Instruction::ORA: Stage([this] { REGISTER(a) =  Or(REGISTER(a), Fetch()); }); break;
+  default: NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", GetOpcode()));
+  }
+}
+
 void MOS6502::RST() noexcept {}
 
 void MOS6502::IRQ() noexcept {}
