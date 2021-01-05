@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/memory_bank.h"
+#include "utils.h"
 
 class MemoryBankTest : public testing::Test {
  protected:

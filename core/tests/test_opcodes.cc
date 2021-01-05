@@ -4,8 +4,10 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
+#include "utils.h"
 
 class OpcodesTest : public testing::Test {
  protected:

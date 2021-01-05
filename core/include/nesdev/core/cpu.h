@@ -21,9 +21,9 @@ class CPU : public Clock {
 
   virtual void Tick() override = 0;
 
-  virtual void Fetch() = 0;
+  virtual void FetchOpcode() = 0;
 
-  virtual void Reset() noexcept = 0;
+  virtual void RST() noexcept = 0;
 
   virtual void IRQ() noexcept = 0;
 
@@ -31,11 +31,11 @@ class CPU : public Clock {
 
  protected:
   struct Context {
-    size_t cycle = 0;
+    size_t cycle = {0};
 
-    Byte opcode_byte;
+    Byte fetched = {0x00};
 
-    Address program_counter = {0x0000};
+    Byte opcode_byte = {0x00};
 
     std::optional<Opcode> opcode;    
 
@@ -43,8 +43,14 @@ class CPU : public Clock {
       Address effective;
       Bitfield<0, 8, Address> lo;
       Bitfield<8, 8, Address> hi;
-    } address {0x0000};
+    } address = {0x0000};
   };
+
+  virtual Byte Fetch(bool immediate) noexcept = 0;
+
+  Byte Fetched() const noexcept {
+    return context_.fetched;
+  }
 
   Byte GetOpcode() const noexcept {
     return context_.opcode_byte;

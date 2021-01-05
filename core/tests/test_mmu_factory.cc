@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mmu.h"
+#include "utils.h"
 
 class MockMemoryBank : public nesdev::core::MemoryBank {
  public:

@@ -71,9 +71,9 @@ class MOS6502 final : public CPU {
 
   void Tick() override;
 
-  void Fetch() override;
+  void FetchOpcode() override;
 
-  void Reset() noexcept override;
+  void RST() noexcept override;
 
   void IRQ() noexcept override;
 
@@ -84,7 +84,7 @@ class MOS6502 final : public CPU {
    public:
     static const Address kOffset = {0x0100};
 
-    static const Byte kHead = 0xFD;
+    static const Byte kHead = {0xFD};
 
     Stack(Registers* const registers, MMU* const mmu)
       : registers_{registers}, mmu_{mmu} {}
@@ -187,14 +187,6 @@ class MOS6502 final : public CPU {
       return bus.b;
     }
 
-    Byte Sub(Bus bus) noexcept {
-      bus.concat = CheckOverflow(bus.a, ~bus.b, bus.a + ~bus.b + registers_->p.carry);
-      registers_->p.carry    = bus.a  & 0x01;
-      registers_->p.zero     = bus.b == 0x00;
-      registers_->p.negative = bus.b  & 0x80;
-      return bus.b;
-    }
-
     void Cmp(Bus bus) noexcept {
       registers_->p.carry    = bus.a >= bus.b;
       bus.concat = bus.a - bus.b;
@@ -202,9 +194,16 @@ class MOS6502 final : public CPU {
       registers_->p.negative = bus.b  & 0x80;
     }
 
+    void Bit(Bus bus) noexcept {
+      bus.concat = (bus.a & bus.b) << 8 | bus.b;
+      registers_->p.zero     = bus.a == 0x00;
+      registers_->p.negative = bus.b  & 1u << 7;
+      registers_->p.overflow = bus.b  & 1u << 6;
+    }
+
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     // [SEE] http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-    Word CheckOverflow(Byte a, Byte b, Word r) noexcept {
+    Word CheckOverflow(Word a, Word b, Word r) noexcept {
       registers_->p.overflow = (a ^ r) & (b ^ r) & 0x80;
       return r;
     };
@@ -214,6 +213,12 @@ class MOS6502 final : public CPU {
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  Byte Fetch(bool immediate) noexcept override {
+    if (immediate)
+      SetAddress(registers_->pc.value++);
+    return context_.fetched = Read(GetAddress());
+  }
+
   void Stage(const std::function<void()>& step) noexcept {
     pipeline_.Push(step);
   }
@@ -288,18 +293,24 @@ class MOS6502 final : public CPU {
   }
 
   Byte Sub(Byte a, Byte b) noexcept {
-    return alu_.Sub(ALU::Load(a, b));
+    return alu_.Add(ALU::Load(a, ~b));
   }
 
   void Cmp(Byte a, Byte b) noexcept {
     return alu_.Cmp(ALU::Load(a, b));
   }
 
-  void WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+  void Bit(Byte a, Byte b) noexcept {
+    return alu_.Bit(ALU::Load(a, b));
+  }
 
-  void WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+  void WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
 
-  void WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode);
+  void WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
+
+  void WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
+
+  void WithABS(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;

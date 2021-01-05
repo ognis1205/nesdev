@@ -16,7 +16,8 @@
 #define REGISTER(x)    registers_->x.value
 #define REGISTER_LO(x) registers_->x.lo
 #define REGISTER_HI(x) registers_->x.hi
-#define FLAG(x)        registers_->p.x.mask
+#define FLAG(x)        registers_->p.x
+#define MASK(x)        registers_->p.x.mask
 
 namespace nesdev {
 namespace core {
@@ -34,7 +35,7 @@ void MOS6502::Tick() {
 //      nmi_ = false;
 //    } else {
       //TODO: Clear all context? pipeline...
-    Fetch();
+    FetchOpcode();
 //    }
   } else {
     Execute();
@@ -45,8 +46,10 @@ void MOS6502::Tick() {
 /*
  * [SEE] https://robinli.eu/f/6502_cpu.txt
  */
-void MOS6502::Fetch() {
+void MOS6502::FetchOpcode() {
+  // Parse next instruction.
   ReadOpcode();
+
   // The following addressing modes are not supported on MOS6502 archetecture.
   switch (GetAddressingMode()) {
   case AddressingMode::SR  : case AddressingMode::DP  : case AddressingMode::DPX : case AddressingMode::DPY :
@@ -57,6 +60,7 @@ void MOS6502::Fetch() {
   default:
     break;
   }
+
   // The following instructions are not supported on MOS6502 archetecture.
   switch (GetInstruction()) {
   case Instruction::BRA: case Instruction::BRL: case Instruction::COP: case Instruction::JML: case Instruction::JSL:
@@ -70,20 +74,8 @@ void MOS6502::Fetch() {
   default:
     break;
   }
-  // Handle instructions addressing stack.
-  switch (GetInstruction()) {
-  case Instruction::JSR:
-    Stage([this] { SetAddressLo(Read(REGISTER(pc)++)); });
-    Stage([    ] { /* Internal operation (predecrement S?). */ });
-    Stage([this] { Push(REGISTER_HI(pc)); });
-    Stage([this] { Push(REGISTER_LO(pc)); });
-    Stage([this] { SetAddressHi(Read(REGISTER(pc)));
-                   REGISTER(pc) = GetAddress(); });
-    return;
-  default:
-    break;
-  }
-  // Handle Accumulator or implied addressing mode.
+
+  // Stage instructions in accordance with the specified addressing mode.
   switch (GetAddressingMode()) {
   case AddressingMode::ACC:
     WithACC(GetInstruction(), GetMemoryAccess(), GetOpcode());
@@ -94,12 +86,15 @@ void MOS6502::Fetch() {
   case AddressingMode::IMM:
     WithIMM(GetInstruction(), GetMemoryAccess(), GetOpcode());
     return;
+  case AddressingMode::ABS:
+    WithABS(GetInstruction(), GetMemoryAccess(), GetOpcode());
+    return;
   default:
     break;
   }
 }
 
-void MOS6502::WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode) {
+void MOS6502::WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
   switch (instruction) {
   case Instruction::ASL:
     Stage([this] { REGISTER(a) = ShiftL(REGISTER(a), false); });
@@ -118,39 +113,39 @@ void MOS6502::WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   }
 }
 
-void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode) {
+void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
   switch (instruction) {
   case Instruction::BRK:
-    Stage([this] { REGISTER(p) |= FLAG(irq_disable);
+    Stage([this] { REGISTER(p) |= MASK(irq_disable);
                    Read(REGISTER(pc)++); });
     Stage([this] { Push(REGISTER_HI(pc)); });
     Stage([this] { Push(REGISTER_LO(pc)); });
-    Stage([this] { Push(REGISTER(p) | FLAG(brk_command)); });
+    Stage([this] { Push(REGISTER(p) | MASK(brk_command)); });
     Stage([this] { REGISTER_LO(pc) = PassThrough(Read(MOS6502::kBRKAddress), false); });
     Stage([this] { REGISTER_HI(pc) = PassThrough(Read(MOS6502::kBRKAddress + 1), false); });
     break;
   case Instruction::PHP:
     Stage([this] { Read(REGISTER(pc)); });
-    Stage([this] { Push(REGISTER(p) | FLAG(brk_command) | FLAG(unused));
-                   REGISTER(p) &= ~(FLAG(brk_command) | FLAG(unused)); });
+    Stage([this] { Push(REGISTER(p) | MASK(brk_command) | MASK(unused));
+                   REGISTER(p) &= ~(MASK(brk_command) | MASK(unused)); });
     break;
   case Instruction::CLC:
-    Stage([this] { REGISTER(p) &= ~FLAG(carry); });
+    Stage([this] { REGISTER(p) &= ~MASK(carry); });
     break;
   case Instruction::PLP:
     Stage([this] { Read(REGISTER(pc)); });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
     Stage([this] { REGISTER(p) = PassThrough(Pull(), false);
-                   REGISTER(p) |= FLAG(unused); });
+                   REGISTER(p) |= MASK(unused); });
     break;
   case Instruction::SEC:
-    Stage([this] { REGISTER(p) |= FLAG(carry); });
+    Stage([this] { REGISTER(p) |= MASK(carry); });
     break;
   case Instruction::RTI:
     Stage([this] { Read(REGISTER(pc)); });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
     Stage([this] { REGISTER(p) = PassThrough(Pull(), false);
-                   REGISTER(p) &= ~(FLAG(brk_command) | FLAG(unused)); });
+                   REGISTER(p) &= ~(MASK(brk_command) | MASK(unused)); });
     Stage([this] { REGISTER_LO(pc) = PassThrough(Pull(), false); });
     Stage([this] { REGISTER_HI(pc) = PassThrough(Pull(), false); });
     break;
@@ -159,7 +154,7 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     Stage([this] { Push(REGISTER(a)); });
     break;
   case Instruction::CLI:
-    Stage([this] { REGISTER(p) &= ~FLAG(irq_disable); });
+    Stage([this] { REGISTER(p) &= ~MASK(irq_disable); });
     break;
   case Instruction::RTS:
     Stage([this] { Read(REGISTER(pc)); });
@@ -173,7 +168,7 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     Stage([this] { REGISTER(a) = PassThrough(Pull(), true); });
     break;
   case Instruction::SEI:
-    Stage([this] { REGISTER(p) |= FLAG(irq_disable); });
+    Stage([this] { REGISTER(p) |= MASK(irq_disable); });
     break;
   case Instruction::DEY:
     Stage([this] { REGISTER(y) = Decrement(REGISTER(y)); });
@@ -194,7 +189,7 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     Stage([this] { REGISTER(x) = PassThrough(REGISTER(a), true); });
     break;
   case Instruction::CLV:
-    Stage([this] { REGISTER(p) &= ~FLAG(overflow); });
+    Stage([this] { REGISTER(p) &= ~MASK(overflow); });
     break;
   case Instruction::TSX:
     Stage([this] { REGISTER(x) = PassThrough(REGISTER(s), true); });
@@ -206,7 +201,7 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     Stage([this] { REGISTER(x) = Decrement(REGISTER(x)); });
     break;
   case Instruction::CLD:
-    Stage([this] { REGISTER(p) &= ~FLAG(decimal_mode); });
+    Stage([this] { REGISTER(p) &= ~MASK(decimal_mode); });
     break;
   case Instruction::INX:
     Stage([this] { REGISTER(x) = Increment(REGISTER(x)); });
@@ -215,55 +210,107 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     Stage([    ] { /* Do nothing. */ });
     break;
   case Instruction::SED:
-    Stage([this] { REGISTER(p) |= FLAG(decimal_mode); });
+    Stage([this] { REGISTER(p) |= MASK(decimal_mode); });
     break;
   default:
     NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
   }
 }
 
-void MOS6502::WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, const Byte& opcode) {
-  SetAddress(REGISTER(pc)++);
+void MOS6502::WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
   switch (instruction) {
   case Instruction::ORA:
-    Stage([this] { REGISTER(a) = Or(REGISTER(a), Read(GetAddress())); });
+    Stage([this] { REGISTER(a) = Or(REGISTER(a), Fetch(true)); });
     break;
   case Instruction::AND:
-    Stage([this] { REGISTER(a) = And(REGISTER(a), Read(GetAddress())); });
+    Stage([this] { REGISTER(a) = And(REGISTER(a), Fetch(true)); });
     break;
   case Instruction::EOR:
-    Stage([this] { REGISTER(a) = Xor(REGISTER(a), Read(GetAddress())); });
+    Stage([this] { REGISTER(a) = Xor(REGISTER(a), Fetch(true)); });
     break;
   case Instruction::ADC:
-    Stage([this] { REGISTER(a) = Add(REGISTER(a), Read(GetAddress())); });
+    Stage([this] { REGISTER(a) = Add(REGISTER(a), Fetch(true)); });
     break;
   case Instruction::LDY:
-    Stage([this] { REGISTER(y) = PassThrough(Read(GetAddress()), true); });
+    Stage([this] { REGISTER(y) = PassThrough(Fetch(true), true); });
     break;
   case Instruction::LDX:
-    Stage([this] { REGISTER(x) = PassThrough(Read(GetAddress()), true); });
+    Stage([this] { REGISTER(x) = PassThrough(Fetch(true), true); });
     break;
   case Instruction::LDA:
-    Stage([this] { REGISTER(a) = PassThrough(Read(GetAddress()), true); });
+    Stage([this] { REGISTER(a) = PassThrough(Fetch(true), true); });
     break;
   case Instruction::CPY:
-    Stage([this] { Cmp(REGISTER(y), Read(GetAddress())); });
+    Stage([this] { Cmp(REGISTER(y), Fetch(true)); });
     break;
   case Instruction::CMP:
-    Stage([this] { Cmp(REGISTER(a), Read(GetAddress())); });
+    Stage([this] { Cmp(REGISTER(a), Fetch(true)); });
     break;
   case Instruction::CPX:
-    Stage([this] { Cmp(REGISTER(x), Read(GetAddress())); });
+    Stage([this] { Cmp(REGISTER(x), Fetch(true)); });
     break;
   case Instruction::SBC:
-    Stage([this] { REGISTER(a) = Sub(REGISTER(a), Read(GetAddress())); });
+    Stage([this] { REGISTER(a) = Sub(REGISTER(a), Fetch(true)); });
     break;
   default:
     NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
   }
 }
 
-void MOS6502::Reset() noexcept {}
+void MOS6502::WithABS(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
+  if (instruction == Instruction::JSR) {
+    Stage([this] { SetAddressLo(Read(REGISTER(pc)++)); });
+    Stage([    ] { /* Internal operation (predecrement S?). */ });
+    Stage([this] { Push(REGISTER_HI(pc)); });
+    Stage([this] { Push(REGISTER_LO(pc)); });
+    Stage([this] { SetAddressHi(Read(REGISTER(pc)++));
+                   REGISTER(pc) = GetAddress(); });
+    return;
+  }
+
+  Stage([this] { SetAddressLo(Read(REGISTER(pc)++)); });
+  Stage([this] { SetAddressHi(Read(REGISTER(pc)++)); });  
+  if (memory_access == MemoryAccess::READ_MODIFY_WRITE) {
+    Stage([this] { Fetch(false); });
+    Stage([this] { Write(GetAddress(), Fetched()); });
+  }
+
+  switch (instruction) {
+  case Instruction::ORA:
+    Stage([this] { REGISTER(a) = Or(REGISTER(a), Fetch(false)); });
+    break;
+  case Instruction::ASL:
+    Stage([this] { Write(GetAddress(), ShiftL(Fetched(), false)); });
+    break;
+  case Instruction::JSR:
+    // JSR is handled above. This instruction treated as kind of special form of absolute addressing mode.
+    break;
+  case Instruction::BIT:
+  case Instruction::AND:
+  case Instruction::ROL:
+  case Instruction::JMP:
+  case Instruction::EOR:
+  case Instruction::LSR:
+  case Instruction::ADC:
+  case Instruction::ROR:
+  case Instruction::STY:
+  case Instruction::STA:
+  case Instruction::STX:
+  case Instruction::LDY:
+  case Instruction::LDA:
+  case Instruction::LDX:
+  case Instruction::CPY:
+  case Instruction::CMP:
+  case Instruction::DEC:
+  case Instruction::CPX:
+  case Instruction::SBC:
+  case Instruction::INC:
+  default:
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+  }
+}
+
+void MOS6502::RST() noexcept {}
 
 void MOS6502::IRQ() noexcept {}
 

@@ -5,9 +5,11 @@
  * Trademarks are owned by their respect owners.
  */
 #include <time.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/pipeline.h"
+#include "utils.h"
 
 class PipelineTest : public testing::Test {
  protected:
