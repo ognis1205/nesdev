@@ -150,11 +150,9 @@ class MOS6502 final : public CPU {
       return bus.b;
     }
 
-    Byte PassThrough(Bus bus, bool check_zero_or_negative) noexcept {
-      if (check_zero_or_negative) {
-	registers_->p.zero     = bus.b == 0x00;
-	registers_->p.negative = bus.b  & 0x80;
-      }
+    Byte PassThrough(Bus bus) noexcept {
+      registers_->p.zero     = bus.b == 0x00;
+      registers_->p.negative = bus.b  & 0x80;
       return bus.b;
     }
 
@@ -213,8 +211,8 @@ class MOS6502 final : public CPU {
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  Byte Fetch(bool immediate) noexcept override {
-    if (immediate)
+  Byte Fetch() noexcept override {
+    if (Is(AddressingMode::IMM))
       SetAddress(registers_->pc.value++);
     return context_.fetched = Read(GetAddress());
   }
@@ -272,8 +270,8 @@ class MOS6502 final : public CPU {
     return alu_.Decrement(ALU::Load(0x00, b));
   }
 
-  Byte PassThrough(Byte b, bool check_zero_or_negative) noexcept {
-    return alu_.PassThrough(ALU::Load(0x00, b), check_zero_or_negative);
+  Byte PassThrough(Byte b) noexcept {
+    return alu_.PassThrough(ALU::Load(0x00, b));
   }
 
   Byte Or(Byte a, Byte b) noexcept {
@@ -304,13 +302,13 @@ class MOS6502 final : public CPU {
     return alu_.Bit(ALU::Load(a, b));
   }
 
-  void WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
+  void ACC();
 
-  void WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
+  void IMP();
 
-  void WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
+  void IMM();
 
-  void WithABS(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode);
+  void ABS();
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;

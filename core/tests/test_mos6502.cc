@@ -137,22 +137,12 @@ TEST_F(MOS6502Test, ALUDecrement) {
 }
 
 TEST_F(MOS6502Test, ALUPassThrough) {
-  auto ret = mos6502_.PassThrough(0b10000000, false);
-  EXPECT_EQ(0b10000000, ret);
-  EXPECT_FALSE(registers_.p.zero);
-  EXPECT_FALSE(registers_.p.negative);
-
-  ret = mos6502_.PassThrough(0b00000000, false);
-  EXPECT_EQ(0b00000000, ret);
-  EXPECT_FALSE(registers_.p.zero);
-  EXPECT_FALSE(registers_.p.negative);
-
-  ret = mos6502_.PassThrough(0b10000000, true);
+  auto ret = mos6502_.PassThrough(0b10000000);
   EXPECT_EQ(0b10000000, ret);
   EXPECT_FALSE(registers_.p.zero);
   EXPECT_TRUE(registers_.p.negative);
 
-  ret = mos6502_.PassThrough(0b00000000, true);
+  ret = mos6502_.PassThrough(0b00000000);
   EXPECT_EQ(0b00000000, ret);
   EXPECT_TRUE(registers_.p.zero);
   EXPECT_FALSE(registers_.p.negative);
@@ -365,4 +355,26 @@ TEST_F(MOS6502Test, ALUCmp) {
   EXPECT_EQ(0b1, registers_.p.carry);
   EXPECT_FALSE(registers_.p.zero);
   EXPECT_TRUE(registers_.p.negative);
+}
+
+TEST_F(MOS6502Test, ALUBit) {
+  mos6502_.Bit(0b00000001, 0b11000000);
+  EXPECT_TRUE(registers_.p.zero);
+  EXPECT_TRUE(registers_.p.negative);
+  EXPECT_TRUE(registers_.p.overflow);
+
+  mos6502_.Bit(0b11111111, 0b11111111);
+  EXPECT_FALSE(registers_.p.zero);
+  EXPECT_TRUE(registers_.p.negative);
+  EXPECT_TRUE(registers_.p.overflow);
+
+  mos6502_.Bit(0b10000001, 0b01111111);
+  EXPECT_FALSE(registers_.p.zero);
+  EXPECT_FALSE(registers_.p.negative);
+  EXPECT_TRUE(registers_.p.overflow);
+
+  mos6502_.Bit(0b10000001, 0b00111111);
+  EXPECT_FALSE(registers_.p.zero);
+  EXPECT_FALSE(registers_.p.negative);
+  EXPECT_FALSE(registers_.p.overflow);
 }

@@ -46,7 +46,7 @@ class CPU : public Clock {
     } address = {0x0000};
   };
 
-  virtual Byte Fetch(bool immediate) noexcept = 0;
+  virtual Byte Fetch() noexcept = 0;
 
   Byte Fetched() const noexcept {
     return context_.fetched;
@@ -82,6 +82,18 @@ class CPU : public Clock {
 
   void SetAddressHi(Byte hi) noexcept {
     context_.address.hi = hi;
+  }
+
+  bool Is(Instruction instruction) const noexcept {
+    return instruction == GetInstruction();
+  }
+
+  bool Is(AddressingMode addressing_mode) const noexcept {
+    return addressing_mode == GetAddressingMode();
+  }
+
+  bool Is(MemoryAccess memory_access) const noexcept {
+    return memory_access == GetMemoryAccess();
   }
 
  protected:

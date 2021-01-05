@@ -77,52 +77,35 @@ void MOS6502::FetchOpcode() {
 
   // Stage instructions in accordance with the specified addressing mode.
   switch (GetAddressingMode()) {
-  case AddressingMode::ACC:
-    WithACC(GetInstruction(), GetMemoryAccess(), GetOpcode());
-    return;
-  case AddressingMode::IMP:
-    WithIMP(GetInstruction(), GetMemoryAccess(), GetOpcode());
-    return;
-  case AddressingMode::IMM:
-    WithIMM(GetInstruction(), GetMemoryAccess(), GetOpcode());
-    return;
-  case AddressingMode::ABS:
-    WithABS(GetInstruction(), GetMemoryAccess(), GetOpcode());
-    return;
+  case AddressingMode::ACC: ACC(); return;
+  case AddressingMode::IMP: IMP(); return;
+  case AddressingMode::IMM: IMM(); return;
+  case AddressingMode::ABS: ABS(); return;
   default:
     break;
   }
 }
 
-void MOS6502::WithACC(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
-  switch (instruction) {
-  case Instruction::ASL:
-    Stage([this] { REGISTER(a) = ShiftL(REGISTER(a), false); });
-    break;
-  case Instruction::ROL:
-    Stage([this] { REGISTER(a) = ShiftL(REGISTER(a), true); });
-    break;
-  case Instruction::LSR:
-    Stage([this] { REGISTER(a) = ShiftR(REGISTER(a), false); });
-    break;
-  case Instruction::ROR:
-    Stage([this] { REGISTER(a) = ShiftR(REGISTER(a), true); });
-    break;
-  default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+void MOS6502::ACC() {
+  switch (GetInstruction()) {
+  case Instruction::ASL: Stage([this] { REGISTER(a) = ShiftL(REGISTER(a), false); }); break;
+  case Instruction::ROL: Stage([this] { REGISTER(a) = ShiftL(REGISTER(a), true);  }); break;
+  case Instruction::LSR: Stage([this] { REGISTER(a) = ShiftR(REGISTER(a), false); }); break;
+  case Instruction::ROR: Stage([this] { REGISTER(a) = ShiftR(REGISTER(a), true);  }); break;
+  default: NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", GetOpcode()));
   }
 }
 
-void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
-  switch (instruction) {
+void MOS6502::IMP() {
+  switch (GetInstruction()) {
   case Instruction::BRK:
     Stage([this] { REGISTER(p) |= MASK(irq_disable);
                    Read(REGISTER(pc)++); });
     Stage([this] { Push(REGISTER_HI(pc)); });
     Stage([this] { Push(REGISTER_LO(pc)); });
     Stage([this] { Push(REGISTER(p) | MASK(brk_command)); });
-    Stage([this] { REGISTER_LO(pc) = PassThrough(Read(MOS6502::kBRKAddress), false); });
-    Stage([this] { REGISTER_HI(pc) = PassThrough(Read(MOS6502::kBRKAddress + 1), false); });
+    Stage([this] { REGISTER_LO(pc) = Read(MOS6502::kBRKAddress); });
+    Stage([this] { REGISTER_HI(pc) = Read(MOS6502::kBRKAddress + 1); });
     break;
   case Instruction::PHP:
     Stage([this] { Read(REGISTER(pc)); });
@@ -135,7 +118,7 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   case Instruction::PLP:
     Stage([this] { Read(REGISTER(pc)); });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
-    Stage([this] { REGISTER(p) = PassThrough(Pull(), false);
+    Stage([this] { REGISTER(p) = Pull();
                    REGISTER(p) |= MASK(unused); });
     break;
   case Instruction::SEC:
@@ -144,10 +127,10 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   case Instruction::RTI:
     Stage([this] { Read(REGISTER(pc)); });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
-    Stage([this] { REGISTER(p) = PassThrough(Pull(), false);
+    Stage([this] { REGISTER(p) = Pull();
                    REGISTER(p) &= ~(MASK(brk_command) | MASK(unused)); });
-    Stage([this] { REGISTER_LO(pc) = PassThrough(Pull(), false); });
-    Stage([this] { REGISTER_HI(pc) = PassThrough(Pull(), false); });
+    Stage([this] { REGISTER_LO(pc) = Pull(); });
+    Stage([this] { REGISTER_HI(pc) = Pull(); });
     break;
   case Instruction::PHA:
     Stage([this] { Read(REGISTER(pc)); });
@@ -159,106 +142,52 @@ void MOS6502::WithIMP(Instruction instruction, [[maybe_unused]]MemoryAccess memo
   case Instruction::RTS:
     Stage([this] { Read(REGISTER(pc)); });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
-    Stage([this] { REGISTER_LO(pc) = PassThrough(Pull(), false); });
-    Stage([this] { REGISTER_HI(pc) = PassThrough(Pull(), false); });
+    Stage([this] { REGISTER_LO(pc) = Pull(); });
+    Stage([this] { REGISTER_HI(pc) = Pull(); });
     Stage([this] { REGISTER(pc)++; });
     break;
   case Instruction::PLA:
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
-    Stage([this] { REGISTER(a) = PassThrough(Pull(), true); });
+    Stage([this] { REGISTER(a) = PassThrough(Pull()); });
     break;
-  case Instruction::SEI:
-    Stage([this] { REGISTER(p) |= MASK(irq_disable); });
-    break;
-  case Instruction::DEY:
-    Stage([this] { REGISTER(y) = Decrement(REGISTER(y)); });
-    break;
-  case Instruction::TXA:
-    Stage([this] { REGISTER(a) = PassThrough(REGISTER(x), true); });
-    break;
-  case Instruction::TYA:
-    Stage([this] { REGISTER(a) = PassThrough(REGISTER(y), true); });
-    break;
-  case Instruction::TXS:
-    Stage([this] { REGISTER(s) = PassThrough(REGISTER(x), false); });
-    break;
-  case Instruction::TAY:
-    Stage([this] { REGISTER(y) = PassThrough(REGISTER(a), true); });
-    break;
-  case Instruction::TAX:
-    Stage([this] { REGISTER(x) = PassThrough(REGISTER(a), true); });
-    break;
-  case Instruction::CLV:
-    Stage([this] { REGISTER(p) &= ~MASK(overflow); });
-    break;
-  case Instruction::TSX:
-    Stage([this] { REGISTER(x) = PassThrough(REGISTER(s), true); });
-    break;
-  case Instruction::INY:
-    Stage([this] { REGISTER(y) = Increment(REGISTER(y)); });
-    break;
-  case Instruction::DEX:
-    Stage([this] { REGISTER(x) = Decrement(REGISTER(x)); });
-    break;
-  case Instruction::CLD:
-    Stage([this] { REGISTER(p) &= ~MASK(decimal_mode); });
-    break;
-  case Instruction::INX:
-    Stage([this] { REGISTER(x) = Increment(REGISTER(x)); });
-    break;
-  case Instruction::NOP:
-    Stage([    ] { /* Do nothing. */ });
-    break;
-  case Instruction::SED:
-    Stage([this] { REGISTER(p) |= MASK(decimal_mode); });
-    break;
-  default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+  case Instruction::SEI: Stage([this] { REGISTER(p) |= MASK(irq_disable);        }); break;
+  case Instruction::DEY: Stage([this] { REGISTER(y)  = Decrement(REGISTER(y));   }); break;
+  case Instruction::TXA: Stage([this] { REGISTER(a)  = PassThrough(REGISTER(x)); }); break;
+  case Instruction::TYA: Stage([this] { REGISTER(a)  = PassThrough(REGISTER(y)); }); break;
+  case Instruction::TXS: Stage([this] { REGISTER(s)  = REGISTER(x);              }); break;
+  case Instruction::TAY: Stage([this] { REGISTER(y)  = PassThrough(REGISTER(a)); }); break;
+  case Instruction::TAX: Stage([this] { REGISTER(x)  = PassThrough(REGISTER(a)); }); break;
+  case Instruction::CLV: Stage([this] { REGISTER(p) &= ~MASK(overflow);          }); break;
+  case Instruction::TSX: Stage([this] { REGISTER(x)  = PassThrough(REGISTER(s)); }); break;
+  case Instruction::INY: Stage([this] { REGISTER(y)  = Increment(REGISTER(y));   }); break;
+  case Instruction::DEX: Stage([this] { REGISTER(x)  = Decrement(REGISTER(x));   }); break;
+  case Instruction::CLD: Stage([this] { REGISTER(p) &= ~MASK(decimal_mode);      }); break;
+  case Instruction::INX: Stage([this] { REGISTER(x)  = Increment(REGISTER(x));   }); break;
+  case Instruction::NOP: Stage([    ] { /* Do nothing. */                        }); break;
+  case Instruction::SED: Stage([this] { REGISTER(p) |= MASK(decimal_mode);       }); break;
+  default: NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", GetOpcode()));
   }
 }
 
-void MOS6502::WithIMM(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
-  switch (instruction) {
-  case Instruction::ORA:
-    Stage([this] { REGISTER(a) = Or(REGISTER(a), Fetch(true)); });
-    break;
-  case Instruction::AND:
-    Stage([this] { REGISTER(a) = And(REGISTER(a), Fetch(true)); });
-    break;
-  case Instruction::EOR:
-    Stage([this] { REGISTER(a) = Xor(REGISTER(a), Fetch(true)); });
-    break;
-  case Instruction::ADC:
-    Stage([this] { REGISTER(a) = Add(REGISTER(a), Fetch(true)); });
-    break;
-  case Instruction::LDY:
-    Stage([this] { REGISTER(y) = PassThrough(Fetch(true), true); });
-    break;
-  case Instruction::LDX:
-    Stage([this] { REGISTER(x) = PassThrough(Fetch(true), true); });
-    break;
-  case Instruction::LDA:
-    Stage([this] { REGISTER(a) = PassThrough(Fetch(true), true); });
-    break;
-  case Instruction::CPY:
-    Stage([this] { Cmp(REGISTER(y), Fetch(true)); });
-    break;
-  case Instruction::CMP:
-    Stage([this] { Cmp(REGISTER(a), Fetch(true)); });
-    break;
-  case Instruction::CPX:
-    Stage([this] { Cmp(REGISTER(x), Fetch(true)); });
-    break;
-  case Instruction::SBC:
-    Stage([this] { REGISTER(a) = Sub(REGISTER(a), Fetch(true)); });
-    break;
-  default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+void MOS6502::IMM() {
+  switch (GetInstruction()) {
+  case Instruction::ORA: Stage([this] { REGISTER(a) =  Or(REGISTER(a), Fetch()); }); break;
+  case Instruction::AND: Stage([this] { REGISTER(a) = And(REGISTER(a), Fetch()); }); break;
+  case Instruction::EOR: Stage([this] { REGISTER(a) = Xor(REGISTER(a), Fetch()); }); break;
+  case Instruction::ADC: Stage([this] { REGISTER(a) = Add(REGISTER(a), Fetch()); }); break;
+  case Instruction::LDY: Stage([this] { REGISTER(y) = PassThrough(Fetch());      }); break;
+  case Instruction::LDX: Stage([this] { REGISTER(x) = PassThrough(Fetch());      }); break;
+  case Instruction::LDA: Stage([this] { REGISTER(a) = PassThrough(Fetch());      }); break;
+  case Instruction::CPY: Stage([this] { Cmp(REGISTER(y), Fetch());               }); break;
+  case Instruction::CMP: Stage([this] { Cmp(REGISTER(a), Fetch());               }); break;
+  case Instruction::CPX: Stage([this] { Cmp(REGISTER(x), Fetch());               }); break;
+  case Instruction::SBC: Stage([this] { REGISTER(a) = Sub(REGISTER(a), Fetch()); }); break;
+  default: NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", GetOpcode()));
   }
 }
 
-void MOS6502::WithABS(Instruction instruction, [[maybe_unused]]MemoryAccess memory_access, Byte opcode) {
-  if (instruction == Instruction::JSR) {
+void MOS6502::ABS() {
+  if (Is(Instruction::JSR)) {
     Stage([this] { SetAddressLo(Read(REGISTER(pc)++)); });
     Stage([    ] { /* Internal operation (predecrement S?). */ });
     Stage([this] { Push(REGISTER_HI(pc)); });
@@ -268,45 +197,45 @@ void MOS6502::WithABS(Instruction instruction, [[maybe_unused]]MemoryAccess memo
     return;
   }
 
+  if (Is(Instruction::JMP)) {
+    Stage([this] { SetAddressLo(Read(REGISTER(pc)++)); });
+    Stage([this] { SetAddressHi(Read(REGISTER(pc)++));
+                   REGISTER(pc) = GetAddress(); });
+    return;
+  }
+
   Stage([this] { SetAddressLo(Read(REGISTER(pc)++)); });
-  Stage([this] { SetAddressHi(Read(REGISTER(pc)++)); });  
-  if (memory_access == MemoryAccess::READ_MODIFY_WRITE) {
-    Stage([this] { Fetch(false); });
+  Stage([this] { SetAddressHi(Read(REGISTER(pc)++)); });
+  if (Is(MemoryAccess::READ_MODIFY_WRITE)) {
+    Stage([this] { Fetch(); });
     Stage([this] { Write(GetAddress(), Fetched()); });
   }
 
-  switch (instruction) {
-  case Instruction::ORA:
-    Stage([this] { REGISTER(a) = Or(REGISTER(a), Fetch(false)); });
-    break;
-  case Instruction::ASL:
-    Stage([this] { Write(GetAddress(), ShiftL(Fetched(), false)); });
-    break;
-  case Instruction::JSR:
-    // JSR is handled above. This instruction treated as kind of special form of absolute addressing mode.
-    break;
-  case Instruction::BIT:
-  case Instruction::AND:
-  case Instruction::ROL:
-  case Instruction::JMP:
-  case Instruction::EOR:
-  case Instruction::LSR:
-  case Instruction::ADC:
-  case Instruction::ROR:
-  case Instruction::STY:
-  case Instruction::STA:
-  case Instruction::STX:
-  case Instruction::LDY:
-  case Instruction::LDA:
-  case Instruction::LDX:
-  case Instruction::CPY:
-  case Instruction::CMP:
-  case Instruction::DEC:
-  case Instruction::CPX:
-  case Instruction::SBC:
-  case Instruction::INC:
-  default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", opcode));
+  switch (GetInstruction()) {
+  case Instruction::ORA: Stage([this] { REGISTER(a) = Or(REGISTER(a), Fetch());        }); break;
+  case Instruction::ASL: Stage([this] { Write(GetAddress(), ShiftL(Fetched(), false)); }); break;
+  case Instruction::JSR: /* JSR is handled above. */                                       break;
+  case Instruction::BIT: Stage([this] { Bit(REGISTER(a), Fetch());                     }); break;
+  case Instruction::AND: Stage([this] { REGISTER(a) = And(REGISTER(a), Fetch());       }); break;
+  case Instruction::ROL: Stage([this] { Write(GetAddress(), ShiftL(Fetched(), true));  }); break;
+  case Instruction::JMP: /* JMP is handled above. */                                       break;
+  case Instruction::EOR: Stage([this] { REGISTER(a) = Xor(REGISTER(a), Fetch());       }); break;
+  case Instruction::LSR: Stage([this] { Write(GetAddress(), ShiftR(Fetched(), false)); }); break;
+  case Instruction::ADC: Stage([this] { REGISTER(a) = Add(REGISTER(a), Fetch());       }); break;
+  case Instruction::ROR: Stage([this] { Write(GetAddress(), ShiftR(Fetched(), true));  }); break;
+  case Instruction::STY: Stage([this] { Write(GetAddress(), REGISTER(y));              }); break;
+  case Instruction::STA: Stage([this] { Write(GetAddress(), REGISTER(a));              }); break;
+  case Instruction::STX: Stage([this] { Write(GetAddress(), REGISTER(x));              }); break;
+  case Instruction::LDY: Stage([this] { REGISTER(y) = PassThrough(Fetch());            }); break;
+  case Instruction::LDA: Stage([this] { REGISTER(a) = PassThrough(Fetch());            }); break;
+  case Instruction::LDX: Stage([this] { REGISTER(x) = PassThrough(Fetch());            }); break;
+  case Instruction::CPY: Stage([this] { Cmp(REGISTER(y), Fetch());                     }); break;
+  case Instruction::CMP: Stage([this] { Cmp(REGISTER(a), Fetch());                     }); break;
+  case Instruction::DEC: Stage([this] { Write(GetAddress(), Decrement(Fetched()));     }); break;
+  case Instruction::CPX: Stage([this] { Cmp(REGISTER(x), Fetch());                     }); break;
+  case Instruction::SBC: Stage([this] { REGISTER(a) = Sub(REGISTER(a), Fetch());       }); break;
+  case Instruction::INC: Stage([this] { Write(GetAddress(), Increment(Fetched()));     }); break;
+  default: NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", GetOpcode()));
   }
 }
 
