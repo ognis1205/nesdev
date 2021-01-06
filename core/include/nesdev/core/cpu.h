@@ -99,7 +99,7 @@ class CPU : public Clock {
     context_.address.hi = hi;
   }
 
-  bool IsPageCrossed() {
+  bool CrossPage() {
     return context_.is_page_crossed;
   }
 
