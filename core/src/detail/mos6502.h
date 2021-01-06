@@ -221,6 +221,10 @@ class MOS6502 final : public CPU {
     if (when) pipeline_.Push(step);
   }
 
+//  void Stage(const Pipeline::Step& step, bool when=true) noexcept {
+//    if (when) pipeline_.Push(step);
+//  }
+
   bool ClearWhenCompleted() noexcept {
     if (pipeline_.Done()) {
       pipeline_.Clear();

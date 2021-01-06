@@ -86,6 +86,11 @@ class CPU : public Clock {
     context_.address.effective = address;
   }
 
+  void SetAddress(Address address, Byte offset) noexcept {
+    context_.is_page_crossed = (static_cast<uint16_t>(address + offset) & 0xFF00) != (address & 0xFF00);
+    context_.address.effective = address + offset;
+  }
+
   void SetAddressLo(Byte lo) noexcept {
     context_.address.lo = lo;
   }
@@ -94,9 +99,8 @@ class CPU : public Clock {
     context_.address.hi = hi;
   }
 
-  constexpr bool IsPageCrossed(Address address, Byte offset) {
+  bool IsPageCrossed() {
     return context_.is_page_crossed;
-//    return (static_cast<uint16_t>(address + offset) & 0xFF00) != (address & 0xFF00);
   }
 
   bool Is(Instruction instruction) const noexcept {
