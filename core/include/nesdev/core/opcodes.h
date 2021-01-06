@@ -127,7 +127,7 @@ enum Instruction : Byte {
   SEC, // [Set] Carry Flag
   SEI, // [Set] Interrupt Disable Flag
   SED, // [Set] Decimal Flag
-  SEP, // [Set] Status Bits
+  SEP, // ***65C816*** [Set] Status Bits
   STP, // ***65C816*** [Stop] the Processor
   STA, // [Store] Accumulator to Memory
   STX, // [Store] Index Register X to Memory

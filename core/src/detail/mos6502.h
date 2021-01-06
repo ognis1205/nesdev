@@ -217,8 +217,8 @@ class MOS6502 final : public CPU {
     return context_.fetched = Read(GetAddress());
   }
 
-  void Stage(const std::function<void()>& step) noexcept {
-    pipeline_.Push(step);
+  void Stage(const std::function<void()>& step, bool when=true) noexcept {
+    if (when) pipeline_.Push(step);
   }
 
   bool ClearWhenCompleted() noexcept {
@@ -301,16 +301,6 @@ class MOS6502 final : public CPU {
   void Bit(Byte a, Byte b) noexcept {
     return alu_.Bit(ALU::Load(a, b));
   }
-
-  void ACC();
-
-  void IMP();
-
-  void IMM();
-
-  void ABS();
-
-  void ZP0();
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Registers* const registers_;
