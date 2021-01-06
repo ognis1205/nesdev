@@ -39,6 +39,8 @@ class CPU : public Clock {
 
     std::optional<Opcode> opcode;    
 
+    bool is_page_crossed = false;
+    
     union {
       Address effective;
       Bitfield<0, 8, Address> lo;
@@ -90,6 +92,11 @@ class CPU : public Clock {
 
   void SetAddressHi(Byte hi) noexcept {
     context_.address.hi = hi;
+  }
+
+  constexpr bool IsPageCrossed(Address address, Byte offset) {
+    return context_.is_page_crossed;
+//    return (static_cast<uint16_t>(address + offset) & 0xFF00) != (address & 0xFF00);
   }
 
   bool Is(Instruction instruction) const noexcept {
