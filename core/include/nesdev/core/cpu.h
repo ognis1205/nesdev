@@ -72,6 +72,14 @@ class CPU : public Clock {
     return context_.address.effective;
   }
 
+  Byte GetOffset() const noexcept {
+    return context_.address.lo;
+  }
+
+  Byte GetPage() const noexcept {
+    return context_.address.hi;
+  }
+
   void SetAddress(Address address) noexcept {
     context_.address.effective = address;
   }
@@ -94,6 +102,18 @@ class CPU : public Clock {
 
   bool Is(MemoryAccess memory_access) const noexcept {
     return memory_access == GetMemoryAccess();
+  }
+
+  bool IsNot(Instruction instruction) const noexcept {
+    return !Is(instruction);
+  }
+
+  bool IsNot(AddressingMode addressing_mode) const noexcept {
+    return !Is(addressing_mode);
+  }
+
+  bool IsNot(MemoryAccess memory_access) const noexcept {
+    return !Is(memory_access);
   }
 
  protected:
