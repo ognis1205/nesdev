@@ -21,11 +21,11 @@ namespace detail {
 
 class MOS6502 final : public CPU {
  public:
-  static const nesdev::core::Address kBRKAddress = {0xFFFE};
+  static const Address kBRKAddress = {0xFFFE};
 
-  static const nesdev::core::Address kRSTAddress = {0xFFFC};
+  static const Address kRSTAddress = {0xFFFC};
 
-  static const nesdev::core::Address kNMIAddress = {0xFFFA};
+  static const Address kNMIAddress = {0xFFFA};
 
   struct Registers {
     // Accumulator
@@ -46,9 +46,9 @@ class MOS6502 final : public CPU {
     } s = {0x00};
     // Program counter
     union {
-      nesdev::core::Address value;
-      Bitfield<0, 8, nesdev::core::Address> lo;
-      Bitfield<8, 8, nesdev::core::Address> hi;
+      Address value;
+      Bitfield<0, 8, Address> lo;
+      Bitfield<8, 8, Address> hi;
     } pc = {0x0000};
     // Status register
     union {
@@ -71,18 +71,18 @@ class MOS6502 final : public CPU {
 
   void Tick() override;
 
-  void Next() override;
+  bool Next() override;
 
-  void RST() noexcept override;
+  bool RST() noexcept override;
 
-  void IRQ() noexcept override;
+  bool IRQ() noexcept override;
 
-  void NMI() noexcept override;
+  bool NMI() noexcept override;
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Stack {
    public:
-    static const nesdev::core::Address kOffset = {0x0100};
+    static const Address kOffset = {0x0100};
 
     static const Byte kHead = {0xFD};
 
@@ -212,9 +212,9 @@ class MOS6502 final : public CPU {
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Byte Fetch() noexcept override {
-    if (AddressingMode() == AddressingMode::IMM)
-      Address(registers_->pc.value++);
-    return context_.fetched = Read(Address());
+    if (AddrMode() == AddressingMode::IMM)
+      Addr(registers_->pc.value++);
+    return context_.fetched = Read(Addr());
   }
 
   void Stage() noexcept {
@@ -242,11 +242,11 @@ class MOS6502 final : public CPU {
     context_.opcode = nesdev::core::Decode(context_.opcode_byte);
   }
 
-  Byte Read(nesdev::core::Address address) const {
+  Byte Read(Address address) const {
     return mmu_->Read(address);
   }
 
-  void Write(nesdev::core::Address address, Byte byte) {
+  void Write(Address address, Byte byte) {
     mmu_->Write(address, byte);
   }
 
@@ -310,10 +310,10 @@ class MOS6502 final : public CPU {
     // For relative addressing mode, if the specified offset is negative. Fix its value
     // to signed value in 16-bit length binary.
     if (context_.address.lo & 0x80)
-      Page(0xFF);
+      AddrHi(0xFF);
   }
 
-  void Branch(nesdev::core::Address relative) {
+  void Branch(Address relative) {
     context_.is_page_crossed = ((registers_->pc.value + relative) & 0xFF00) != (registers_->pc.value & 0xFF00);
     registers_->pc.value = registers_->pc.value + relative;
   }

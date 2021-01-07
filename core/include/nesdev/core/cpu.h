@@ -21,13 +21,13 @@ class CPU : public Clock {
 
   virtual void Tick() override = 0;
 
-  virtual void Next() = 0;
+  virtual bool Next() = 0;
 
-  virtual void RST() noexcept = 0;
+  virtual bool RST() noexcept = 0;
 
-  virtual void IRQ() noexcept = 0;
+  virtual bool IRQ() noexcept = 0;
 
-  virtual void NMI() noexcept = 0;
+  virtual bool NMI() noexcept = 0;
 
  protected:
   struct Context {
@@ -46,6 +46,12 @@ class CPU : public Clock {
       Bitfield<0, 8, Address> lo;
       Bitfield<8, 8, Address> hi;
     } address = {0x0000};
+
+    union {
+      Address effective;
+      Bitfield<0, 8, Address> lo;
+      Bitfield<8, 8, Address> hi;
+    } pointer = {0x0000};
   };
 
   virtual Byte Fetch() noexcept = 0;
@@ -58,77 +64,101 @@ class CPU : public Clock {
     return context_.opcode_byte;
   }
 
-  nesdev::core::Instruction Instruction() const noexcept {
+  Instruction Inst() const noexcept {
     return context_.opcode->instruction;
   }
 
-  nesdev::core::AddressingMode AddressingMode() const noexcept {
+  AddressingMode AddrMode() const noexcept {
     return context_.opcode->addressing_mode;
   }
 
-  nesdev::core::MemoryAccess MemoryAccess() const noexcept {
+  MemoryAccess MemAccess() const noexcept {
     return context_.opcode->memory_access;
   }
 
-  nesdev::core::Address Address() const noexcept {
+  Address Addr() const noexcept {
     return context_.address.effective;
   }
 
-  Byte Offset() const noexcept {
+  Byte AddrLo() const noexcept {
     return context_.address.lo;
   }
 
-  Byte Page() const noexcept {
+  Byte AddrHi() const noexcept {
     return context_.address.hi;
   }
 
-  void Address(nesdev::core::Address address) noexcept {
+  void Addr(Address address) noexcept {
     context_.address.effective = address;
   }
 
-  void Address(nesdev::core::Address address, Byte offset) noexcept {
+  void Addr(Address address, Byte offset) noexcept {
     context_.is_page_crossed = ((address + offset) & 0xFF00) != (address & 0xFF00);
     context_.address.effective = address + offset;
   }
 
-  void Address(nesdev::core::Address address, nesdev::core::Address relative) noexcept {
+  void Addr(Address address, Address relative) noexcept {
     context_.is_page_crossed = ((address + relative) & 0xFF00) != (address & 0xFF00);
     context_.address.effective = address + relative;
   }
 
-  void Offset(Byte offset) noexcept {
-    context_.address.lo = offset;
+  void AddrLo(Byte lo) noexcept {
+    context_.address.lo = lo;
   }
 
-  void Page(Byte page) noexcept {
-    context_.address.hi = page;
+  void AddrHi(Byte hi) noexcept {
+    context_.address.hi = hi;
+  }
+
+  Address Ptr() const noexcept {
+    return context_.pointer.effective;
+  }
+
+  Byte PtrLo() noexcept {
+    return context_.pointer.lo;
+  }
+
+  Byte PtrHi() noexcept {
+    return context_.pointer.hi;
+  }
+
+  void Ptr(Address address) noexcept {
+    context_.pointer.effective = address;
+  }
+
+  void PtrLo(Byte lo) noexcept {
+    context_.pointer.lo = lo;
+  }
+
+  void PtrHi(Byte hi) noexcept {
+    context_.pointer.hi = hi;
   }
 
   bool CrossPage() {
     return context_.is_page_crossed;
   }
 
-  bool If(nesdev::core::Instruction instruction) const noexcept {
-    return instruction == Instruction();
+  bool If(Instruction instruction) const noexcept {
+    return instruction == Inst();
   }
 
-  bool If(nesdev::core::AddressingMode addressing_mode) const noexcept {
-    return addressing_mode == AddressingMode();
+  bool If(AddressingMode addressing_mode) const noexcept {
+    return addressing_mode == AddrMode();
   }
 
-  bool If(nesdev::core::MemoryAccess memory_access) const noexcept {
-    return memory_access == MemoryAccess();
+  bool If(MemoryAccess memory_access) const noexcept {
+    return memory_access == MemAccess();
   }
 
-  bool IfNot(nesdev::core::Instruction instruction) const noexcept {
+  bool IfNot(Instruction instruction) const noexcept {
     return !If(instruction);
   }
 
-  bool IfNot(nesdev::core::AddressingMode addressing_mode) const noexcept {
+  bool IfNot(AddressingMode addressing_mode) const noexcept {
     return !If(addressing_mode);
   }
 
-  bool IfNot(nesdev::core::MemoryAccess memory_access) const noexcept {
+  bool IfNot(MemoryAccess memory_access) const noexcept {
     return !If(memory_access);
   }
 
