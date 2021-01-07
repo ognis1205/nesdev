@@ -12,11 +12,11 @@
 namespace nesdev {
 namespace core {
 
-using Byte = std::uint_least8_t;
+using Byte = std::uint8_t;
 
-using Word = std::uint_least16_t;
+using Word = std::uint16_t;
 
-using Address = std::uint_least16_t;
+using Address = std::uint16_t;
 
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
 struct Bitfield {

@@ -21,7 +21,7 @@ class CPU : public Clock {
 
   virtual void Tick() override = 0;
 
-  virtual void FetchOpcode() = 0;
+  virtual void Next() = 0;
 
   virtual void RST() noexcept = 0;
 
@@ -54,77 +54,82 @@ class CPU : public Clock {
     return context_.fetched;
   }
 
-  Byte GetOpcode() const noexcept {
+  Byte Opcode() const noexcept {
     return context_.opcode_byte;
   }
 
-  Instruction GetInstruction() const noexcept {
+  nesdev::core::Instruction Instruction() const noexcept {
     return context_.opcode->instruction;
   }
 
-  AddressingMode GetAddressingMode() const noexcept {
+  nesdev::core::AddressingMode AddressingMode() const noexcept {
     return context_.opcode->addressing_mode;
   }
 
-  MemoryAccess GetMemoryAccess() const noexcept {
+  nesdev::core::MemoryAccess MemoryAccess() const noexcept {
     return context_.opcode->memory_access;
   }
 
-  Address GetAddress() const noexcept {
+  nesdev::core::Address Address() const noexcept {
     return context_.address.effective;
   }
 
-  Byte GetOffset() const noexcept {
+  Byte Offset() const noexcept {
     return context_.address.lo;
   }
 
-  Byte GetPage() const noexcept {
+  Byte Page() const noexcept {
     return context_.address.hi;
   }
 
-  void SetAddress(Address address) noexcept {
+  void Address(nesdev::core::Address address) noexcept {
     context_.address.effective = address;
   }
 
-  void SetAddress(Address address, Byte offset) noexcept {
-    context_.is_page_crossed = (static_cast<uint16_t>(address + offset) & 0xFF00) != (address & 0xFF00);
+  void Address(nesdev::core::Address address, Byte offset) noexcept {
+    context_.is_page_crossed = ((address + offset) & 0xFF00) != (address & 0xFF00);
     context_.address.effective = address + offset;
   }
 
-  void SetAddressLo(Byte lo) noexcept {
-    context_.address.lo = lo;
+  void Address(nesdev::core::Address address, nesdev::core::Address relative) noexcept {
+    context_.is_page_crossed = ((address + relative) & 0xFF00) != (address & 0xFF00);
+    context_.address.effective = address + relative;
   }
 
-  void SetAddressHi(Byte hi) noexcept {
-    context_.address.hi = hi;
+  void Offset(Byte offset) noexcept {
+    context_.address.lo = offset;
+  }
+
+  void Page(Byte page) noexcept {
+    context_.address.hi = page;
   }
 
   bool CrossPage() {
     return context_.is_page_crossed;
   }
 
-  bool Is(Instruction instruction) const noexcept {
-    return instruction == GetInstruction();
+  bool If(nesdev::core::Instruction instruction) const noexcept {
+    return instruction == Instruction();
   }
 
-  bool Is(AddressingMode addressing_mode) const noexcept {
-    return addressing_mode == GetAddressingMode();
+  bool If(nesdev::core::AddressingMode addressing_mode) const noexcept {
+    return addressing_mode == AddressingMode();
   }
 
-  bool Is(MemoryAccess memory_access) const noexcept {
-    return memory_access == GetMemoryAccess();
+  bool If(nesdev::core::MemoryAccess memory_access) const noexcept {
+    return memory_access == MemoryAccess();
   }
 
-  bool IsNot(Instruction instruction) const noexcept {
-    return !Is(instruction);
+  bool IfNot(nesdev::core::Instruction instruction) const noexcept {
+    return !If(instruction);
   }
 
-  bool IsNot(AddressingMode addressing_mode) const noexcept {
-    return !Is(addressing_mode);
+  bool IfNot(nesdev::core::AddressingMode addressing_mode) const noexcept {
+    return !If(addressing_mode);
   }
 
-  bool IsNot(MemoryAccess memory_access) const noexcept {
-    return !Is(memory_access);
+  bool IfNot(nesdev::core::MemoryAccess memory_access) const noexcept {
+    return !If(memory_access);
   }
 
  protected:

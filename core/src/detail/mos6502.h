@@ -21,11 +21,11 @@ namespace detail {
 
 class MOS6502 final : public CPU {
  public:
-  static const Address kBRKAddress = {0xFFFE};
+  static const nesdev::core::Address kBRKAddress = {0xFFFE};
 
-  static const Address kRSTAddress = {0xFFFC};
+  static const nesdev::core::Address kRSTAddress = {0xFFFC};
 
-  static const Address kNMIAddress = {0xFFFA};
+  static const nesdev::core::Address kNMIAddress = {0xFFFA};
 
   struct Registers {
     // Accumulator
@@ -46,9 +46,9 @@ class MOS6502 final : public CPU {
     } s = {0x00};
     // Program counter
     union {
-      Address value;
-      Bitfield<0, 8, Address> lo;
-      Bitfield<8, 8, Address> hi;
+      nesdev::core::Address value;
+      Bitfield<0, 8, nesdev::core::Address> lo;
+      Bitfield<8, 8, nesdev::core::Address> hi;
     } pc = {0x0000};
     // Status register
     union {
@@ -71,7 +71,7 @@ class MOS6502 final : public CPU {
 
   void Tick() override;
 
-  void FetchOpcode() override;
+  void Next() override;
 
   void RST() noexcept override;
 
@@ -82,7 +82,7 @@ class MOS6502 final : public CPU {
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Stack {
    public:
-    static const Address kOffset = {0x0100};
+    static const nesdev::core::Address kOffset = {0x0100};
 
     static const Byte kHead = {0xFD};
 
@@ -90,11 +90,11 @@ class MOS6502 final : public CPU {
       : registers_{registers}, mmu_{mmu} {}
 
     Byte Pull() const {
-      return mmu_->Read(Stack::kOffset + ++registers_->s.value);
+      return mmu_->Read(kOffset + ++registers_->s.value);
     }
 
     void Push(Byte byte) {
-      mmu_->Write(Stack::kOffset + registers_->s.value--, byte);
+      mmu_->Write(kOffset + registers_->s.value--, byte);
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -112,7 +112,7 @@ class MOS6502 final : public CPU {
     };
 
     static Bus Load(Byte a, Byte b) noexcept {
-      return {(Word)(a << 8 | b)};
+      return {static_cast<Word>(a << 8 | b)};      
     };
 
     ALU(Registers* const registers)
@@ -212,18 +212,18 @@ class MOS6502 final : public CPU {
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Byte Fetch() noexcept override {
-    if (Is(AddressingMode::IMM))
-      SetAddress(registers_->pc.value++);
-    return context_.fetched = Read(GetAddress());
+    if (AddressingMode() == AddressingMode::IMM)
+      Address(registers_->pc.value++);
+    return context_.fetched = Read(Address());
+  }
+
+  void Stage() noexcept {
+    // This is just for formatting the code.
   }
 
   void Stage(const std::function<void()>& step, bool when=true) noexcept {
     if (when) pipeline_.Push(step);
   }
-
-//  void Stage(const Pipeline::Step& step, bool when=true) noexcept {
-//    if (when) pipeline_.Push(step);
-//  }
 
   bool ClearWhenCompleted() noexcept {
     if (pipeline_.Done()) {
@@ -237,16 +237,16 @@ class MOS6502 final : public CPU {
     pipeline_.Tick();
   }
 
-  void ReadOpcode() noexcept {
+  void Parse() noexcept {
     context_.opcode_byte = Read(registers_->pc.value++);
     context_.opcode = nesdev::core::Decode(context_.opcode_byte);
   }
 
-  Byte Read(Address address) const {
+  Byte Read(nesdev::core::Address address) const {
     return mmu_->Read(address);
   }
 
-  void Write(Address address, Byte byte) {
+  void Write(nesdev::core::Address address, Byte byte) {
     mmu_->Write(address, byte);
   }
 
@@ -304,6 +304,18 @@ class MOS6502 final : public CPU {
 
   void Bit(Byte a, Byte b) noexcept {
     return alu_.Bit(ALU::Load(a, b));
+  }
+
+  void FixPage() {
+    // For relative addressing mode, if the specified offset is negative. Fix its value
+    // to signed value in 16-bit length binary.
+    if (context_.address.lo & 0x80)
+      Page(0xFF);
+  }
+
+  void Branch(nesdev::core::Address relative) {
+    context_.is_page_crossed = ((registers_->pc.value + relative) & 0xFF00) != (registers_->pc.value & 0xFF00);
+    registers_->pc.value = registers_->pc.value + relative;
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
