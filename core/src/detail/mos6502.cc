@@ -49,8 +49,17 @@ void MOS6502::Tick() {
 }
 
 /*
- * The following instruction timings are defined according to the following article.
+ * The following instruction timings are defined according to the following
+article.
  * [SEE] https://robinli.eu/f/6502_cpu.txt
+ *
+ * NOTE: The following opcodes are invelid in MOS6502 archetecture, but still
+ *       capable to handle each addressing modes and instructions, so will not
+ *       throw exceptions.
+ *       {0x1A, {Instruction::INC, AddressingMode::ACC, MemoryAccess::READ_MODIFY_WRITE}} // ***65C02-***
+ *       {0x3A, {Instruction::DEC, AddressingMode::ACC, MemoryAccess::READ_MODIFY_WRITE}} // ***65C02-***
+ *       {0x3C, {Instruction::BIT, AddressingMode::ABX,  MemoryAccess::READ            }} // ***65C02-***
+ *       {0x89, {Instruction::BIT, AddressingMode::IMM,  MemoryAccess::READ            }} // ***65C02-***
  */
 bool MOS6502::Next() {
   // Parse next instruction.
@@ -354,11 +363,30 @@ bool MOS6502::Next() {
   return true;
 }
 
-bool MOS6502::RST() noexcept { return true; }
+bool MOS6502::RST() noexcept {
+  pipeline_.Clear();
+  context_.is_nmi_occured = false;
+  AddrLo(Read(MOS6502::kRSTAddress));
+  AddrHi(Read(MOS6502::kRSTAddress + 1));
+  REG(pc) = Addr();
+  return true;
+}
 
 bool MOS6502::IRQ() noexcept { return true; }
 
-bool MOS6502::NMI() noexcept { return true; }
+bool MOS6502::NMI() noexcept {
+  if (context_.is_nmi_occured) {
+    Stage([this] { Read(REG(pc));                                            });
+    Stage([this] { Push(REG_HI(pc));                                         });
+    Stage([this] { Push(REG_LO(pc));                                         });
+    Stage([this] { Push(REG(p));                                             });
+    Stage([this] { AddrLo(Read(MOS6502::kNMIAddress));                       });
+    Stage([this] { AddrHi(Read(MOS6502::kNMIAddress + 1)); REG(pc) = Addr(); });
+    return !(context_.is_nmi_occured = false);
+  } else {
+    return false;
+  }
+}
   
 }  // namespace detail
 }  // namespace core

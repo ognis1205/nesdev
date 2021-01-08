@@ -40,6 +40,8 @@ class CPU : public Clock {
     std::optional<Opcode> opcode;    
 
     bool is_page_crossed = false;
+
+    bool is_nmi_occured = false;
     
     union {
       Address effective;
@@ -134,8 +136,12 @@ class CPU : public Clock {
     context_.pointer.hi = hi;
   }
 
-  bool CrossPage() {
+  bool CrossPage() noexcept {
     return context_.is_page_crossed;
+  }
+
+  void SignalNMI() noexcept {
+    context_.is_nmi_occured = true;
   }
 
   bool If(Instruction instruction) const noexcept {
