@@ -57,158 +57,298 @@ bool MOS6502::Next() {
   Parse();
   // Stage the specified addressing mode.
   switch (AddrMode()) {
-  case A::ACC: Stage(         /* Nothing to stage. */                                                                                                             ); break;
-  case A::IMP: Stage(         /* Nothing to stage. */                                                                                                             ); break;
-  case A::IMM: Stage(         /* Nothing to stage. */                                                                                                             ); break;
-  case A::REL: Stage(         /* Nothing to stage. */                                                                                                             ); break;
-  case A::ABS: Stage([this] { AddrLo(Read(REG(pc)++));                                                                           }                                );
-               Stage([this] { AddrHi(Read(REG(pc)++)); REG(pc) = Addr();                                                         }, If(I::JMP)                    );
-               Stage([    ] { /* Internal operation. */                                                                          }, If(I::JSR)                    );
-               Stage([this] { Push(REG_HI(pc));                                                                                  }, If(I::JSR)                    );
-               Stage([this] { Push(REG_LO(pc));                                                                                  }, If(I::JSR)                    );
-               Stage([this] { AddrHi(Read(REG(pc)++)); REG(pc) = Addr();                                                         }, If(I::JSR)                    );
-               Stage([this] { AddrHi(Read(REG(pc)++));                                                                           }, IfNot(I::JMP) && IfNot(I::JSR));
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::ABX: Stage([this] { AddrLo(Read(REG(pc)++));                                                                           }                                );
-               Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(x));                                                     }                                );
-               Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip;              }, If(M::READ)                   );
-               Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                                       }, IfNot(M::READ)                );
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::ABY: Stage([this] { AddrLo(Read(REG(pc)++));                                                                           }                                );
-               Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(y));                                                     }                                );
-               Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip;              }, If(M::READ)                   );
-               Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                                       }, IfNot(M::READ)                );
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::ZP0: Stage([this] { Addr(Read(REG(pc)++));                                                                             }                                );
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::ZPX: Stage([this] { Addr(Read(REG(pc)++));                                                                             }                                );
-               Stage([this] { Read(REG(pc)); AddrLo(AddrLo() + REG(x));                                                          }                                );
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::ZPY: Stage([this] { Addr(Read(REG(pc)++));                                                                             }                                );
-               Stage([this] { Read(REG(pc)); AddrLo(AddrLo() + REG(y));                                                          }                                );
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::IND: Stage([this] { PtrLo(Read(REG(pc)++));                                                                            }                                );
-               Stage([this] { PtrHi(Read(REG(pc)++));                                                                            }                                );
-               Stage([this] { AddrLo(Read(Ptr()));                                                                               }                                );
-               Stage([this] { if (PtrLo() == 0xFF) AddrHi(Read(Ptr() & 0xFF00)); else AddrHi(Read(Ptr() + 1)); REG(pc) = Addr(); }                                ); break;
-  case A::IZX: Stage([this] { Ptr(Read(REG(pc)++));                                                                              }                                );
-               Stage([this] { Read(Ptr());                                                                                       }                                );
-               Stage([this] { AddrLo(Read(Ptr() + static_cast<Address>(REG(x))));                                                }                                );
-               Stage([this] { AddrHi(Read(Ptr() + static_cast<Address>(REG(x)) + 1));                                            }                                );
-               Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  case A::IZY: Stage([this] { Ptr(Read(REG(pc)++));                                                                              }                                );
-               Stage([this] { AddrLo(Read(Ptr()));                                                                               }                                );
-	       Stage([this] { AddrHi(Read(Ptr() + 1)); Addr(Addr(), REG(y));                                                     }                                );
-	       Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip;              }, If(M::READ)                   );
-	       Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                                       }, IfNot(M::READ)                );
-	       Stage([this] { Fetch();                                                                                           }, If(M::READ_MODIFY_WRITE)      );
-               Stage([this] { Write(Addr(), Fetched());                                                                          }, If(M::READ_MODIFY_WRITE)      ); break;
-  default    : NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Opcode()));
+  case A::ACC:
+    Stage(/* Nothing to stage. */);
+    break;
+  case A::IMP:
+    Stage(/* Nothing to stage. */);
+    break;
+  case A::IMM:
+    Stage(/* Nothing to stage. */);
+    break;
+  case A::REL:
+    Stage(/* Nothing to stage. */);
+    break;
+  case A::ABS:
+    Stage([this] { AddrLo(Read(REG(pc)++));                   }                                );
+    Stage([this] { AddrHi(Read(REG(pc)++)); REG(pc) = Addr(); }, If(I::JMP)                    );
+    Stage([    ] { /* Internal operation. */                  }, If(I::JSR)                    );
+    Stage([this] { Push(REG_HI(pc));                          }, If(I::JSR)                    );
+    Stage([this] { Push(REG_LO(pc));                          }, If(I::JSR)                    );
+    Stage([this] { AddrHi(Read(REG(pc)++)); REG(pc) = Addr(); }, If(I::JSR)                    );
+    Stage([this] { AddrHi(Read(REG(pc)++));                   }, IfNot(I::JMP) && IfNot(I::JSR));
+    Stage([this] { Fetch();                                   }, If(M::READ_MODIFY_WRITE)      );
+    Stage([this] { Write(Addr(), Fetched());                  }, If(M::READ_MODIFY_WRITE)      );
+    break;
+  case A::ABX:
+    Stage([this] { AddrLo(Read(REG(pc)++));                                                              }                          );
+    Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(x));                                        }                          );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
+    Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
+    break;
+  case A::ABY:
+    Stage([this] { AddrLo(Read(REG(pc)++));                                                              }                          );
+    Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(y));                                        }                          );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
+    Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
+    break;
+  case A::ZP0:
+    Stage([this] { Addr(Read(REG(pc)++));    }                          );
+    Stage([this] { Fetch();                  }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched()); }, If(M::READ_MODIFY_WRITE));
+    break;
+  case A::ZPX:
+    Stage([this] { Addr(Read(REG(pc)++));                    }                          );
+    Stage([this] { Read(REG(pc)); AddrLo(AddrLo() + REG(x)); }                          );
+    Stage([this] { Fetch();                                  }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                 }, If(M::READ_MODIFY_WRITE));
+    break;
+  case A::ZPY:
+    Stage([this] { Addr(Read(REG(pc)++));                    }                          );
+    Stage([this] { Read(REG(pc)); AddrLo(AddrLo() + REG(y)); }                          );
+    Stage([this] { Fetch();                                  }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                 }, If(M::READ_MODIFY_WRITE));
+    break;
+  case A::IND:
+    Stage([this] { PtrLo(Read(REG(pc)++));                                                                            });
+    Stage([this] { PtrHi(Read(REG(pc)++));                                                                            });
+    Stage([this] { AddrLo(Read(Ptr()));                                                                               });
+    Stage([this] { if (PtrLo() == 0xFF) AddrHi(Read(Ptr() & 0xFF00)); else AddrHi(Read(Ptr() + 1)); REG(pc) = Addr(); });
+    break;
+  case A::IZX:
+    Stage([this] { Ptr(Read(REG(pc)++));                                   }                          );
+    Stage([this] { Read(Ptr());                                            }                          );
+    Stage([this] { AddrLo(Read(Ptr() + static_cast<Address>(REG(x))));     }                          );
+    Stage([this] { AddrHi(Read(Ptr() + static_cast<Address>(REG(x)) + 1)); }                          );
+    Stage([this] { Fetch();                                                }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                               }, If(M::READ_MODIFY_WRITE));
+    break;
+  case A::IZY:
+    Stage([this] { Ptr(Read(REG(pc)++));                                                                 }                          );
+    Stage([this] { AddrLo(Read(Ptr()));                                                                  }                          );
+    Stage([this] { AddrHi(Read(Ptr() + 1)); Addr(Addr(), REG(y));                                        }                          );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
+    Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
+    break;
+  default:
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Opcode()));
   }
   // Stage the specified instruction.
   switch (Inst()) {
-  case I::ADC: Stage([this] { REG(a) = Add(REG(a), Fetch());                                                              }               ); break;
-  case I::AND: Stage([this] { REG(a) = And(REG(a), Fetch());                                                              }               ); break;
-  case I::ASL: Stage([this] { REG(a) = ShiftL(REG(a), false);                                                             }, If(A::ACC)   );
-               Stage([this] { Write(Addr(), ShiftL(Fetched(), false));                                                    }, IfNot(A::ACC)); break;
-  case I::BCC: Stage([this] { if (!CLR(carry)) REG(pc)++; return !CLR(carry) ? S::Stop : S::Continue;                     }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BCS: Stage([this] { if (!FLG(carry)) REG(pc)++; return !FLG(carry) ? S::Stop : S::Continue;                     }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BEQ: Stage([this] { if (!FLG(zero)) REG(pc)++; return !FLG(zero) ? S::Stop : S::Continue;                       }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BNE: Stage([this] { if (!CLR(zero)) REG(pc)++; return !CLR(zero) ? S::Stop : S::Continue;                       }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BMI: Stage([this] { if (!FLG(negative)) REG(pc)++; return !FLG(negative) ? S::Stop : S::Continue;               }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BPL: Stage([this] { if (!CLR(negative)) REG(pc)++; return !CLR(negative) ? S::Stop : S::Continue;               }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BVC: Stage([this] { if (!CLR(overflow)) REG(pc)++; return !CLR(overflow) ? S::Stop : S::Continue;               }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BVS: Stage([this] { if (!FLG(overflow)) REG(pc)++; return !FLG(overflow) ? S::Stop : S::Continue;               }               );
-               Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop;   }               );
-               Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::BIT: Stage([this] { Bit(REG(a), Fetch());                                                                       }               ); break;
-  case I::BRK: Stage([this] { REG(p) |= MSK(irq_disable); Read(REG(pc)++);                                                }               );
-               Stage([this] { Push(REG_HI(pc));                                                                           }               );
-               Stage([this] { Push(REG_LO(pc));                                                                           }               );
-               Stage([this] { Push(REG(p) | MSK(brk_command));                                                            }               );
-               Stage([this] { REG_LO(pc) = Read(MOS6502::kBRKAddress);                                                    }               );
-               Stage([this] { REG_HI(pc) = Read(MOS6502::kBRKAddress + 1);                                                }               ); break;
-  case I::CLC: Stage([this] { REG(p) &= ~MSK(carry);                                                                      }               ); break;
-  case I::CLI: Stage([this] { REG(p) &= ~MSK(irq_disable);                                                                }               ); break;
-  case I::CLD: Stage([this] { REG(p) &= ~MSK(decimal_mode);                                                               }               ); break;
-  case I::CLV: Stage([this] { REG(p) &= ~MSK(overflow);                                                                   }               ); break;
-  case I::CMP: Stage([this] { Cmp(REG(a), Fetch());                                                                       }               ); break;
-  case I::CPX: Stage([this] { Cmp(REG(x), Fetch());                                                                       }               ); break;
-  case I::CPY: Stage([this] { Cmp(REG(y), Fetch());                                                                       }               ); break;
-  case I::DEC: Stage([this] { Write(Addr(), Decrement(Fetched()));                                                        }               ); break;
-  case I::DEX: Stage([this] { REG(x) = Decrement(REG(x));                                                                 }               ); break;
-  case I::DEY: Stage([this] { REG(y) = Decrement(REG(y));                                                                 }               ); break;
-  case I::EOR: Stage([this] { REG(a) = Xor(REG(a), Fetch());                                                              }               ); break;
-  case I::INC: Stage([this] { Write(Addr(), Increment(Fetched()));                                                        }               ); break;
-  case I::INX: Stage([this] { REG(x) = Increment(REG(x));                                                                 }               ); break;
-  case I::INY: Stage([this] { REG(y) = Increment(REG(y));                                                                 }               ); break;
-  case I::JMP: Stage(         /* Nothing to stage. */                                                                                     ); break;
-  case I::JSR: Stage(         /* Nothing to stage. */                                                                                     ); break;
-  case I::LDA: Stage([this] { REG(a) = PassThrough(Fetch());                                                              }               ); break;
-  case I::LDX: Stage([this] { REG(x) = PassThrough(Fetch());                                                              }               ); break;
-  case I::LDY: Stage([this] { REG(y) = PassThrough(Fetch());                                                              }               ); break;
-  case I::LSR: Stage([this] { REG(a) = ShiftR(REG(a), false);                                                             }, If(A::ACC)   );
-               Stage([this] { Write(Addr(), ShiftR(Fetched(), false));                                                    }, IfNot(A::ACC)); break;
-  case I::NOP: Stage([    ] { /* Do nothing. */                                                                           }               ); break;
-  case I::ORA: Stage([this] { REG(a) = Or(REG(a), Fetch());                                                               }               ); break;
-  case I::PHA: Stage([this] { Read(REG(pc));                                                                              }               );
-               Stage([this] { Push(REG(a));                                                                               }               ); break;
-  case I::PHP: Stage([this] { Read(REG(pc));                                                                              }               );
-               Stage([this] { Push(REG(p) | MSK(brk_command) | MSK(unused)); REG(p) &= ~(MSK(brk_command) | MSK(unused)); }               ); break;
-  case I::PLA: Stage([    ] { /* Increment stack pointer. Done in Pull. */                                                }               );
-               Stage([this] { REG(a) = PassThrough(Pull());                                                               }               ); break;
-  case I::PLP: Stage([this] { Read(REG(pc));                                                                              }               );
-               Stage([    ] { /* Increment stack pointer. Done in Pull. */                                                }               );
-               Stage([this] { REG(p) = Pull(); REG(p) |= MSK(unused);                                                     }               ); break;
-  case I::ROL: Stage([this] { REG(a) = ShiftL(REG(a), true);                                                              }, If(A::ACC)   );
-               Stage([this] { Write(Addr(), ShiftL(Fetched(), true));                                                     }, IfNot(A::ACC)); break;
-  case I::ROR: Stage([this] { REG(a) = ShiftR(REG(a), true);                                                              }, If(A::ACC)   );
-               Stage([this] { Write(Addr(), ShiftR(Fetched(), true));                                                     }, IfNot(A::ACC)); break;
-  case I::RTI: Stage([this] { Read(REG(pc));                                                                              }               );
-               Stage([    ] { /* Increment stack pointer. Done in Pull. */                                                }               );
-               Stage([this] { REG(p) = Pull(); REG(p) &= ~(MSK(brk_command) | MSK(unused));                               }               );
-               Stage([this] { REG_LO(pc) = Pull();                                                                        }               );
-               Stage([this] { REG_HI(pc) = Pull();                                                                        }               ); break;
-  case I::RTS: Stage([this] { Read(REG(pc));                                                                              }               );
-               Stage([    ] { /* Increment stack pointer. Done in Pull. */                                                }               );
-               Stage([this] { REG_LO(pc) = Pull();                                                                        }               );
-               Stage([this] { REG_HI(pc) = Pull();                                                                        }               );
-               Stage([this] { REG(pc)++;                                                                                  }               ); break;
-  case I::SBC: Stage([this] { REG(a) = Sub(REG(a), Fetch());                                                              }               ); break;
-  case I::SEC: Stage([this] { REG(p) |= MSK(carry);                                                                       }               ); break;
-  case I::SEI: Stage([this] { REG(p) |= MSK(irq_disable);                                                                 }               ); break;
-  case I::SED: Stage([this] { REG(p) |= MSK(decimal_mode);                                                                }               ); break;
-  case I::STA: Stage([this] { Write(Addr(), REG(a));                                                                      }               ); break;
-  case I::STX: Stage([this] { Write(Addr(), REG(x));                                                                      }               ); break;
-  case I::STY: Stage([this] { Write(Addr(), REG(y));                                                                      }               ); break;
-  case I::TAX: Stage([this] { REG(x) = PassThrough(REG(a));                                                               }               ); break;
-  case I::TAY: Stage([this] { REG(y) = PassThrough(REG(a));                                                               }               ); break;
-  case I::TSX: Stage([this] { REG(x) = PassThrough(REG(s));                                                               }               ); break;
-  case I::TXA: Stage([this] { REG(a) = PassThrough(REG(x));                                                               }               ); break;
-  case I::TXS: Stage([this] { REG(s) = REG(x);                                                                            }               ); break;
-  case I::TYA: Stage([this] { REG(a) = PassThrough(REG(y));                                                               }               ); break;
-  default    : NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Opcode()));
+  case I::ADC:
+    Stage([this] { REG(a) = Add(REG(a), Fetch()); });
+    break;
+  case I::AND:
+    Stage([this] { REG(a) = And(REG(a), Fetch()); });
+    break;
+  case I::ASL:
+    Stage([this] { REG(a) = ShiftL(REG(a), false);          }, If(A::ACC)   );
+    Stage([this] { Write(Addr(), ShiftL(Fetched(), false)); }, IfNot(A::ACC));
+    break;
+  case I::BCC:
+    Stage([this] { if (!CLR(carry)) REG(pc)++; return !CLR(carry) ? S::Stop : S::Continue;                   });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BCS:
+    Stage([this] { if (!FLG(carry)) REG(pc)++; return !FLG(carry) ? S::Stop : S::Continue;                   });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BEQ:
+    Stage([this] { if (!FLG(zero)) REG(pc)++; return !FLG(zero) ? S::Stop : S::Continue;                     });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BNE:
+    Stage([this] { if (!CLR(zero)) REG(pc)++; return !CLR(zero) ? S::Stop : S::Continue;                     });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BMI:
+    Stage([this] { if (!FLG(negative)) REG(pc)++; return !FLG(negative) ? S::Stop : S::Continue;             });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BPL:
+    Stage([this] { if (!CLR(negative)) REG(pc)++; return !CLR(negative) ? S::Stop : S::Continue;             });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BVC:
+    Stage([this] { if (!CLR(overflow)) REG(pc)++; return !CLR(overflow) ? S::Stop : S::Continue;             });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BVS:
+    Stage([this] { if (!FLG(overflow)) REG(pc)++; return !FLG(overflow) ? S::Stop : S::Continue;             });
+    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
+    Stage([    ] { /* Do nothing. */                                                                         });
+    break;
+  case I::BIT:
+    Stage([this] { Bit(REG(a), Fetch()); });
+    break;
+  case I::BRK:
+    Stage([this] { REG(p) |= MSK(irq_disable); Read(REG(pc)++); });
+    Stage([this] { Push(REG_HI(pc));                            });
+    Stage([this] { Push(REG_LO(pc));                            });
+    Stage([this] { Push(REG(p) | MSK(brk_command));             });
+    Stage([this] { REG_LO(pc) = Read(MOS6502::kBRKAddress);     });
+    Stage([this] { REG_HI(pc) = Read(MOS6502::kBRKAddress + 1); });
+    break;
+  case I::CLC:
+    Stage([this] { REG(p) &= ~MSK(carry); });
+    break;
+  case I::CLI:
+    Stage([this] { REG(p) &= ~MSK(irq_disable); });
+    break;
+  case I::CLD:
+    Stage([this] { REG(p) &= ~MSK(decimal_mode); });
+    break;
+  case I::CLV:
+    Stage([this] { REG(p) &= ~MSK(overflow); });
+    break;
+  case I::CMP:
+    Stage([this] { Cmp(REG(a), Fetch()); });
+    break;
+  case I::CPX:
+    Stage([this] { Cmp(REG(x), Fetch()); });
+    break;
+  case I::CPY:
+    Stage([this] { Cmp(REG(y), Fetch()); });
+    break;
+  case I::DEC:
+    Stage([this] { Write(Addr(), Decrement(Fetched())); });
+    break;
+  case I::DEX:
+    Stage([this] { REG(x) = Decrement(REG(x)); });
+    break;
+  case I::DEY:
+    Stage([this] { REG(y) = Decrement(REG(y)); });
+    break;
+  case I::EOR:
+    Stage([this] { REG(a) = Xor(REG(a), Fetch()); });
+    break;
+  case I::INC:
+    Stage([this] { Write(Addr(), Increment(Fetched())); });
+    break;
+  case I::INX:
+    Stage([this] { REG(x) = Increment(REG(x)); });
+    break;
+  case I::INY:
+    Stage([this] { REG(y) = Increment(REG(y)); });
+    break;
+  case I::JMP:
+    Stage(/* Nothing to stage. */);
+    break;
+  case I::JSR:
+    Stage(/* Nothing to stage. */);
+    break;
+  case I::LDA:
+    Stage([this] { REG(a) = PassThrough(Fetch()); });
+    break;
+  case I::LDX:
+    Stage([this] { REG(x) = PassThrough(Fetch()); });
+    break;
+  case I::LDY:
+    Stage([this] { REG(y) = PassThrough(Fetch()); });
+    break;
+  case I::LSR:
+    Stage([this] { REG(a) = ShiftR(REG(a), false);          }, If(A::ACC)   );
+    Stage([this] { Write(Addr(), ShiftR(Fetched(), false)); }, IfNot(A::ACC));
+    break;
+  case I::NOP:
+    Stage([    ] { /* Do nothing. */ });
+    break;
+  case I::ORA:
+    Stage([this] { REG(a) = Or(REG(a), Fetch()); });
+    break;
+  case I::PHA:
+    Stage([this] { Read(REG(pc)); });
+    Stage([this] { Push(REG(a));  });
+    break;
+  case I::PHP:
+    Stage([this] { Read(REG(pc));                                                                              });
+    Stage([this] { Push(REG(p) | MSK(brk_command) | MSK(unused)); REG(p) &= ~(MSK(brk_command) | MSK(unused)); });
+    break;
+  case I::PLA:
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { REG(a) = PassThrough(Pull());                });
+    break;
+  case I::PLP:
+    Stage([this] { Read(REG(pc));                               });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { REG(p) = Pull(); REG(p) |= MSK(unused);      });
+    break;
+  case I::ROL:
+    Stage([this] { REG(a) = ShiftL(REG(a), true);          }, If(A::ACC)   );
+    Stage([this] { Write(Addr(), ShiftL(Fetched(), true)); }, IfNot(A::ACC));
+    break;
+  case I::ROR:
+    Stage([this] { REG(a) = ShiftR(REG(a), true);          }, If(A::ACC)   );
+    Stage([this] { Write(Addr(), ShiftR(Fetched(), true)); }, IfNot(A::ACC));
+    break;
+  case I::RTI:
+    Stage([this] { Read(REG(pc));                                                });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */                  });
+    Stage([this] { REG(p) = Pull(); REG(p) &= ~(MSK(brk_command) | MSK(unused)); });
+    Stage([this] { REG_LO(pc) = Pull();                                          });
+    Stage([this] { REG_HI(pc) = Pull();                                          });
+    break;
+  case I::RTS:
+    Stage([this] { Read(REG(pc));                               });
+    Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
+    Stage([this] { REG_LO(pc) = Pull();                         });
+    Stage([this] { REG_HI(pc) = Pull();                         });
+    Stage([this] { REG(pc)++;                                   });
+    break;
+  case I::SBC:
+    Stage([this] { REG(a) = Sub(REG(a), Fetch()); });
+    break;
+  case I::SEC:
+    Stage([this] { REG(p) |= MSK(carry); });
+    break;
+  case I::SEI:
+    Stage([this] { REG(p) |= MSK(irq_disable); });
+    break;
+  case I::SED:
+    Stage([this] { REG(p) |= MSK(decimal_mode); });
+    break;
+  case I::STA:
+    Stage([this] { Write(Addr(), REG(a)); });
+    break;
+  case I::STX:
+    Stage([this] { Write(Addr(), REG(x)); });
+    break;
+  case I::STY:
+    Stage([this] { Write(Addr(), REG(y)); });
+    break;
+  case I::TAX:
+    Stage([this] { REG(x) = PassThrough(REG(a)); });
+    break;
+  case I::TAY:
+    Stage([this] { REG(y) = PassThrough(REG(a)); });
+    break;
+  case I::TSX:
+    Stage([this] { REG(x) = PassThrough(REG(s)); });
+    break;
+  case I::TXA:
+    Stage([this] { REG(a) = PassThrough(REG(x)); });
+    break;
+  case I::TXS:
+    Stage([this] { REG(s) = REG(x); });
+    break;
+  case I::TYA:
+    Stage([this] { REG(a) = PassThrough(REG(y)); });
+    break;
+  default:
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Opcode()));
   }
   // Return true, just for coding comfortability.
   return true;
