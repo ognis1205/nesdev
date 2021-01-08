@@ -43,14 +43,13 @@ MOS6502::MOS6502(MOS6502::Registers* const registers, MMU* const mmu)
 MOS6502::~MOS6502() {}
 
 void MOS6502::Tick() {
-  if (ClearWhenCompleted()) NMI() || Next();
+  if (ClearWhenCompleted()) RST() || IRQ() || NMI() || Next();
   else Execute();
   ++context_.cycle;
 }
 
 /*
- * The following instruction timings are defined according to the following
-article.
+ * The following instruction timings are defined according to the following article.
  * [SEE] https://robinli.eu/f/6502_cpu.txt
  *
  * NOTE: The following opcodes are invelid in MOS6502 archetecture, but still
@@ -58,8 +57,8 @@ article.
  *       throw exceptions.
  *       {0x1A, {Instruction::INC, AddressingMode::ACC, MemoryAccess::READ_MODIFY_WRITE}} // ***65C02-***
  *       {0x3A, {Instruction::DEC, AddressingMode::ACC, MemoryAccess::READ_MODIFY_WRITE}} // ***65C02-***
- *       {0x3C, {Instruction::BIT, AddressingMode::ABX,  MemoryAccess::READ            }} // ***65C02-***
- *       {0x89, {Instruction::BIT, AddressingMode::IMM,  MemoryAccess::READ            }} // ***65C02-***
+ *       {0x3C, {Instruction::BIT, AddressingMode::ABX, MemoryAccess::READ             }} // ***65C02-***
+ *       {0x89, {Instruction::BIT, AddressingMode::IMM, MemoryAccess::READ             }} // ***65C02-***
  */
 bool MOS6502::Next() {
   // Parse next instruction.
@@ -161,44 +160,60 @@ bool MOS6502::Next() {
     Stage([this] { Write(Addr(), ShiftL(Fetched(), false)); }, IfNot(A::ACC));
     break;
   case I::BCC:
-    Stage([this] { if (!CLR(carry)) REG(pc)++; return !CLR(carry) ? S::Stop : S::Continue;                   });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!CLR(carry)) REG(pc)++; return !CLR(carry) ? S::Stop : S::Continue;                 });
+    Stage([this] { REG(pc)++;                                                                              }, IfCarry()   );
+    Stage([    ] { /* Check if carry is clear, done in staging phase here. */                              }, IfNotCarry());
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
+    Stage([    ] { /* Do nothing. */                                                                       }, IfNotCarry());
     break;
   case I::BCS:
-    Stage([this] { if (!FLG(carry)) REG(pc)++; return !FLG(carry) ? S::Stop : S::Continue;                   });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!FLG(carry)) REG(pc)++; return !FLG(carry) ? S::Stop : S::Continue;                 });
+    Stage([this] { REG(pc)++;                                                                              }, IfNotCarry());
+    Stage([    ] { /* Check if carry is set, done in staging phase here. */                                }, IfCarry()   );
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry()   );
+    Stage([    ] { /* Do nothing. */                                                                       }, IfCarry()   );
     break;
   case I::BEQ:
-    Stage([this] { if (!FLG(zero)) REG(pc)++; return !FLG(zero) ? S::Stop : S::Continue;                     });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!FLG(zero)) REG(pc)++; return !FLG(zero) ? S::Stop : S::Continue;                   });
+    Stage([this] { REG(pc)++;                                                                              }, IfNotZero());
+    Stage([    ] { /* Check if zero is set, done in staging phase here. */                                 }, IfZero()   );
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero()   );
+    Stage([    ] { /* Do nothing. */                                                                       }, IfZero()   );
     break;
   case I::BNE:
-    Stage([this] { if (!CLR(zero)) REG(pc)++; return !CLR(zero) ? S::Stop : S::Continue;                     });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!CLR(zero)) REG(pc)++; return !CLR(zero) ? S::Stop : S::Continue;                   });
+    Stage([this] { REG(pc)++;                                                                              }, IfZero()   );
+    Stage([    ] { /* Check if zero is clear, done in staging phase here. */                               }, IfNotZero());
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
+    Stage([    ] { /* Do nothing. */                                                                       }, IfNotZero());
     break;
   case I::BMI:
-    Stage([this] { if (!FLG(negative)) REG(pc)++; return !FLG(negative) ? S::Stop : S::Continue;             });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!FLG(negative)) REG(pc)++; return !FLG(negative) ? S::Stop : S::Continue;           });
+    Stage([this] { REG(pc)++;                                                                              }, IfNotNegative());
+    Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfNegative()   );
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative()   );
+    Stage([    ] { /* Do nothing. */                                                                       }, IfNegative()   );
     break;
   case I::BPL:
-    Stage([this] { if (!CLR(negative)) REG(pc)++; return !CLR(negative) ? S::Stop : S::Continue;             });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!CLR(negative)) REG(pc)++; return !CLR(negative) ? S::Stop : S::Continue;           });
+    Stage([this] { REG(pc)++;                                                                              }, IfNegative()   );
+    Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotNegative());
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());
+    Stage([    ] { /* Do nothing. */                                                                       }, IfNotNegative());
     break;
   case I::BVC:
-    Stage([this] { if (!CLR(overflow)) REG(pc)++; return !CLR(overflow) ? S::Stop : S::Continue;             });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!CLR(overflow)) REG(pc)++; return !CLR(overflow) ? S::Stop : S::Continue;           });
+    Stage([this] { REG(pc)++;                                                                              }, IfOverflow()   );
+    Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotOverflow());
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());
+    Stage([    ] { /* Do nothing. */                                                                       }, IfNotOverflow());
     break;
   case I::BVS:
-    Stage([this] { if (!FLG(overflow)) REG(pc)++; return !FLG(overflow) ? S::Stop : S::Continue;             });
-    Stage([this] { AddrLo(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; });
-    Stage([    ] { /* Do nothing. */                                                                         });
+    //Stage([this] { if (!FLG(overflow)) REG(pc)++; return !FLG(overflow) ? S::Stop : S::Continue;           });
+    Stage([this] { REG(pc)++;                                                                              }, IfNotOverflow());
+    Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfOverflow()   );
+    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow()   );
+    Stage([    ] { /* Do nothing. */                                                                       }, IfOverflow()   );
     break;
   case I::BIT:
     Stage([this] { Bit(REG(a), Fetch()); });
@@ -287,6 +302,7 @@ bool MOS6502::Next() {
     Stage([this] { Push(REG(p) | MSK(brk_command) | MSK(unused)); REG(p) &= ~(MSK(brk_command) | MSK(unused)); });
     break;
   case I::PLA:
+    Stage([this] { Read(REG(pc));                                                                              });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
     Stage([this] { REG(a) = PassThrough(Pull());                });
     break;
@@ -364,28 +380,34 @@ bool MOS6502::Next() {
 }
 
 bool MOS6502::RST() noexcept {
-  pipeline_.Clear();
-  context_.is_nmi_occured = false;
-  AddrLo(Read(MOS6502::kRSTAddress));
-  AddrHi(Read(MOS6502::kRSTAddress + 1));
-  REG(pc) = Addr();
-  return true;
+  Stage([this] { AddrLo(Read(MOS6502::kRSTAddress));                       }, IfRST());
+  Stage([this] { AddrHi(Read(MOS6502::kRSTAddress + 1)); REG(pc) = Addr(); }, IfRST());
+  Stage([this] { REG(a) = {0x00};                                          }, IfRST());
+  Stage([this] { REG(x) = {0x00};                                          }, IfRST());
+  Stage([this] { REG(y) = {0x00};                                          }, IfRST());
+  Stage([this] { REG(s) = Stack::kHead;                                    }, IfRST());
+  Stage([this] { REG(p) = 0x00 | MSK(unused);                              }, IfRST());
+  return IfRST() ? !(context_.is_rst_signaled = false) : false;
 }
 
-bool MOS6502::IRQ() noexcept { return true; }
+bool MOS6502::IRQ() noexcept {
+  Stage([this] { Push(REG_HI(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { Push(REG_LO(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { Push(REG(p));                                                          }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { AddrLo(Read(MOS6502::kBRKAddress));                                    }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { AddrHi(Read(MOS6502::kBRKAddress + 1)); REG(pc) = Addr();              }, IfIRQ() && IfNotIRQDisable());
+  return IfIRQ() ? !(context_.is_irq_signaled = false) : false;
+}
 
 bool MOS6502::NMI() noexcept {
-  if (context_.is_nmi_occured) {
-    Stage([this] { Read(REG(pc));                                            });
-    Stage([this] { Push(REG_HI(pc));                                         });
-    Stage([this] { Push(REG_LO(pc));                                         });
-    Stage([this] { Push(REG(p));                                             });
-    Stage([this] { AddrLo(Read(MOS6502::kNMIAddress));                       });
-    Stage([this] { AddrHi(Read(MOS6502::kNMIAddress + 1)); REG(pc) = Addr(); });
-    return !(context_.is_nmi_occured = false);
-  } else {
-    return false;
-  }
+  Stage([this] { Read(REG(pc));                                            }, IfNMI());
+  Stage([this] { Push(REG_HI(pc));                                         }, IfNMI());
+  Stage([this] { Push(REG_LO(pc));                                         }, IfNMI());
+  Stage([this] { Push(REG(p));                                             }, IfNMI());
+  Stage([this] { AddrLo(Read(MOS6502::kNMIAddress));                       }, IfNMI());
+  Stage([this] { AddrHi(Read(MOS6502::kNMIAddress + 1)); REG(pc) = Addr(); }, IfNMI());
+  return IfNMI() ? !(context_.is_nmi_signaled = false) : false;
 }
   
 }  // namespace detail

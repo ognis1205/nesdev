@@ -313,6 +313,70 @@ class MOS6502 final : public CPU {
       AddrHi(0xFF);
   }
 
+  bool IfCarry() const noexcept {
+    return !!registers_->p.carry;
+  }
+
+  bool IfZero() const noexcept {
+    return !!registers_->p.zero;
+  }
+
+  bool IfIRQDisable() const noexcept {
+    return !!registers_->p.irq_disable;
+  }
+
+  bool IfDecimalMode() const noexcept {
+    return !!registers_->p.decimal_mode;
+  }
+
+  bool IfBRKCommand() const noexcept {
+    return !!registers_->p.brk_command;
+  }
+
+  bool IfUnused() const noexcept {
+    return !!registers_->p.unused;
+  }
+
+  bool IfOverflow() const noexcept {
+    return !!registers_->p.overflow;
+  }
+
+  bool IfNegative() const noexcept {
+    return !!registers_->p.negative;
+  }
+
+  bool IfNotCarry() const noexcept {
+    return !registers_->p.carry;
+  }
+
+  bool IfNotZero() const noexcept {
+    return !registers_->p.zero;
+  }
+
+  bool IfNotIRQDisable() const noexcept {
+    return !registers_->p.irq_disable;
+  }
+
+  bool IfNotDecimalMode() const noexcept {
+    return !registers_->p.decimal_mode;
+  }
+
+  bool IfNotBRKCommand() const noexcept {
+    return !registers_->p.brk_command;
+  }
+
+  bool IfNotUnused() const noexcept {
+    return !registers_->p.unused;
+  }
+
+  bool IfNotOverflow() const noexcept {
+    return !registers_->p.overflow;
+  }
+
+  bool IfNotNegative() const noexcept {
+    return !registers_->p.negative;
+  }
+
   void Branch(Address relative) {
     context_.is_page_crossed = ((registers_->pc.value + relative) & 0xFF00) != (registers_->pc.value & 0xFF00);
     registers_->pc.value = registers_->pc.value + relative;

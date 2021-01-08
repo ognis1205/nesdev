@@ -664,6 +664,7 @@ TEST_F(MOS6502Test, ALUBit) {
 TEST_F(MOS6502Test, InvalidOpcodes) {
   for (nesdev::core::Word opcode = 0x00; opcode <= 0xFF; opcode++) {
     auto op = lookup_.at(opcode);
+    mos6502_.pipeline_.Clear();
     EXPECT_CALL(mmu_, Read(testing::_))
       .Times(1)
       .WillOnce(testing::Return(opcode));
@@ -671,7 +672,8 @@ TEST_F(MOS6502Test, InvalidOpcodes) {
       EXPECT_THROW(mos6502_.Next(), nesdev::core::InvalidOpcode);
     } else {
       mos6502_.Next();
-      EXPECT_GE(mos6502_.pipeline_.steps_.size(), op.cycles - 1);
+      EXPECT_THAT(mos6502_.pipeline_.steps_.size(),
+		  testing::AllOf(testing::Ge(op.cycles - 1), testing::Le(op.cycles + 1)));
     }
   }
 }

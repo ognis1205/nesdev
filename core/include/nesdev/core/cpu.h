@@ -31,6 +31,19 @@ class CPU : public Clock {
 
  protected:
   struct Context {
+    void Clear() {
+      opcode.reset();
+      cycle             = {0};
+      fetched           = {0x00};
+      opcode_byte       = {0x00};
+      is_page_crossed   = false;
+      is_rst_signaled   = false;
+      is_irq_signaled   = false;
+      is_nmi_signaled   = false;
+      address.effective = {0x0000};
+      pointer.effective = {0x0000};
+    }
+
     size_t cycle = {0};
 
     Byte fetched = {0x00};
@@ -41,7 +54,11 @@ class CPU : public Clock {
 
     bool is_page_crossed = false;
 
-    bool is_nmi_occured = false;
+    bool is_rst_signaled = false;
+
+    bool is_irq_signaled = false;
+
+    bool is_nmi_signaled = false;
     
     union {
       Address effective;
@@ -140,10 +157,6 @@ class CPU : public Clock {
     return context_.is_page_crossed;
   }
 
-  void SignalNMI() noexcept {
-    context_.is_nmi_occured = true;
-  }
-
   bool If(Instruction instruction) const noexcept {
     return instruction == Inst();
   }
@@ -166,6 +179,18 @@ class CPU : public Clock {
 
   bool IfNot(MemoryAccess memory_access) const noexcept {
     return !If(memory_access);
+  }
+
+  bool IfRST() const noexcept {
+    return context_.is_rst_signaled;
+  }
+
+  bool IfIRQ() const noexcept {
+    return context_.is_irq_signaled;
+  }
+
+  bool IfNMI() const noexcept {
+    return context_.is_nmi_signaled;
   }
 
  protected:
