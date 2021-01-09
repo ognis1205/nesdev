@@ -10,17 +10,12 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mmu.h"
+#include "mock_memory_bank.h"
 #include "utils.h"
 
-class MockMemoryBank : public nesdev::core::MemoryBank {
- public:
-  MOCK_CONST_METHOD1(MockHasValidAddress, bool(nesdev::core::Address));
-  MOCK_CONST_METHOD1(Read, nesdev::core::Byte(nesdev::core::Address));
-  MOCK_METHOD2(Write, void(nesdev::core::Address, nesdev::core::Byte));
-  virtual bool HasValidAddress(nesdev::core::Address address) const noexcept {
-    return MockHasValidAddress(address);
-  }
-};
+namespace nesdev {
+namespace core {
+namespace test {
 
 class MMUTest : public testing::Test {
  protected:
@@ -35,7 +30,7 @@ class MMUTest : public testing::Test {
 
   time_t start_time_;
 
-  nesdev::core::detail::MMU mmu_;
+  detail::MMU mmu_;
 };
 
 TEST_F(MMUTest, Clear) {
@@ -57,7 +52,7 @@ TEST_F(MMUTest, Add) {
 }
 
 TEST_F(MMUTest, Set) {
-  std::vector<std::unique_ptr<nesdev::core::MemoryBank>> memory_banks;
+  std::vector<std::unique_ptr<MemoryBank>> memory_banks;
   for (int i = 0; i < 3; i++) {
     auto memory_bank = std::make_unique<MockMemoryBank>();
     memory_banks.push_back(std::move(memory_bank));
@@ -87,11 +82,11 @@ TEST_F(MMUTest, ReadWithInvalidAddress) {
     .WillOnce(testing::Return(false));
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
-  EXPECT_THROW(mmu_.Read(0x0000), nesdev::core::InvalidAddress);
+  EXPECT_THROW(mmu_.Read(0x0000), InvalidAddress);
 }
 
 TEST_F(MMUTest, WriteWithValidAddress) {
-  nesdev::core::Byte memory = 0x00;
+  Byte memory = 0x00;
   auto memory_bank = std::make_unique<MockMemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
@@ -106,14 +101,14 @@ TEST_F(MMUTest, WriteWithValidAddress) {
 }
 
 TEST_F(MMUTest, WriteWithInvalidAddress) {
-  nesdev::core::Byte memory = 0x00;
+  Byte memory = 0x00;
   auto memory_bank = std::make_unique<MockMemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(false));
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
-  EXPECT_THROW(mmu_.Write(0x0000, 0x01), nesdev::core::InvalidAddress);
+  EXPECT_THROW(mmu_.Write(0x0000, 0x01), InvalidAddress);
   EXPECT_EQ(0x00, memory);
 }
 
@@ -136,3 +131,8 @@ TEST_F(MMUTest, SwitchWithInvalidAddress) {
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   EXPECT_FALSE(mmu_.Switch(0x0000));
 }
+
+}  // namespace detail
+}  // namespace core
+}  // namespace nesdev
+

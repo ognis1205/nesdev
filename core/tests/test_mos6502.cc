@@ -10,17 +10,12 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mos6502.h"
+#include "mock_mmu.h"
 #include "utils.h"
 
-class MockMMU : public nesdev::core::MMU {
- public:
-  MOCK_METHOD1(MockSet, void(nesdev::core::MemoryBanks));
-  MOCK_CONST_METHOD1(Read, nesdev::core::Byte(nesdev::core::Address));
-  MOCK_METHOD2(Write, void(nesdev::core::Address, nesdev::core::Byte));
-  virtual void Set(nesdev::core::MemoryBanks memory_banks) noexcept {
-    return MockSet(std::move(memory_banks));
-  }
-};
+namespace nesdev {
+namespace core {
+namespace test {
 
 class MOS6502Test : public testing::Test {
  protected:
@@ -37,9 +32,9 @@ class MOS6502Test : public testing::Test {
 
   MockMMU mmu_;
 
-  nesdev::core::detail::MOS6502::Registers registers_;
+  detail::MOS6502::Registers registers_;
 
-  nesdev::core::detail::MOS6502 mos6502_{&registers_, &mmu_};
+  detail::MOS6502 mos6502_{&registers_, &mmu_};
 
   struct Op {
     std::string inst;
@@ -662,18 +657,23 @@ TEST_F(MOS6502Test, ALUBit) {
 }
 
 TEST_F(MOS6502Test, InvalidOpcodes) {
-  for (nesdev::core::Word opcode = 0x00; opcode <= 0xFF; opcode++) {
+  for (Word opcode = 0x00; opcode <= 0xFF; opcode++) {
     auto op = lookup_.at(opcode);
     mos6502_.pipeline_.Clear();
     EXPECT_CALL(mmu_, Read(testing::_))
       .Times(1)
       .WillOnce(testing::Return(opcode));
     if (!op.cycles) {
-      EXPECT_THROW(mos6502_.Next(), nesdev::core::InvalidOpcode);
+      EXPECT_THROW(mos6502_.Next(), InvalidOpcode);
     } else {
       mos6502_.Next();
-      EXPECT_THAT(mos6502_.pipeline_.steps_.size(),
-		  testing::AllOf(testing::Ge(op.cycles - 1), testing::Le(op.cycles + 1)));
+      EXPECT_THAT(
+	mos6502_.pipeline_.steps_.size(),
+	testing::AllOf(testing::Ge(op.cycles - 1), testing::Le(op.cycles + 1)));
     }
   }
 }
+
+}  // namespace test
+}  // namespace core
+}  // namespace nesdev

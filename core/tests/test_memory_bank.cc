@@ -10,6 +10,10 @@
 #include "detail/memory_bank.h"
 #include "utils.h"
 
+namespace nesdev {
+namespace core {
+namespace test {
+
 class MemoryBankTest : public testing::Test {
  protected:
   void SetUp() override {
@@ -23,7 +27,7 @@ class MemoryBankTest : public testing::Test {
 
   time_t start_time_;
 
-  nesdev::core::detail::MemoryBank<0x0000, 0x1FFF, 0x800> memory_bank_;
+  detail::MemoryBank<0x0000, 0x1FFF, 0x800> memory_bank_;
 };
 
 TEST_F(MemoryBankTest, HasValidAddress) {
@@ -40,28 +44,32 @@ TEST_F(MemoryBankTest, Read) {
     EXPECT_EQ(0x00, memory_bank_.Read(i));
   }
   for (auto i = 0x2000u; i <= 0xFFFFu; i++) {
-    EXPECT_THROW(memory_bank_.Read(i), nesdev::core::InvalidAddress);
+    EXPECT_THROW(memory_bank_.Read(i), InvalidAddress);
   }
 }
 
 TEST_F(MemoryBankTest, Write) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    memory_bank_.Write(i, static_cast<nesdev::core::Byte>(i >> 2));
+    memory_bank_.Write(i, static_cast<Byte>(i >> 2));
   }
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    EXPECT_EQ(static_cast<nesdev::core::Byte>(i >> 2), memory_bank_.Read(i));
+    EXPECT_EQ(static_cast<Byte>(i >> 2), memory_bank_.Read(i));
   }
   for (auto i = 0x2000u; i <= 0xFFFFu; i++) {
-    EXPECT_THROW(memory_bank_.Write(i, static_cast<nesdev::core::Byte>(i >> 2)), nesdev::core::InvalidAddress);
+    EXPECT_THROW(memory_bank_.Write(i, static_cast<Byte>(i >> 2)), InvalidAddress);
   }
 }
 
 TEST_F(MemoryBankTest, PointerTo) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    memory_bank_.Write(i, static_cast<nesdev::core::Byte>(i >> 2));
+    memory_bank_.Write(i, static_cast<Byte>(i >> 2));
   }
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    EXPECT_EQ(static_cast<nesdev::core::Byte>(i >> 2), *(memory_bank_.PointerTo(i)));
+    EXPECT_EQ(static_cast<Byte>(i >> 2), *(memory_bank_.PointerTo(i)));
     EXPECT_EQ(*(memory_bank_.PointerTo(i)), *(memory_bank_.PointerTo(i % 0x800u)));
   }
 }
+
+}  // namespace test
+}  // namespace core
+}  // namespace nesdev

@@ -10,6 +10,10 @@
 #include <nesdev/core.h>
 #include "utils.h"
 
+namespace nesdev {
+namespace core {
+namespace test {
+
 class TypesTest : public testing::Test {
  protected:
   void SetUp() override {
@@ -24,21 +28,21 @@ class TypesTest : public testing::Test {
   time_t start_time_;
 
   union {
-    nesdev::core::Address value;
-    nesdev::core::Bitfield<0, 8, nesdev::core::Address> offset;
-    nesdev::core::Bitfield<8, 8, nesdev::core::Address> page;
+    Address value;
+    Bitfield<0, 8, Address> offset;
+    Bitfield<8, 8, Address> page;
   } pc_ = {0x0000};
 
   union {
-    nesdev::core::Byte value;
-    nesdev::core::Bitfield<0, 1, nesdev::core::Byte> carry;
-    nesdev::core::Bitfield<1, 1, nesdev::core::Byte> zero;
-    nesdev::core::Bitfield<2, 1, nesdev::core::Byte> irq_disable;
-    nesdev::core::Bitfield<3, 1, nesdev::core::Byte> decimal_mode;
-    nesdev::core::Bitfield<4, 1, nesdev::core::Byte> brk_command;
-    nesdev::core::Bitfield<5, 1, nesdev::core::Byte> unused;
-    nesdev::core::Bitfield<6, 1, nesdev::core::Byte> overflow;
-    nesdev::core::Bitfield<7, 1, nesdev::core::Byte> negative;
+    Byte value;
+    Bitfield<0, 1, Byte> carry;
+    Bitfield<1, 1, Byte> zero;
+    Bitfield<2, 1, Byte> irq_disable;
+    Bitfield<3, 1, Byte> decimal_mode;
+    Bitfield<4, 1, Byte> brk_command;
+    Bitfield<5, 1, Byte> unused;
+    Bitfield<6, 1, Byte> overflow;
+    Bitfield<7, 1, Byte> negative;
   } p_ = {0x00};
 };
 
@@ -432,3 +436,7 @@ TEST_F(TypesTest, InDecrement) {
   EXPECT_EQ(0b00000000, pc_.page);
   EXPECT_EQ(0b0000000011111111, pc_.value);
 }
+
+}  // namespace test
+}  // namespace core
+}  // namespace nesdev

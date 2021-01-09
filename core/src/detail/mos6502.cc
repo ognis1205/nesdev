@@ -160,49 +160,42 @@ bool MOS6502::Next() {
     Stage([this] { Write(Addr(), ShiftL(Fetched(), false)); }, IfNot(A::ACC));
     break;
   case I::BCC:
-    //Stage([this] { if (!CLR(carry)) REG(pc)++; return !CLR(carry) ? S::Stop : S::Continue;                 });
     Stage([this] { REG(pc)++;                                                                              }, IfCarry()   );
     Stage([    ] { /* Check if carry is clear, done in staging phase here. */                              }, IfNotCarry());
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotCarry());
     break;
   case I::BCS:
-    //Stage([this] { if (!FLG(carry)) REG(pc)++; return !FLG(carry) ? S::Stop : S::Continue;                 });
     Stage([this] { REG(pc)++;                                                                              }, IfNotCarry());
     Stage([    ] { /* Check if carry is set, done in staging phase here. */                                }, IfCarry()   );
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry()   );
     Stage([    ] { /* Do nothing. */                                                                       }, IfCarry()   );
     break;
   case I::BEQ:
-    //Stage([this] { if (!FLG(zero)) REG(pc)++; return !FLG(zero) ? S::Stop : S::Continue;                   });
     Stage([this] { REG(pc)++;                                                                              }, IfNotZero());
     Stage([    ] { /* Check if zero is set, done in staging phase here. */                                 }, IfZero()   );
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero()   );
     Stage([    ] { /* Do nothing. */                                                                       }, IfZero()   );
     break;
   case I::BNE:
-    //Stage([this] { if (!CLR(zero)) REG(pc)++; return !CLR(zero) ? S::Stop : S::Continue;                   });
     Stage([this] { REG(pc)++;                                                                              }, IfZero()   );
     Stage([    ] { /* Check if zero is clear, done in staging phase here. */                               }, IfNotZero());
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotZero());
     break;
   case I::BMI:
-    //Stage([this] { if (!FLG(negative)) REG(pc)++; return !FLG(negative) ? S::Stop : S::Continue;           });
     Stage([this] { REG(pc)++;                                                                              }, IfNotNegative());
     Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfNegative()   );
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative()   );
     Stage([    ] { /* Do nothing. */                                                                       }, IfNegative()   );
     break;
   case I::BPL:
-    //Stage([this] { if (!CLR(negative)) REG(pc)++; return !CLR(negative) ? S::Stop : S::Continue;           });
     Stage([this] { REG(pc)++;                                                                              }, IfNegative()   );
     Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotNegative());
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotNegative());
     break;
   case I::BVC:
-    //Stage([this] { if (!CLR(overflow)) REG(pc)++; return !CLR(overflow) ? S::Stop : S::Continue;           });
     Stage([this] { REG(pc)++;                                                                              }, IfOverflow()   );
     Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotOverflow());
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());

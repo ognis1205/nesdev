@@ -11,6 +11,10 @@
 #include "detail/pipeline.h"
 #include "utils.h"
 
+namespace nesdev {
+namespace core {
+namespace test {
+
 class PipelineTest : public testing::Test {
  protected:
   void SetUp() override {
@@ -26,14 +30,14 @@ class PipelineTest : public testing::Test {
 
   int acc_ = 0;
 
-  nesdev::core::detail::Pipeline pipeline1_, pipeline2_;
+  detail::Pipeline pipeline1_, pipeline2_;
 
   std::function<void()> step1_ = [this]() {
     acc_++;
   };
 
-  std::function<nesdev::core::detail::Pipeline::Status()> step2_ = []() {
-    return nesdev::core::detail::Pipeline::Status::Skip;
+  std::function<detail::Pipeline::Status()> step2_ = []() {
+    return detail::Pipeline::Status::Skip;
   };
 };
 
@@ -83,3 +87,8 @@ TEST_F(PipelineTest, Tick) {
   EXPECT_EQ(3, acc_);
   EXPECT_TRUE(pipeline1_.Done());
 }
+
+}  // namespace test
+}  // namespace core
+}  // namespace nesdev
+

@@ -10,17 +10,12 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mmu.h"
+#include "mock_memory_bank.h"
 #include "utils.h"
 
-class MockMemoryBank : public nesdev::core::MemoryBank {
- public:
-  MOCK_CONST_METHOD1(MockHasValidAddress, bool(nesdev::core::Address));
-  MOCK_CONST_METHOD1(Read, nesdev::core::Byte(nesdev::core::Address));
-  MOCK_METHOD2(Write, void(nesdev::core::Address, nesdev::core::Byte));
-  virtual bool HasValidAddress(nesdev::core::Address address) const noexcept {
-    return MockHasValidAddress(address);
-  }
-};
+namespace nesdev {
+namespace core {
+namespace test {
 
 class MMUFactoryTest : public testing::Test {
  protected:
@@ -37,17 +32,21 @@ class MMUFactoryTest : public testing::Test {
 };
 
 TEST_F(MMUFactoryTest, CreateEmpty) {
-  auto mmu = nesdev::core::MMUFactory::Create();
-  EXPECT_TRUE(static_cast<nesdev::core::detail::MMU*>(mmu.get())->memory_banks_.empty());
+  auto mmu = MMUFactory::Create();
+  EXPECT_TRUE(static_cast<detail::MMU*>(mmu.get())->memory_banks_.empty());
 }
 
 TEST_F(MMUFactoryTest, Create) {
-  std::vector<std::unique_ptr<nesdev::core::MemoryBank>> memory_banks;
+  std::vector<std::unique_ptr<MemoryBank>> memory_banks;
   for (int i = 0; i < 3; i++) {
     auto memory_bank = std::make_unique<MockMemoryBank>();
     memory_banks.push_back(std::move(memory_bank));
   }
-  auto mmu = nesdev::core::MMUFactory::Create(std::move(memory_banks));
-  EXPECT_FALSE(static_cast<nesdev::core::detail::MMU*>(mmu.get())->memory_banks_.empty());
-  EXPECT_EQ(3, static_cast<nesdev::core::detail::MMU*>(mmu.get())->memory_banks_.size());
+  auto mmu = MMUFactory::Create(std::move(memory_banks));
+  EXPECT_FALSE(static_cast<detail::MMU*>(mmu.get())->memory_banks_.empty());
+  EXPECT_EQ(3, static_cast<detail::MMU*>(mmu.get())->memory_banks_.size());
 }
+
+}  // namespace test
+}  // namespace core
+}  // namespace nesdev

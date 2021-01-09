@@ -23,6 +23,8 @@ class CPU : public Clock {
 
   virtual bool Next() = 0;
 
+  virtual Byte Fetch() noexcept = 0;
+
   virtual bool RST() noexcept = 0;
 
   virtual bool IRQ() noexcept = 0;
@@ -72,8 +74,6 @@ class CPU : public Clock {
       Bitfield<8, 8, Address> hi;
     } pointer = {0x0000};
   };
-
-  virtual Byte Fetch() noexcept = 0;
 
   Byte Fetched() const noexcept {
     return context_.fetched;
