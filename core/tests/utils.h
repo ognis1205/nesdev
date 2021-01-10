@@ -4,13 +4,15 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_TESTS_UTILS_H_
-#define _NESDEV_CORE_TESTS_UTILS_H_
-#include <bitset>
-#include <iomanip>
+#ifndef _NESDEV_CORE_TEST_UTILS_H_
+#define _NESDEV_CORE_TEST_UTILS_H_
 #include <sstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+namespace nesdev {
+namespace core {
+namespace test {
 
 #define DBG(...) \
   do { \
@@ -27,4 +29,8 @@ class DebugOut : public std::stringstream {
 
 #define COUT DebugOut()
 
-#endif  // ifndef _NESDEV_CORE_TESTS_UTILS_H_
+}  // namespace test
+}  // namespace core
+}  // namespace nesdev
+
+#endif  // ifndef _NESDEV_CORE_TEST_UTILS_H_

@@ -44,26 +44,6 @@ class MockCPU : public CPU {
     return MockNMI();
   }
 
-  Byte Fetched() const noexcept {
-    return CPU::Fetched();
-  }
-
-  Byte Opcode() const noexcept {
-    return CPU::Opcode();
-  }
-
-  Instruction Inst() const noexcept {
-    return CPU::Inst();
-  }
-
-  AddressingMode AddrMode() const noexcept {
-    return CPU::AddrMode();
-  }
-
-  MemoryAccess MemAccess() const noexcept {
-    return CPU::MemAccess();
-  }
-
   Address Addr() const noexcept {
     return CPU::Addr();
   }

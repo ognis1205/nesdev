@@ -31,6 +31,31 @@ class CPU : public Clock {
 
   virtual bool NMI() noexcept = 0;
 
+ public:
+  size_t Cycle() const noexcept {
+    return context_.cycle;
+  }
+
+  Byte Fetched() const noexcept {
+    return context_.fetched;
+  }
+
+  Byte Op() const noexcept {
+    return context_.opcode_byte;
+  }
+
+  Instruction Inst() const noexcept {
+    return context_.opcode->instruction;
+  }
+
+  AddressingMode AddrMode() const noexcept {
+    return context_.opcode->addressing_mode;
+  }
+
+  MemoryAccess MemAccess() const noexcept {
+    return context_.opcode->memory_access;
+  }
+
  protected:
   struct Context {
     void Clear() {
@@ -52,7 +77,7 @@ class CPU : public Clock {
 
     Byte opcode_byte = {0x00};
 
-    std::optional<Opcode> opcode;    
+    std::optional<Opcode> opcode;
 
     bool is_page_crossed = false;
 
@@ -75,26 +100,7 @@ class CPU : public Clock {
     } pointer = {0x0000};
   };
 
-  Byte Fetched() const noexcept {
-    return context_.fetched;
-  }
-
-  Byte Opcode() const noexcept {
-    return context_.opcode_byte;
-  }
-
-  Instruction Inst() const noexcept {
-    return context_.opcode->instruction;
-  }
-
-  AddressingMode AddrMode() const noexcept {
-    return context_.opcode->addressing_mode;
-  }
-
-  MemoryAccess MemAccess() const noexcept {
-    return context_.opcode->memory_access;
-  }
-
+ protected:
   Address Addr() const noexcept {
     return context_.address.effective;
   }
@@ -105,6 +111,18 @@ class CPU : public Clock {
 
   Byte AddrHi() const noexcept {
     return context_.address.hi;
+  }
+
+  Address Ptr() const noexcept {
+    return context_.pointer.effective;
+  }
+
+  Byte PtrLo() const noexcept {
+    return context_.pointer.lo;
+  }
+
+  Byte PtrHi() const noexcept {
+    return context_.pointer.hi;
   }
 
   void Addr(Address address) noexcept {
@@ -127,18 +145,6 @@ class CPU : public Clock {
 
   void AddrHi(Byte hi) noexcept {
     context_.address.hi = hi;
-  }
-
-  Address Ptr() const noexcept {
-    return context_.pointer.effective;
-  }
-
-  Byte PtrLo() noexcept {
-    return context_.pointer.lo;
-  }
-
-  Byte PtrHi() noexcept {
-    return context_.pointer.hi;
   }
 
   void Ptr(Address address) noexcept {

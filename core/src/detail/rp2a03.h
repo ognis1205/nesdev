@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_DETAIL_MOS6502_H_
-#define _NESDEV_CORE_DETAIL_MOS6502_H_
+#ifndef _NESDEV_CORE_DETAIL_RP2A03_H_
+#define _NESDEV_CORE_DETAIL_RP2A03_H_
 #include <cstdint>
 #include <functional>
 #include "nesdev/core/cpu.h"
@@ -19,7 +19,7 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-class MOS6502 final : public CPU {
+class RP2A03 final : public CPU {
  public:
   static const Address kBRKAddress = {0xFFFE};
 
@@ -65,9 +65,9 @@ class MOS6502 final : public CPU {
   };
 
  public:
-  MOS6502(Registers* const registers, MMU* const mmu);
+  RP2A03(Registers* const registers, MMU* const mmu);
 
-  ~MOS6502();
+  ~RP2A03();
 
   void Tick() override;
 
@@ -397,4 +397,4 @@ class MOS6502 final : public CPU {
 }  // namespace detail
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_DETAIL_CPU_H_
+#endif  // ifndef _NESDEV_CORE_DETAIL_RP2A03_H_

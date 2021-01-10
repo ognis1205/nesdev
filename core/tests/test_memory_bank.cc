@@ -60,13 +60,13 @@ TEST_F(MemoryBankTest, Write) {
   }
 }
 
-TEST_F(MemoryBankTest, PointerTo) {
+TEST_F(MemoryBankTest, PtrTo) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     memory_bank_.Write(i, static_cast<Byte>(i >> 2));
   }
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
-    EXPECT_EQ(static_cast<Byte>(i >> 2), *(memory_bank_.PointerTo(i)));
-    EXPECT_EQ(*(memory_bank_.PointerTo(i)), *(memory_bank_.PointerTo(i % 0x800u)));
+    EXPECT_EQ(static_cast<Byte>(i >> 2), *(memory_bank_.PtrTo(i)));
+    EXPECT_EQ(*(memory_bank_.PtrTo(i)), *(memory_bank_.PtrTo(i % 0x800u)));
   }
 }
 

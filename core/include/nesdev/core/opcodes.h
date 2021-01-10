@@ -153,7 +153,7 @@ enum Instruction : Byte {
   XCE  // ***65C816*** [Exchange] Carry and Emulation Bits
 };
 
-enum class MemoryAccess {
+enum MemoryAccess : Byte {
   READ,
   READ_MODIFY_WRITE,
   WRITE

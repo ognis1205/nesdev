@@ -14,8 +14,7 @@ endif ()
 
 add_executable(
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
-  ${NESDEV_CORE_TEST_SOURCES}
-  ${NESDEV_CORE_SOURCES})
+  ${NESDEV_CORE_TEST_SOURCES})
 
 target_compile_features (
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
@@ -38,6 +37,7 @@ target_include_directories(
 
 target_link_libraries(
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
+  ${NESDEV_CORE_LIBRARY}
   GTest::GTest
   GTest::GMock)
 

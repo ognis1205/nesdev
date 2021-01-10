@@ -11,7 +11,7 @@
 #include "nesdev/core/types.h"
 #include "macros.h"
 #include "pipeline.h"
-#include "detail/mos6502.h"
+#include "detail/rp2a03.h"
 
 namespace nesdev {
 namespace core {
@@ -37,12 +37,12 @@ constexpr Address FixHiByte(Address address) noexcept {
   return address - static_cast<Address>(0x0100);
 }
 
-MOS6502::MOS6502(MOS6502::Registers* const registers, MMU* const mmu)
+RP2A03::RP2A03(RP2A03::Registers* const registers, MMU* const mmu)
   : registers_{registers}, mmu_{mmu}, stack_{registers, mmu}, alu_{registers} {}
 
-MOS6502::~MOS6502() {}
+RP2A03::~RP2A03() {}
 
-void MOS6502::Tick() {
+void RP2A03::Tick() {
   if (ClearWhenCompleted()) RST() || IRQ() || NMI() || Next();
   else Execute();
   ++context_.cycle;
@@ -60,7 +60,7 @@ void MOS6502::Tick() {
  *       {0x3C, {Instruction::BIT, AddressingMode::ABX, MemoryAccess::READ             }} // ***65C02-***
  *       {0x89, {Instruction::BIT, AddressingMode::IMM, MemoryAccess::READ             }} // ***65C02-***
  */
-bool MOS6502::Next() {
+bool RP2A03::Next() {
   // Parse next instruction.
   Parse();
   // Stage the specified addressing mode.
@@ -145,7 +145,7 @@ bool MOS6502::Next() {
     Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
     break;
   default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Opcode()));
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Op()));
   }
   // Stage the specified instruction.
   switch (Inst()) {
@@ -202,7 +202,6 @@ bool MOS6502::Next() {
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotOverflow());
     break;
   case I::BVS:
-    //Stage([this] { if (!FLG(overflow)) REG(pc)++; return !FLG(overflow) ? S::Stop : S::Continue;           });
     Stage([this] { REG(pc)++;                                                                              }, IfNotOverflow());
     Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfOverflow()   );
     Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow()   );
@@ -216,8 +215,8 @@ bool MOS6502::Next() {
     Stage([this] { Push(REG_HI(pc));                            });
     Stage([this] { Push(REG_LO(pc));                            });
     Stage([this] { Push(REG(p) | MSK(brk_command));             });
-    Stage([this] { REG_LO(pc) = Read(MOS6502::kBRKAddress);     });
-    Stage([this] { REG_HI(pc) = Read(MOS6502::kBRKAddress + 1); });
+    Stage([this] { REG_LO(pc) = Read(RP2A03::kBRKAddress);      });
+    Stage([this] { REG_HI(pc) = Read(RP2A03::kBRKAddress + 1);  });
     break;
   case I::CLC:
     Stage([this] { REG(p) &= ~MSK(carry); });
@@ -295,7 +294,7 @@ bool MOS6502::Next() {
     Stage([this] { Push(REG(p) | MSK(brk_command) | MSK(unused)); REG(p) &= ~(MSK(brk_command) | MSK(unused)); });
     break;
   case I::PLA:
-    Stage([this] { Read(REG(pc));                                                                              });
+    Stage([this] { Read(REG(pc));                               });
     Stage([    ] { /* Increment stack pointer. Done in Pull. */ });
     Stage([this] { REG(a) = PassThrough(Pull());                });
     break;
@@ -366,40 +365,40 @@ bool MOS6502::Next() {
     Stage([this] { REG(a) = PassThrough(REG(y)); });
     break;
   default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Opcode()));
+    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Op()));
   }
   // Return true, just for coding comfortability.
   return true;
 }
 
-bool MOS6502::RST() noexcept {
-  Stage([this] { AddrLo(Read(MOS6502::kRSTAddress));                       }, IfRST());
-  Stage([this] { AddrHi(Read(MOS6502::kRSTAddress + 1)); REG(pc) = Addr(); }, IfRST());
-  Stage([this] { REG(a) = {0x00};                                          }, IfRST());
-  Stage([this] { REG(x) = {0x00};                                          }, IfRST());
-  Stage([this] { REG(y) = {0x00};                                          }, IfRST());
-  Stage([this] { REG(s) = Stack::kHead;                                    }, IfRST());
-  Stage([this] { REG(p) = 0x00 | MSK(unused);                              }, IfRST());
+bool RP2A03::RST() noexcept {
+  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       }, IfRST());
+  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); }, IfRST());
+  Stage([this] { REG(a) = {0x00};                                         }, IfRST());
+  Stage([this] { REG(x) = {0x00};                                         }, IfRST());
+  Stage([this] { REG(y) = {0x00};                                         }, IfRST());
+  Stage([this] { REG(s) = Stack::kHead;                                   }, IfRST());
+  Stage([this] { REG(p) = 0x00 | MSK(unused);                             }, IfRST());
   return IfRST() ? !(context_.is_rst_signaled = false) : false;
 }
 
-bool MOS6502::IRQ() noexcept {
+bool RP2A03::IRQ() noexcept {
   Stage([this] { Push(REG_HI(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { Push(REG_LO(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { Push(REG(p));                                                          }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { AddrLo(Read(MOS6502::kBRKAddress));                                    }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { AddrHi(Read(MOS6502::kBRKAddress + 1)); REG(pc) = Addr();              }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { AddrLo(Read(RP2A03::kBRKAddress));                                     }, IfIRQ() && IfNotIRQDisable());
+  Stage([this] { AddrHi(Read(RP2A03::kBRKAddress + 1)); REG(pc) = Addr();               }, IfIRQ() && IfNotIRQDisable());
   return IfIRQ() ? !(context_.is_irq_signaled = false) : false;
 }
 
-bool MOS6502::NMI() noexcept {
-  Stage([this] { Read(REG(pc));                                            }, IfNMI());
-  Stage([this] { Push(REG_HI(pc));                                         }, IfNMI());
-  Stage([this] { Push(REG_LO(pc));                                         }, IfNMI());
-  Stage([this] { Push(REG(p));                                             }, IfNMI());
-  Stage([this] { AddrLo(Read(MOS6502::kNMIAddress));                       }, IfNMI());
-  Stage([this] { AddrHi(Read(MOS6502::kNMIAddress + 1)); REG(pc) = Addr(); }, IfNMI());
+bool RP2A03::NMI() noexcept {
+  Stage([this] { Read(REG(pc));                                           }, IfNMI());
+  Stage([this] { Push(REG_HI(pc));                                        }, IfNMI());
+  Stage([this] { Push(REG_LO(pc));                                        }, IfNMI());
+  Stage([this] { Push(REG(p));                                            }, IfNMI());
+  Stage([this] { AddrLo(Read(RP2A03::kNMIAddress));                       }, IfNMI());
+  Stage([this] { AddrHi(Read(RP2A03::kNMIAddress + 1)); REG(pc) = Addr(); }, IfNMI());
   return IfNMI() ? !(context_.is_nmi_signaled = false) : false;
 }
   

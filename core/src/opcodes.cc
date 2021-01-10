@@ -229,7 +229,7 @@ static const std::map<Byte, Opcode> lookup = {
   {0xCE, {Instruction::DEC, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
   {0xCF, {Instruction::CMP, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
   {0xD0, {Instruction::BNE, AddressingMode::REL,  MemoryAccess::READ             }},
-  {0xD1, {Instruction::CMP, AddressingMode::IZX,  MemoryAccess::READ             }},
+  {0xD1, {Instruction::CMP, AddressingMode::IZY,  MemoryAccess::READ             }},
   {0xD2, {Instruction::CMP, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
   {0xD3, {Instruction::CMP, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
   {0xD4, {Instruction::PEI, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C816**
@@ -351,7 +351,7 @@ static std::string ToString(Instruction instruction) noexcept {
   case SBC: return "SBC";
   case SEC: return "SEC";
   case SEI: return "SEI";
-  case SED: return "SEd";
+  case SED: return "SED";
   case SEP: return "SEP";
   case STP: return "STP";
   case STA: return "STA";
