@@ -68,6 +68,16 @@ class InvalidOpcode : public Exception {
   InvalidOpcode(const char* what_arg) : Exception(what_arg) {}
 };
 
+class InvalidHeader : public Exception {
+ public:
+  static InvalidHeader Occur(const std::string& what_arg) {
+    return InvalidHeader((Exception::Header("InvalidHeader") + " " + what_arg).c_str());
+  }
+
+ private:
+  InvalidHeader(const char* what_arg) : Exception(what_arg) {}
+};
+
 class NotImplemented : public Exception {
  public:
   static NotImplemented Occur(const std::string& what_arg, const Byte& byte) {

@@ -10,10 +10,12 @@
 #include "core/clock.h"
 #include "core/cpu.h"
 #include "core/exceptions.h"
+#include "core/ines_header.h"
 #include "core/memory_bank.h"
 #include "core/mmu.h"
 #include "core/mmu_factory.h"
 #include "core/opcodes.h"
+#include "core/ppu.h"
 #include "core/types.h"
 
 #endif  // ifndef _NESDEV_CORE_H_

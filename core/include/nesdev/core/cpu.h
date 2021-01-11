@@ -6,7 +6,6 @@
  */
 #ifndef _NESDEV_CORE_CPU_H_
 #define _NESDEV_CORE_CPU_H_
-#include <cstdlib>
 #include <optional>
 #include "nesdev/core/clock.h"
 #include "nesdev/core/opcodes.h"
@@ -32,26 +31,32 @@ class CPU : public Clock {
   virtual bool NMI() noexcept = 0;
 
  public:
+  [[nodiscard]]
   size_t Cycle() const noexcept {
     return context_.cycle;
   }
 
+  [[nodiscard]]
   Byte Fetched() const noexcept {
     return context_.fetched;
   }
 
+  [[nodiscard]]
   Byte Op() const noexcept {
     return context_.opcode_byte;
   }
 
+  [[nodiscard]]
   Instruction Inst() const noexcept {
     return context_.opcode->instruction;
   }
 
+  [[nodiscard]]
   AddressingMode AddrMode() const noexcept {
     return context_.opcode->addressing_mode;
   }
 
+  [[nodiscard]]
   MemoryAccess MemAccess() const noexcept {
     return context_.opcode->memory_access;
   }
@@ -101,26 +106,32 @@ class CPU : public Clock {
   };
 
  protected:
+  [[nodiscard]]
   Address Addr() const noexcept {
     return context_.address.effective;
   }
 
+  [[nodiscard]]
   Byte AddrLo() const noexcept {
     return context_.address.lo;
   }
 
+  [[nodiscard]]
   Byte AddrHi() const noexcept {
     return context_.address.hi;
   }
 
+  [[nodiscard]]
   Address Ptr() const noexcept {
     return context_.pointer.effective;
   }
 
+  [[nodiscard]]
   Byte PtrLo() const noexcept {
     return context_.pointer.lo;
   }
 
+  [[nodiscard]]
   Byte PtrHi() const noexcept {
     return context_.pointer.hi;
   }
@@ -163,38 +174,47 @@ class CPU : public Clock {
     return context_.is_page_crossed;
   }
 
+  [[nodiscard]]
   bool If(Instruction instruction) const noexcept {
     return instruction == Inst();
   }
 
+  [[nodiscard]]
   bool If(AddressingMode addressing_mode) const noexcept {
     return addressing_mode == AddrMode();
   }
 
+  [[nodiscard]]
   bool If(MemoryAccess memory_access) const noexcept {
     return memory_access == MemAccess();
   }
 
+  [[nodiscard]]
   bool IfNot(Instruction instruction) const noexcept {
     return !If(instruction);
   }
 
+  [[nodiscard]]
   bool IfNot(AddressingMode addressing_mode) const noexcept {
     return !If(addressing_mode);
   }
 
+  [[nodiscard]]
   bool IfNot(MemoryAccess memory_access) const noexcept {
     return !If(memory_access);
   }
 
+  [[nodiscard]]
   bool IfRST() const noexcept {
     return context_.is_rst_signaled;
   }
 
+  [[nodiscard]]
   bool IfIRQ() const noexcept {
     return context_.is_irq_signaled;
   }
 
+  [[nodiscard]]
   bool IfNMI() const noexcept {
     return context_.is_nmi_signaled;
   }
