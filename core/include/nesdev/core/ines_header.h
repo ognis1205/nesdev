@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_INES_HEADER_H_
 #define _NESDEV_CORE_INES_HEADER_H_
+#include <cstddef>
 #include <fstream>
 #include "nesdev/core/types.h"
 
@@ -33,19 +34,21 @@ class INESHeader {
  public:
   static const Address kTrainerSize = {0x0200};
 
+  static const Word k16kb = {0x4000};
+
+  static const Word k8kb  = {0x2000};
+
  public:
-  INESHeader(std::ifstream* const ifs);
-
-  ~INESHeader();
+  void Load(std::ifstream* const ifs);
 
   [[nodiscard]]
-  constexpr bool HasValidMagic() const noexcept;
+  bool HasValidMagic() const noexcept;
 
   [[nodiscard]]
-  constexpr Byte SizeOfPRGRom() const noexcept;
+  std::size_t SizeOfPRGRom() const noexcept;
 
   [[nodiscard]]
-  constexpr Byte SizeOfCHRRom() const noexcept;
+  std::size_t SizeOfCHRRom() const noexcept;
 
   [[nodiscard]]
   Mirroring Mirror() const noexcept;
@@ -72,7 +75,7 @@ class INESHeader {
   Byte Mapper() const noexcept;
 
   [[nodiscard]]
-  constexpr Byte SizeOfPRGRam() const noexcept;
+  std::size_t SizeOfPRGRam() const noexcept;
 
   [[nodiscard]]
   TVSystem TV() const;
@@ -83,13 +86,17 @@ class INESHeader {
   [[nodiscard]]
   bool HasBusConflict() const noexcept;
 
- private:
-  Byte magic_[4];        // FLAGS 0-3  : ("NES" followed by MS-DOS end-of-file)
+ public:
+  // FLAGS 0-3  : ("NES" followed by MS-DOS end-of-file)
+  Byte magic_[4] = {0x00, 0x00, 0x00, 0x00};
 
-  Byte prg_rom_size_;    // FLAGS 4    : Size of PRG ROM in 16 KB units.
+  // FLAGS 4    : Size of PRG ROM in 16 KB units.
+  Byte prg_rom_size_ = {0x00};
 
-  Byte chr_rom_size_;    // FLAGS 5    : Size of CHR ROM in 8 KB units.
+  // FLAGS 5    : Size of CHR ROM in 8 KB units.
+  Byte chr_rom_size_ = {0x00};
 
+  // FLAGS 6    : Mapper, mirroring, battery, trainer.
   union {
     Byte value;
     Bitfield<0, 1, Byte> mirroring;
@@ -97,32 +104,37 @@ class INESHeader {
     Bitfield<2, 1, Byte> contains_trainer;
     Bitfield<3, 1, Byte> ignore_mirroring;
     Bitfield<4, 4, Byte> mapper_nibble_lo;
-  } flags6_;             // FLAGS 6    : Mapper, mirroring, battery, trainer.
+  } flags6_ = {0x00};
 
+  // FLAGS 7    : Mapper, VS/Playchoice, NES 2.0.
   union {
     Byte value;
     Bitfield<0, 1, Byte> is_vs_unisystem;
     Bitfield<1, 1, Byte> is_play_choice;
     Bitfield<2, 2, Byte> is_nes20_format;
     Bitfield<4, 4, Byte> mapper_nibble_hi;
-  } flags7_;             // FLAGS 7    : Mapper, VS/Playchoice, NES 2.0.
+  } flags7_ = {0x00};
 
-  Byte prg_ram_size_;    // FLAGS 8    : PRG-RAM size (rarely used extension).
+  // FLAGS 8    : PRG-RAM size (rarely used extension).
+  Byte prg_ram_size_ = {0x00};
 
+  // FLAGS 9    : TV system (rarely used extension).
   union {
     Byte value;
     Bitfield<0, 1, Byte> tv_system;
     Bitfield<1, 7, Byte> reserved;
-  } flags9_;             // FLAGS 9    : TV system (rarely used extension).
+  } flags9_ = {0x00};
 
+  // FLAGS 10   : TV system, PRG-RAM presence (unofficial, rarely used extension).
   union {
     Byte value;
     Bitfield<0, 2, Byte> tv_system;
     Bitfield<4, 1, Byte> prg_ram_not_present;
     Bitfield<5, 1, Byte> has_bus_conflict;
-  } flags10_;            // FLAGS 10   : TV system, PRG-RAM presence (unofficial, rarely used extension).
+  } flags10_ = {0x00};
 
-  Byte unused_[5];       // FLAGS 11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15)
+  // FLAGS 11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15)
+  Byte unused_[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
 };
 
 }  // namespace core
