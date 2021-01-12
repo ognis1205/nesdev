@@ -39,7 +39,7 @@ class INESHeaderTest : public testing::Test {
 
 TEST_F(INESHeaderTest, SuperMarioBrothers) {
   ifs_.open(super_mario_brothers_header_, std::ifstream::binary);
-  header_.Load(&ifs_);
+//  header_.Load(&ifs_);
   EXPECT_TRUE(header_.HasValidMagic());
   EXPECT_EQ(1 * 32768u, header_.SizeOfPRGRom());
   EXPECT_EQ(1 * 8192u, header_.SizeOfCHRRom());
@@ -60,7 +60,7 @@ TEST_F(INESHeaderTest, SuperMarioBrothers) {
 
 TEST_F(INESHeaderTest, Zelda) {
   ifs_.open(zelda_header_, std::ifstream::binary);
-  header_.Load(&ifs_);
+//  header_.Load(&ifs_);
   EXPECT_TRUE(header_.HasValidMagic());
   EXPECT_EQ(4 * 32768u, header_.SizeOfPRGRom());
   EXPECT_EQ(0 * 8192u, header_.SizeOfCHRRom());

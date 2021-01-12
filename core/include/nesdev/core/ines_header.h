@@ -46,8 +46,6 @@ class INESHeader {
   static constexpr std::size_t k8KByte  =  8 * 1024;
 
  public:
-  void Load(std::ifstream* const ifs);
-
   [[nodiscard]]
   bool HasValidMagic() const noexcept {
     return magic_[0] == 0x4E && magic_[1] == 0x45 && magic_[2] == 0x53 && magic_[3] == 0x1A;
