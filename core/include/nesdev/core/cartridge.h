@@ -7,6 +7,7 @@
 #ifndef _NESDEV_CORE_CARTRIDGE_H_
 #define _NESDEV_CORE_CARTRIDGE_H_
 #include "nesdev/core/ines_header.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -18,7 +19,7 @@ class Cartridge {
 
   virtual ~Cartridge() = default;
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   INESHeader header_;
 };
 
