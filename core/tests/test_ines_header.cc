@@ -41,15 +41,15 @@ TEST_F(INESHeaderTest, SuperMarioBrothers) {
   ifs_.open(super_mario_brothers_header_, std::ifstream::binary);
   header_.Load(&ifs_);
   EXPECT_TRUE(header_.HasValidMagic());
-  EXPECT_EQ(32768u, header_.SizeOfPRGRom());
-  EXPECT_EQ(8192u, header_.SizeOfCHRRom());
+  EXPECT_EQ(1 * 32768u, header_.SizeOfPRGRom());
+  EXPECT_EQ(1 * 8192u, header_.SizeOfCHRRom());
   EXPECT_EQ(Mirroring::VERTICAL, header_.Mirror());
   EXPECT_FALSE(header_.ContainsPersistentMemory());
   EXPECT_FALSE(header_.ContainsTrainer());
   EXPECT_FALSE(header_.IgnoreMirroing());
   EXPECT_FALSE(header_.IsVSUnisystem());
   EXPECT_FALSE(header_.IsPlayChoice());
-  EXPECT_FALSE(header_.IsNES20Format());
+  EXPECT_EQ(INESFormat::NES10, header_.Format());
   EXPECT_EQ(0, header_.Mapper());
   EXPECT_EQ(0, header_.SizeOfPRGRam());
   EXPECT_EQ(TVSystem::NTSC, header_.TV());
@@ -70,7 +70,7 @@ TEST_F(INESHeaderTest, Zelda) {
   EXPECT_FALSE(header_.IgnoreMirroing());
   EXPECT_FALSE(header_.IsVSUnisystem());
   EXPECT_FALSE(header_.IsPlayChoice());
-  EXPECT_FALSE(header_.IsNES20Format());
+  EXPECT_EQ(INESFormat::NES10, header_.Format());
   EXPECT_EQ(1, header_.Mapper());
   EXPECT_EQ(0, header_.SizeOfPRGRam());
   EXPECT_EQ(TVSystem::NTSC, header_.TV());

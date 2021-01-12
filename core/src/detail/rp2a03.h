@@ -9,10 +9,10 @@
 #include <cstdint>
 #include <functional>
 #include "nesdev/core/cpu.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
-#include "macros.h"
 #include "pipeline.h"
 
 namespace nesdev {

@@ -6,26 +6,19 @@
  */
 #ifndef _NESDEV_CORE_CARTRIDGE_H_
 #define _NESDEV_CORE_CARTRIDGE_H_
-#include <string>
 #include "nesdev/core/ines_header.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
 namespace core {
 
-/*
- * The iNES format header.
- * [SEE] https://wiki.nesdev.com/w/index.php/INES
- * [SEE] http://nesdev.com/neshdr20.txt
- * [SEE] https://nescartdb.com/
- */
 class Cartridge {
  public:
-  Cartridge(const std::string& path);
+  explicit Cartridge(const INESHeader& header) : header_{header} {};
 
-  ~Cartridge();
+  virtual ~Cartridge() = default;
 
- private:
+ protected:
   INESHeader header_;
 };
 

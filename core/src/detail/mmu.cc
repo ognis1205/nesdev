@@ -6,10 +6,10 @@
  */
 #include <algorithm>
 #include "nesdev/core/exceptions.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/types.h"
-#include "macros.h"
 #include "detail/mmu.h"
 
 namespace nesdev {

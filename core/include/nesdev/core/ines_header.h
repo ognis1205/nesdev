@@ -8,10 +8,17 @@
 #define _NESDEV_CORE_INES_HEADER_H_
 #include <cstddef>
 #include <fstream>
+#include "nesdev/core/exceptions.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
 namespace core {
+
+enum class INESFormat : Byte {
+  NES10,
+  NES20
+};
 
 enum class Mirroring : Byte {
   HORIZONTAL,
@@ -32,69 +39,117 @@ enum class TVSystem : Byte {
  */
 class INESHeader {
  public:
-  static const Address kTrainerSize = {0x0200};
+  static const Address kTrainerEnd = {0x0200};
 
-  static const Word k16kb = {0x4000};
+  static constexpr std::size_t k16KByte = 16 * 1024;
 
-  static const Word k8kb  = {0x2000};
+  static constexpr std::size_t k8KByte  =  8 * 1024;
 
  public:
   void Load(std::ifstream* const ifs);
 
   [[nodiscard]]
-  bool HasValidMagic() const noexcept;
+  bool HasValidMagic() const noexcept {
+    return magic_[0] == 0x4E && magic_[1] == 0x45 && magic_[2] == 0x53 && magic_[3] == 0x1A;
+  }
 
   [[nodiscard]]
-  std::size_t SizeOfPRGRom() const noexcept;
+  std::size_t SizeOfPRGRom() const noexcept {
+    return prg_rom_chunks_ * INESHeader::k16KByte;
+  }
 
   [[nodiscard]]
-  std::size_t SizeOfCHRRom() const noexcept;
+  std::size_t NumOfPRGBanks() const noexcept {
+    return prg_rom_chunks_;
+  }
 
   [[nodiscard]]
-  Mirroring Mirror() const noexcept;
+  std::size_t SizeOfCHRRom() const noexcept {
+    return chr_rom_chunks_ * INESHeader::k8KByte;
+  }
 
   [[nodiscard]]
-  bool ContainsPersistentMemory() const noexcept;
+  std::size_t NumOfCHRBanks() const noexcept {
+    return chr_rom_chunks_;
+  }
 
   [[nodiscard]]
-  bool ContainsTrainer() const noexcept;
+  Mirroring Mirror() const noexcept {
+    return flags6_.mirroring ? Mirroring::VERTICAL : Mirroring::HORIZONTAL;
+  }
 
   [[nodiscard]]
-  bool IgnoreMirroing() const noexcept;
+  bool ContainsPersistentMemory() const noexcept {
+    return flags6_.contains_persistent_memory;
+  }
 
   [[nodiscard]]
-  bool IsVSUnisystem() const noexcept;
+  bool ContainsTrainer() const noexcept {
+    return flags6_.contains_trainer;
+  }
 
   [[nodiscard]]
-  bool IsPlayChoice() const noexcept;
+  bool IgnoreMirroing() const noexcept {
+    return flags6_.ignore_mirroring;
+  }
 
   [[nodiscard]]
-  bool IsNES20Format() const noexcept;
+  bool IsVSUnisystem() const noexcept {
+    return flags7_.is_vs_unisystem;
+  }
 
   [[nodiscard]]
-  Byte Mapper() const noexcept;
+  bool IsPlayChoice() const noexcept {
+    return flags7_.is_play_choice;
+  }
 
   [[nodiscard]]
-  std::size_t SizeOfPRGRam() const noexcept;
+  INESFormat Format() const noexcept {
+    switch (flags7_.ines_format) {
+    case 0x10: return INESFormat::NES20;
+    default  : return INESFormat::NES10;
+    }
+  }
 
   [[nodiscard]]
-  TVSystem TV() const;
+  Byte Mapper() const noexcept {
+    return flags7_.mapper_nibble_hi << 4 | flags6_.mapper_nibble_lo;
+  }
 
   [[nodiscard]]
-  bool HasPRGRam() const noexcept;
+  std::size_t SizeOfPRGRam() const noexcept {
+    return prg_ram_chunks_ ? prg_ram_chunks_ * INESHeader::k8KByte : INESHeader::k8KByte;
+  }
 
   [[nodiscard]]
-  bool HasBusConflict() const noexcept;
+  TVSystem TV() const {
+    switch(flags10_.tv_system) {
+    case 0:         return TVSystem::NTSC;
+    case 2:         return TVSystem::PAL;
+    case 1: case 3: return TVSystem::DUAL_COMPAT;
+    default:        NESDEV_CORE_THROW(InvalidCartridge::Occur("Invalid TV system specified to iNES header"));
+    }
+  }
+
+  [[nodiscard]]
+  bool HasPRGRam() const noexcept {
+    return !flags10_.prg_ram_not_present;
+  }
+
+  [[nodiscard]]
+  bool HasBusConflict() const noexcept {
+    return flags10_.has_bus_conflict;
+  }
 
  public:
   // FLAGS 0-3  : ("NES" followed by MS-DOS end-of-file)
   Byte magic_[4] = {0x00, 0x00, 0x00, 0x00};
 
   // FLAGS 4    : Size of PRG ROM in 16 KB units.
-  Byte prg_rom_size_ = {0x00};
+  Byte prg_rom_chunks_ = {0x00};
 
   // FLAGS 5    : Size of CHR ROM in 8 KB units.
-  Byte chr_rom_size_ = {0x00};
+  Byte chr_rom_chunks_ = {0x00};
 
   // FLAGS 6    : Mapper, mirroring, battery, trainer.
   union {
@@ -111,12 +166,12 @@ class INESHeader {
     Byte value;
     Bitfield<0, 1, Byte> is_vs_unisystem;
     Bitfield<1, 1, Byte> is_play_choice;
-    Bitfield<2, 2, Byte> is_nes20_format;
+    Bitfield<2, 2, Byte> ines_format;
     Bitfield<4, 4, Byte> mapper_nibble_hi;
   } flags7_ = {0x00};
 
   // FLAGS 8    : PRG-RAM size (rarely used extension).
-  Byte prg_ram_size_ = {0x00};
+  Byte prg_ram_chunks_ = {0x00};
 
   // FLAGS 9    : TV system (rarely used extension).
   union {

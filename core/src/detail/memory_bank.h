@@ -7,9 +7,9 @@
 #ifndef _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
 #define _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
 #include "nesdev/core/exceptions.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/types.h"
-#include "macros.h"
 
 namespace nesdev {
 namespace core {
@@ -18,15 +18,15 @@ namespace detail {
 template <Address From, Address To, Address Range>
 class MemoryBank final : public nesdev::core::MemoryBank {
  public:
-  static_assert(
+  NESDEV_CORE_SASSERT(
     Range > 0u,
-    "[nesdev::core::detail::MemoryBank] Range must be greater than zero");
-  static_assert(
+    "Range must be greater than zero");
+  NESDEV_CORE_SASSERT(
     From <= To,
-    "[nesdev::core::detail::MemoryBank] Start address must be greater than end address");
-  static_assert(
+    "Start address must be greater than end address");
+  NESDEV_CORE_SASSERT(
     (To - From + 1u) % Range == 0,
-    "[nesdev::core::detail::MemoryBank] Range does not match address range");
+    "Range does not match address range");
 
   MemoryBank() = default;
 

@@ -14,7 +14,7 @@ elseif (MSVC)
   add_compile_options (/wd4018)
 endif ()
 
-add_executable(
+add_executable (
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
   ${NESDEV_CORE_TEST_SOURCES})
 
@@ -29,7 +29,7 @@ target_compile_definitions (
   NESDEV_CORE_TEST
   ${NESDEV_COMPILE_DEFINITIONS})
 
-target_include_directories(
+target_include_directories (
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
   PUBLIC
   ${GTEST_INCLUDE_PATH}
@@ -37,19 +37,19 @@ target_include_directories(
   ${NESDEV_CORE_INCLUDE_PATH}
   ${NESDEV_CORE_TEST_INCLUDE_PATH})
 
-target_link_libraries(
+target_link_libraries (
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
   ${NESDEV_CORE_LIBRARY}
   GTest::GTest
   GTest::GMock)
 
-add_dependencies(
+add_dependencies (
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
   googletest)
 
-enable_testing()
+enable_testing ()
 
-add_test(
+add_test (
   NAME
   NesDevCoreTests
   COMMAND
@@ -57,7 +57,7 @@ add_test(
 #  WORKING_DIRECTORY
 #  ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
-add_custom_command(
+add_custom_command (
   TARGET
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
   POST_BUILD

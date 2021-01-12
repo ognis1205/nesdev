@@ -9,8 +9,9 @@
 #include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
 
-namespace nesdev {
-namespace core {
+namespace {
+
+using namespace nesdev::core;
 
 /*
  * NOTE:
@@ -19,7 +20,7 @@ namespace core {
  * [SEE] https://undisbeliever.net/snesdev/65816-opcodes.htm
  * [SEE] http://nparker.llx.com/a2/opcodes.html
  */
-static const std::map<Byte, Opcode> lookup = {
+const std::map<Byte, Opcode> lookup = {
   {0x00, {Instruction::BRK, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x01, {Instruction::ORA, AddressingMode::IZX,  MemoryAccess::READ             }},
   {0x02, {Instruction::COP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816***
@@ -278,11 +279,7 @@ static const std::map<Byte, Opcode> lookup = {
   {0xFF, {Instruction::SBC, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
 };
 
-Opcode Decode(Byte byte) noexcept {
-  return lookup.at(byte);
-}
-
-static std::string ToString(Instruction instruction) noexcept {
+std::string ToString(Instruction instruction) noexcept {
   switch (instruction) {
   case ADC: return "ADC";
   case AND: return "AND";
@@ -380,7 +377,7 @@ static std::string ToString(Instruction instruction) noexcept {
   }
 }
 
-static std::string ToString(AddressingMode addressing_mode) noexcept {
+std::string ToString(AddressingMode addressing_mode) noexcept {
   switch (addressing_mode) {
   case ABS:  return "ABS";
   case ABX:  return "ABX";
@@ -415,8 +412,17 @@ static std::string ToString(AddressingMode addressing_mode) noexcept {
   }
 }
 
+}
+
+namespace nesdev {
+namespace core {
+
+Opcode Decode(Byte byte) noexcept {
+  return ::lookup.at(byte);
+}
+
 std::string ToString(Byte byte) noexcept {
-  return ToString(Decode(byte).instruction) + ", " + ToString(Decode(byte).addressing_mode);
+  return ::ToString(Decode(byte).instruction) + ", " + ::ToString(Decode(byte).addressing_mode);
 }
 
 }  // namespace core

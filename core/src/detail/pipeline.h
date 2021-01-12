@@ -8,7 +8,7 @@
 #define _NESDEV_CORE_DETAIL_PIPELINE_H_
 #include <deque>
 #include <functional>
-#include "macros.h"
+#include "nesdev/core/macros.h"
 
 namespace nesdev {
 namespace core {

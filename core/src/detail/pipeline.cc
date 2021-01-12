@@ -6,8 +6,8 @@
  */
 #include <functional>
 #include <iterator>
+#include "nesdev/core/macros.h"
 #include "detail/pipeline.h"
-#include "macros.h"
 
 namespace nesdev {
 namespace core {

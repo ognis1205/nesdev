@@ -6,10 +6,10 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_MMU_H_
 #define _NESDEV_CORE_DETAIL_MMU_H_
+#include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/mmu.h"
 #include "nesdev/core/types.h"
-#include "macros.h"
 
 namespace nesdev {
 namespace core {

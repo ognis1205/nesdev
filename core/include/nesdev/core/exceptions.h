@@ -32,6 +32,16 @@ class Exception : public std::exception {
   std::runtime_error what_arg_;
 };
 
+class AssertionFailed : public Exception {
+ public:
+  static AssertionFailed Occur(const std::string& what_arg) {
+    return AssertionFailed((Exception::Header("AssertionFalied") + " " + what_arg).c_str());
+  }
+
+ private:
+  AssertionFailed(const char* what_arg) : Exception(what_arg) {}
+};
+
 class InvalidAddress : public Exception {
  public:
   static InvalidAddress Occur(const std::string& what_arg, const Address& address) {
@@ -68,14 +78,14 @@ class InvalidOpcode : public Exception {
   InvalidOpcode(const char* what_arg) : Exception(what_arg) {}
 };
 
-class InvalidHeader : public Exception {
+class InvalidCartridge : public Exception {
  public:
-  static InvalidHeader Occur(const std::string& what_arg) {
-    return InvalidHeader((Exception::Header("InvalidHeader") + " " + what_arg).c_str());
+  static InvalidCartridge Occur(const std::string& what_arg) {
+    return InvalidCartridge((Exception::Header("InvalidCartridge") + " " + what_arg).c_str());
   }
 
  private:
-  InvalidHeader(const char* what_arg) : Exception(what_arg) {}
+  InvalidCartridge(const char* what_arg) : Exception(what_arg) {}
 };
 
 class NotImplemented : public Exception {

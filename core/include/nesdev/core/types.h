@@ -12,9 +12,9 @@
 namespace nesdev {
 namespace core {
 
-using Byte = std::uint8_t;
+using Byte    = std::uint8_t;
 
-using Word = std::uint16_t;
+using Word    = std::uint16_t;
 
 using Address = std::uint16_t;
 

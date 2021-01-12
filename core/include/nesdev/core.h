@@ -7,6 +7,9 @@
 #ifndef _NESDEV_CORE_H_
 #define _NESDEV_CORE_H_
 
+#include "core/macros.h"
+#include "core/cartridge.h"
+#include "core/cartridge_factory.h"
 #include "core/clock.h"
 #include "core/cpu.h"
 #include "core/exceptions.h"
