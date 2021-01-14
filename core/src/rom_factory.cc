@@ -10,12 +10,12 @@
 #include <istream>
 #include <limits>
 #include <memory>
-#include "nesdev/core/cartridge.h"
-#include "nesdev/core/cartridge_factory.h"
+#include "nesdev/core/rom.h"
+#include "nesdev/core/rom_factory.h"
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/ines_header.h"
 #include "nesdev/core/macros.h"
-#include "detail/cartridge.h"
+#include "detail/roms/nrom.h"
 
 namespace {
 
@@ -25,10 +25,10 @@ std::size_t SizeOf(std::istream& is) {
   is.seekg(0, std::ios::beg);
   NESDEV_CORE_CASSERT(
     size >= 0,
-    "Cartridge file must be non-empty");
+    "ROM file must be non-empty");
   NESDEV_CORE_CASSERT(
     static_cast<uint64_t>(size) <= std::numeric_limits<std::size_t>::max(),
-    "Cartridge file exceeds the file size limits");
+    "ROM file exceeds the file size limits");
   return static_cast<std::size_t>(size);
 }
 
@@ -37,7 +37,7 @@ std::size_t SizeOf(std::istream& is) {
 namespace nesdev {
 namespace core {
 
-std::unique_ptr<Cartridge> CartridgeFactory::Create(std::istream& is) {
+std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   std::vector<Byte> image(::SizeOf(is));
   if (image.size() < sizeof(INESHeader))
     NESDEV_CORE_THROW(InvalidCartridge::Occur("Specified file does not have enough space to store heaader"));
@@ -58,7 +58,7 @@ std::unique_ptr<Cartridge> CartridgeFactory::Create(std::istream& is) {
     image.begin() + sizeof(INESHeader) + header.SizeOfPRGRom(),
     image.begin() + sizeof(INESHeader) + header.SizeOfPRGRom() + header.SizeOfCHRRom());
 
-  return std::make_unique<detail::Cartridge>(header, prg_rom, chr_rom);
+  return std::make_unique<detail::roms::NROM>(header, prg_rom, chr_rom);
 }
 
 }  // namespace core

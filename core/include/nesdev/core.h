@@ -8,17 +8,18 @@
 #define _NESDEV_CORE_H_
 
 #include "core/macros.h"
-#include "core/cartridge.h"
-#include "core/cartridge_factory.h"
 #include "core/clock.h"
 #include "core/cpu.h"
 #include "core/exceptions.h"
 #include "core/ines_header.h"
+#include "core/mapper.h"
 #include "core/memory_bank.h"
 #include "core/mmu.h"
 #include "core/mmu_factory.h"
 #include "core/opcodes.h"
 #include "core/ppu.h"
+#include "core/rom.h"
+#include "core/rom_factory.h"
 #include "core/types.h"
 
 #endif  // ifndef _NESDEV_CORE_H_

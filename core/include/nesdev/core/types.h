@@ -8,15 +8,18 @@
 #define _NESDEV_CORE_TYPES_H_
 #include <cstdint>
 #include <cstdlib>
+#include <utility>
 
 namespace nesdev {
 namespace core {
 
-using Byte    = std::uint8_t;
+using Byte       = std::uint8_t;
 
-using Word    = std::uint16_t;
+using Word       = std::uint16_t;
 
-using Address = std::uint16_t;
+using Address    = std::uint16_t;
+
+using AddressSpace = std::pair<Address, Address>;
 
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
 struct Bitfield {

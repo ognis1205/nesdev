@@ -7,7 +7,7 @@
 #ifndef _NESDEV_CORE_PPU_H_
 #define _NESDEV_CORE_PPU_H_
 #include "nesdev/core/clock.h"
-//#include "nesdev/core/opcodes.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -19,13 +19,13 @@ class PPU : public Clock {
 
   virtual void Tick() override = 0;
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
     }
   };
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   Context context_;
 };
 

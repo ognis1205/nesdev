@@ -8,6 +8,7 @@
 #define _NESDEV_CORE_CPU_H_
 #include <optional>
 #include "nesdev/core/clock.h"
+#include "nesdev/core/macros.h"
 #include "nesdev/core/opcodes.h"
 #include "nesdev/core/types.h"
 
@@ -61,7 +62,7 @@ class CPU : public Clock {
     return context_.opcode->memory_access;
   }
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
       opcode.reset();
@@ -105,7 +106,7 @@ class CPU : public Clock {
     } pointer = {0x0000};
   };
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   [[nodiscard]]
   Address Addr() const noexcept {
     return context_.address.effective;
@@ -219,7 +220,7 @@ class CPU : public Clock {
     return context_.is_nmi_signaled;
   }
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   Context context_;
 };
 

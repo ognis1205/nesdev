@@ -21,8 +21,11 @@ enum class INESFormat : Byte {
 };
 
 enum class Mirroring : Byte {
+  HARDWARE,
   HORIZONTAL,
-  VERTICAL
+  VERTICAL,
+  ONESCREEN_LO,
+  ONESCREEN_HI
 };
 
 enum class TVSystem : Byte {
@@ -139,7 +142,7 @@ class INESHeader {
     return flags10_.has_bus_conflict;
   }
 
- public:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:  
   // FLAGS 0-3  : ("NES" followed by MS-DOS end-of-file)
   Byte magic_[4] = {0x00, 0x00, 0x00, 0x00};
 
