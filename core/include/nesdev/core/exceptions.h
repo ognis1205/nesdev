@@ -6,11 +6,13 @@
  */
 #ifndef _NESDEV_CORE_EXCEPTIONS_H_
 #define _NESDEV_CORE_EXCEPTIONS_H_
+#include <cassert>
 #include <exception>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -21,14 +23,14 @@ class Exception : public std::exception {
  public:
   const char* what() const noexcept override { return what_arg_.what(); }
 
- protected:
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   static std::string Header(const std::string& name) {
     return "[nesdev::core::" + name + "]";
   }
 
   Exception(const char* what_arg) : what_arg_{what_arg} {}
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   std::runtime_error what_arg_;
 };
 
@@ -38,9 +40,20 @@ class AssertionFailed : public Exception {
     return AssertionFailed((Exception::Header("AssertionFalied") + " " + what_arg).c_str());
   }
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   AssertionFailed(const char* what_arg) : Exception(what_arg) {}
 };
+
+class Assertion {
+ public:
+  static void CAssert(bool expr, const char* msg) {
+    if (!expr) NESDEV_CORE_THROW(AssertionFailed::Occur(msg));
+  }
+};
+
+#if !defined(NESDEV_CORE_CASSERT)
+#  define NESDEV_CORE_CASSERT(expr, msg) nesdev::core::Assertion::CAssert(expr, msg)
+#endif
 
 class InvalidAddress : public Exception {
  public:
@@ -56,7 +69,7 @@ class InvalidAddress : public Exception {
     return InvalidAddress((Exception::Header("InvalidAddress") + " " + what_arg + " " + ss.str()).c_str());
   }
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   InvalidAddress(const char* what_arg) : Exception(what_arg) {}
 };
 
@@ -74,7 +87,7 @@ class InvalidOpcode : public Exception {
     return InvalidOpcode((Exception::Header("InvalidOpcode") + " " + what_arg + " " + ss.str()).c_str());
   }
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   InvalidOpcode(const char* what_arg) : Exception(what_arg) {}
 };
 
@@ -84,7 +97,7 @@ class InvalidCartridge : public Exception {
     return InvalidCartridge((Exception::Header("InvalidCartridge") + " " + what_arg).c_str());
   }
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   InvalidCartridge(const char* what_arg) : Exception(what_arg) {}
 };
 
@@ -102,7 +115,7 @@ class NotImplemented : public Exception {
     return NotImplemented((Exception::Header("NotImplemented") + " " + what_arg + " " + ss.str()).c_str());
   }
 
- private:
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   NotImplemented(const char* what_arg) : Exception(what_arg) {}
 };
 

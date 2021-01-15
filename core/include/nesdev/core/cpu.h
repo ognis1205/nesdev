@@ -17,6 +17,10 @@ namespace core {
 
 class CPU : public Clock {
  public:
+  class RAM final {
+  };
+
+ public:
   virtual ~CPU() = default;
 
   virtual void Tick() override = 0;

@@ -15,6 +15,10 @@ namespace core {
 
 class PPU : public Clock {
  public:
+  class Nametable final {
+  };
+
+ public:
   virtual ~PPU() = default;
 
   virtual void Tick() override = 0;

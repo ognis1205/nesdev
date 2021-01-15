@@ -18,16 +18,17 @@ namespace detail {
 template <Address From, Address To, Address Range>
 class MemoryBank final : public nesdev::core::MemoryBank {
  public:
-  NESDEV_CORE_SASSERT(
+  static_assert(
     Range > 0u,
     "Range must be greater than zero");
-  NESDEV_CORE_SASSERT(
+  static_assert(
     From <= To,
     "Start address must be greater than end address");
-  NESDEV_CORE_SASSERT(
+  static_assert(
     (To - From + 1u) % Range == 0,
     "Range does not match address range");
 
+ public:
   MemoryBank() = default;
 
   [[nodiscard]]

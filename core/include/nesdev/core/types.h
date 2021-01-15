@@ -13,13 +13,29 @@
 namespace nesdev {
 namespace core {
 
-using Byte       = std::uint8_t;
+using Byte    = std::uint8_t;
 
-using Word       = std::uint16_t;
+using Word    = std::uint16_t;
 
-using Address    = std::uint16_t;
+using Address = std::uint16_t;
 
-using AddressSpace = std::pair<Address, Address>;
+template <Address Start, Address End>
+class AddressSpace {
+ public:
+  static_assert(
+    Start <= End,
+    "Start address must be greater than end address");
+
+  static const Address LBound = Start;
+
+  static const Address RBound = End;
+
+ public:
+  bool Contain(Address address) const noexcept {
+    if constexpr (Start == 0) return address <= End;
+    else return address >= Start && address <= End;
+  }
+};
 
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
 struct Bitfield {

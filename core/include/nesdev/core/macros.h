@@ -21,27 +21,6 @@
 #  define NESDEV_CORE_CATCH(exception) if (false)
 #endif
 
-#if !defined(NESDEV_CORE_CASSERT)
-#  include <cassert>
-#  include <iostream>
-#  include <nesdev/core/exceptions.h>
-namespace nesdev {
-namespace core {
-class Assertion {
- public:
-  static void CAssert(bool expr, const char* msg) {
-    if (!expr) NESDEV_CORE_THROW(AssertionFailed::Occur(msg));
-  }
-};
-}  // namespace core
-}  // namespace nesdev
-#  define NESDEV_CORE_CASSERT(expr, msg) nesdev::core::Assertion::CAssert(expr, msg)
-#endif
-
-#if !defined(NESDEV_CORE_SASSERT)
-#  define NESDEV_CORE_SASSERT(expr, msg) static_assert(expr, msg)
-#endif
-
 #if defined(NESDEV_CORE_TEST)
 #  define NESDEV_CORE_PROTECTED_UNLESS_TESTED public
 #  define NESDEV_CORE_PRIVATE_UNLESS_TESTED   public
