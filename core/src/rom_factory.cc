@@ -19,18 +19,18 @@
 
 namespace {
 
-std::size_t SizeOf(std::istream& is) {
-  is.seekg(0, std::ios::end);
-  std::istream::pos_type size = is.tellg();
-  is.seekg(0, std::ios::beg);
-  NESDEV_CORE_CASSERT(
-    size >= 0,
-    "ROM file must be non-empty");
-  NESDEV_CORE_CASSERT(
-    static_cast<uint64_t>(size) <= std::numeric_limits<std::size_t>::max(),
-    "ROM file exceeds the file size limits");
-  return static_cast<std::size_t>(size);
-}
+//std::size_t SizeOf(std::istream& is) {
+//  is.seekg(0, std::ios::end);
+//  std::istream::pos_type size = is.tellg();
+//  is.seekg(0, std::ios::beg);
+//  NESDEV_CORE_CASSERT(
+//    size >= 0,
+//    "ROM file must be non-empty");
+//  NESDEV_CORE_CASSERT(
+//    static_cast<uint64_t>(size) <= std::numeric_limits<std::size_t>::max(),
+//    "ROM file exceeds the file size limits");
+//  return static_cast<std::size_t>(size);
+//}
 
 }
 
@@ -38,11 +38,11 @@ namespace nesdev {
 namespace core {
 
 std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
-  std::vector<Byte> image(::SizeOf(is));
-  if (image.size() < sizeof(ROM::Header))
-    NESDEV_CORE_THROW(InvalidROM::Occur("Specified file does not have enough space to store heaader"));
-  if (!is.read(reinterpret_cast<char*>(image.data()), image.size()))
-    NESDEV_CORE_THROW(InvalidROM::Occur("Unable to load image from specified file"));
+//  std::vector<Byte> image(::SizeOf(is));
+//  if (image.size() < sizeof(ROM::Header))
+//    NESDEV_CORE_THROW(InvalidROM::Occur("Specified file does not have enough space to store heaader"));
+//  if (!is.read(reinterpret_cast<char*>(image.data()), image.size()))
+//    NESDEV_CORE_THROW(InvalidROM::Occur("Unable to load image from specified file"));
 
   std::shared_ptr<ROM::Header> header = std::make_shared<ROM::Header>();
   is.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));

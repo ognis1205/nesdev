@@ -94,7 +94,7 @@ class InvalidOpcode : public Exception {
 class InvalidROM : public Exception {
  public:
   static InvalidROM Occur(const std::string& what_arg) {
-    return InvalidROM((Exception::Header("InvalidCartridge") + " " + what_arg).c_str());
+    return InvalidROM((Exception::Header("InvalidROM") + " " + what_arg).c_str());
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:

@@ -26,10 +26,6 @@ class AddressSpace {
     Start <= End,
     "Start address must be greater than end address");
 
-  static const Address LBound = Start;
-
-  static const Address RBound = End;
-
  public:
   [[nodiscard]]
   bool Contain(Address address) const noexcept {

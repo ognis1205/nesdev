@@ -16,13 +16,6 @@ namespace roms {
 
 class Mapper000 final : public nesdev::core::ROM::Mapper {
  public:
-  static const AddressSpace<0x0000, 0x1FFF> kCHRRom;
-
-  static const AddressSpace<0x6000, 0x7FFF> kPRGRam;
-
-  static const AddressSpace<0x8000, 0xFFFF> kPRGRom;
-
- public:
   Mapper000(ROM::Header* const header, ROM::Chips* const chips);
 
   [[nodiscard]]
