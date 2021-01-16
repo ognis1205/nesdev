@@ -38,6 +38,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Appl
   set (CLANG 1)
 endif ()
 
+#TODO: Find -Wno-type-limits equivalent warning flag for MSVC
 if (CMAKE_COMPILER_IS_GNUCXX OR CLANG)
   add_compile_options (-Wall -Wextra -Werror -Wno-type-limits -pedantic)
 elseif (MSVC)

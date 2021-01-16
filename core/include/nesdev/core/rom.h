@@ -45,8 +45,6 @@ class ROM {
     };
 
    public:
-    static const AddressSpace<0x0000, 0x0200> kTrainer;
-
     static constexpr std::size_t k16KByte = 16 * 1024;
 
     static constexpr std::size_t k8KByte  =  8 * 1024;
@@ -59,22 +57,36 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfPRGRom() const noexcept {
-      return prg_rom_chunks_ * Header::k16KByte;
+      return NumOfPRGBanks() * Header::k16KByte;
     }
 
     [[nodiscard]]
-    std::size_t NumOfPRGBanks() const noexcept {
-      return prg_rom_chunks_;
+    std::size_t NumOfPRGBanks() const {
+      switch (Format()) {
+      case Format::NES10:
+	return prg_rom_chunks_;
+      case Format::NES20:
+	return (flags8_.prg_rom_chunks_nibble_hi << 8) | prg_rom_chunks_;
+      default:
+	NESDEV_CORE_THROW(InvalidROM::Occur("Invalid iNES format specified to iNES header"));
+      }
     }
 
     [[nodiscard]]
     std::size_t SizeOfCHRRom() const noexcept {
-      return chr_rom_chunks_ == 0 ? Header::k8KByte : chr_rom_chunks_ * Header::k8KByte;
+      return NumOfCHRBanks() == 0 ? Header::k8KByte : NumOfCHRBanks() * Header::k8KByte;
     }
 
     [[nodiscard]]
-    std::size_t NumOfCHRBanks() const noexcept {
-      return chr_rom_chunks_;
+    std::size_t NumOfCHRBanks() const {
+      switch (Format()) {
+      case Format::NES10:
+	return chr_rom_chunks_;
+      case Format::NES20:
+	return (flags8_.chr_rom_chunks_nibble_hi << 8) | prg_rom_chunks_;
+      default:
+        NESDEV_CORE_THROW(InvalidROM::Occur("Invalid iNES format specified to iNES header"));
+      }
     }
 
     [[nodiscard]]
@@ -122,16 +134,25 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfPRGRam() const noexcept {
-      return prg_ram_chunks_ ? prg_ram_chunks_ * Header::k8KByte : Header::k8KByte;
+      return NumOfPRGRams() == 0 ? Header::k8KByte : NumOfPRGRams() * Header::k8KByte;
+    }
+
+    [[nodiscard]]
+    std::size_t NumOfPRGRams() const noexcept {
+      return flags8_.prg_ram_chunks;
     }
 
     [[nodiscard]]
     Header::TVSystem TVSystem() const {
       switch(flags10_.tv_system) {
-      case 0:         return Header::TVSystem::NTSC;
-      case 2:         return Header::TVSystem::PAL;
-      case 1: case 3: return Header::TVSystem::DUAL_COMPAT;
-      default:        NESDEV_CORE_THROW(InvalidROM::Occur("Invalid TV system specified to iNES header"));
+      case 0:
+	return Header::TVSystem::NTSC;
+      case 2:
+	return Header::TVSystem::PAL;
+      case 1: case 3:
+	return Header::TVSystem::DUAL_COMPAT;
+      default:
+        NESDEV_CORE_THROW(InvalidROM::Occur("Invalid TV system specified to iNES header"));
       }
     }
 
@@ -175,7 +196,12 @@ class ROM {
     } flags7_ = {0x00};
 
     // FLAGS 8    : PRG-RAM size (rarely used extension).
-    Byte prg_ram_chunks_ = {0x00};
+    union {
+      Byte value;
+      Bitfield<0, 8, Byte> prg_ram_chunks;
+      Bitfield<0, 3, Byte> prg_rom_chunks_nibble_hi;
+      Bitfield<3, 3, Byte> chr_rom_chunks_nibble_hi;
+    } flags8_ = {0x00};
 
     // FLAGS 9    : TV system (rarely used extension).
     union {
@@ -221,7 +247,7 @@ class ROM {
 
     virtual Byte Read(Space space, Address address) const = 0;
 
-    virtual void Write(Space space, Address address, Byte byte) const = 0;
+    virtual Byte Write(Space space, Address address, Byte byte) const = 0;
 
     [[nodiscard]]
     virtual bool IRQ() const noexcept = 0;
@@ -239,8 +265,12 @@ class ROM {
   };
 
  public:
-  explicit ROM(std::unique_ptr<Header> header, std::unique_ptr<Chips> chips, std::unique_ptr<Mapper> mapper)
-    : header_{std::move(header)}, chips_{std::move(chips)}, mapper_{std::move(mapper)} {};
+  explicit ROM(std::unique_ptr<Header> header,
+	       std::unique_ptr<Chips> chips,
+	       std::unique_ptr<Mapper> mapper)
+    : header_{std::move(header)},
+      chips_{std::move(chips)},
+      mapper_{std::move(mapper)} {};
 
   virtual ~ROM() = default;
 

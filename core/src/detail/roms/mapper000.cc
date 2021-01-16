@@ -61,7 +61,7 @@ Byte Mapper000::Read(ROM::Mapper::Space space, Address address) const {
   }
 }
 
-void Mapper000::Write(Mapper::Space space, Address address, Byte byte) const {
+Byte Mapper000::Write(Mapper::Space space, Address address, Byte byte) const {
   switch (space) {
   // If PRGROM is 16KB
   //   CPU Address Bus          PRG ROM
@@ -71,16 +71,12 @@ void Mapper000::Write(Mapper::Space space, Address address, Byte byte) const {
   //   CPU Address Bus          PRG ROM
   //   0x8000 -> 0xFFFF: Map    0x0000 -> 0x7FFF
   case Mapper::Space::CPU:
-    if (::kPRGRam.Contain(address)) {
-      chips_->prg_ram[address % header_->SizeOfPRGRam()] = byte;
-      return;
-    }
+    if (::kPRGRam.Contain(address))
+      return chips_->prg_ram[address % header_->SizeOfPRGRam()] = byte;
     [[fallthrough]];
   case Mapper::Space::PPU:
-    if (!header_->NumOfCHRBanks() && ::kCHRRom.Contain(address)) {
-      chips_->chr_rom[address % header_->SizeOfCHRRom()] = byte;
-      return;
-    }
+    if (!header_->NumOfCHRBanks() && ::kCHRRom.Contain(address))
+      return chips_->chr_rom[address % header_->SizeOfCHRRom()] = byte;
     [[fallthrough]];
   default:
     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));

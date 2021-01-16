@@ -30,20 +30,13 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   if (header->ContainsTrainer())
     is.seekg(512, std::ios_base::cur);
 
-  std::unique_ptr<ROM::Chips> chips = std::make_unique<ROM::Chips>();
+  std::unique_ptr<ROM::Chips>   chips = std::make_unique<ROM::Chips>();
   std::unique_ptr<ROM::Mapper> mapper = std::make_unique<detail::roms::Mapper000>(header.get(), chips.get());
   chips->prg_rom.resize(header->SizeOfPRGRom());
   chips->prg_ram.resize(header->SizeOfPRGRam());
   chips->chr_rom.resize(header->SizeOfCHRRom());
-
-  switch (header->Format()) {
-  case ROM::Header::Format::NES10:
-    is.read(reinterpret_cast<char*>(chips->prg_rom.data()), chips->prg_rom.size());
-    is.read(reinterpret_cast<char*>(chips->chr_rom.data()), chips->chr_rom.size());
-    break;
-  case ROM::Header::Format::NES20:
-    break;
-  }
+  is.read(reinterpret_cast<char*>(chips->prg_rom.data()), chips->prg_rom.size());
+  is.read(reinterpret_cast<char*>(chips->chr_rom.data()), chips->chr_rom.size());
 
   return std::make_unique<detail::roms::NROM>(std::move(header), std::move(chips), std::move(mapper));
 }

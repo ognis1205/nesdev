@@ -17,7 +17,9 @@ namespace roms {
 
 class NROM final : public nesdev::core::ROM {
  public:
-  NROM(std::unique_ptr<Header> header, std::unique_ptr<ROM::Chips> chips, std::unique_ptr<ROM::Mapper> mapper);
+  NROM(std::unique_ptr<Header> header,
+       std::unique_ptr<ROM::Chips> chips,
+       std::unique_ptr<ROM::Mapper> mapper);
 };
 
 }  // namespace roms
