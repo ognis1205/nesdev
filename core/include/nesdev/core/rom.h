@@ -6,7 +6,9 @@
  */
 #ifndef _NESDEV_CORE_ROM_H_
 #define _NESDEV_CORE_ROM_H_
-#include "nesdev/core/ines_header.h"
+#include <memory>
+#include <vector>
+#include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
@@ -21,7 +23,7 @@ class ROM {
    * [SEE] http://nesdev.com/neshdr20.txt
    * [SEE] https://nescartdb.com/
    */
-  class INESHeader {
+  class Header {
    public:
     enum class Format : Byte {
       NES10,
@@ -29,9 +31,9 @@ class ROM {
     };
 
     enum class Mirroring : Byte {
-      HARDWARE,
       HORIZONTAL,
       VERTICAL,
+      HARDWARE,
       ONESCREEN_LO,
       ONESCREEN_HI
     };
@@ -57,7 +59,7 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfPRGRom() const noexcept {
-      return prg_rom_chunks_ * INESHeader::k16KByte;
+      return prg_rom_chunks_ * Header::k16KByte;
     }
 
     [[nodiscard]]
@@ -67,7 +69,7 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfCHRRom() const noexcept {
-      return chr_rom_chunks_ * INESHeader::k8KByte;
+      return chr_rom_chunks_ == 0 ? Header::k8KByte : chr_rom_chunks_ * Header::k8KByte;
     }
 
     [[nodiscard]]
@@ -76,8 +78,8 @@ class ROM {
     }
 
     [[nodiscard]]
-    INESHeader::Mirroring Mirroring() const noexcept {
-      return flags6_.mirroring ? INESHeader::Mirroring::VERTICAL : INESHeader::Mirroring::HORIZONTAL;
+    Header::Mirroring Mirroring() const noexcept {
+      return flags6_.mirroring ? Header::Mirroring::VERTICAL : Header::Mirroring::HORIZONTAL;
     }
 
     [[nodiscard]]
@@ -106,10 +108,10 @@ class ROM {
     }
 
     [[nodiscard]]
-    INESHeader::Format Format() const noexcept {
+    Header::Format Format() const noexcept {
       switch (flags7_.ines_format) {
-      case 0x10: return INESHeader::Format::NES20;
-      default  : return INESHeader::Format::NES10;
+      case 0x10: return Header::Format::NES20;
+      default  : return Header::Format::NES10;
       }
     }
 
@@ -120,16 +122,16 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfPRGRam() const noexcept {
-      return prg_ram_chunks_ ? prg_ram_chunks_ * INESHeader::k8KByte : INESHeader::k8KByte;
+      return prg_ram_chunks_ ? prg_ram_chunks_ * Header::k8KByte : Header::k8KByte;
     }
 
     [[nodiscard]]
-    INESHeader::TVSystem TVSystem() const {
+    Header::TVSystem TVSystem() const {
       switch(flags10_.tv_system) {
-      case 0:         return INESHeader::TVSystem::NTSC;
-      case 2:         return INESHeader::TVSystem::PAL;
-      case 1: case 3: return INESHeader::TVSystem::DUAL_COMPAT;
-      default:        NESDEV_CORE_THROW(InvalidCartridge::Occur("Invalid TV system specified to iNES header"));
+      case 0:         return Header::TVSystem::NTSC;
+      case 2:         return Header::TVSystem::PAL;
+      case 1: case 3: return Header::TVSystem::DUAL_COMPAT;
+      default:        NESDEV_CORE_THROW(InvalidROM::Occur("Invalid TV system specified to iNES header"));
       }
     }
 
@@ -194,6 +196,14 @@ class ROM {
     Byte unused_[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
   };
 
+  struct Chips {
+    std::vector<Byte> chr_rom;
+
+    std::vector<Byte> prg_rom;
+
+    std::vector<Byte> prg_ram;
+  };
+
   class Mapper {
    public:
     enum class Space : Byte {
@@ -202,22 +212,16 @@ class ROM {
     };
 
    public:
-    explicit Mapper(const INESHeader& header)
-      : header_{header} {};
+    explicit Mapper(Header* const header, Chips* const chips) : header_{header}, chips_{chips} {};
 
     virtual ~Mapper() = default;
 
     [[nodiscard]]
-    virtual bool HasValidAddress(Space space, Address address) const noexcept = 0;
+    virtual bool HasValidAddress(Space space, Address address) const = 0;
 
-    [[nodiscard]]
-    virtual Address MapR(Space space, Address address) const = 0;
+    virtual Byte Read(Space space, Address address) const = 0;
 
-    [[nodiscard]]
-    virtual Address MapW(Space space, Address address) const = 0;
-
-    [[nodiscard]]
-    virtual Mirroring Mirror() const noexcept = 0;
+    virtual void Write(Space space, Address address, Byte byte) const = 0;
 
     [[nodiscard]]
     virtual bool IRQ() const noexcept = 0;
@@ -229,23 +233,23 @@ class ROM {
     virtual void Reset() noexcept = 0;
 
    NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-    const INESHeader& header_;
+    Header* const header_;
+
+    Chips* const chips_;
   };
 
  public:
-  explicit ROM(const INESHeader& header, Mapper* const mapper)
-    : header_{header}, mapper_{mapper} {};
+  explicit ROM(Header* const header, Chips* const chips, Mapper* const mapper)
+    : header_{header}, chips_{chips}, mapper_{mapper} {};
 
   virtual ~ROM() = default;
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  [[nodiscard]]
-  virtual Address Map(Mapper::Space space, Address address) const = 0;
+  Header* const header_;
 
- NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  INESHeader header_;
+  Chips* const chips_;
 
-  Mapper* mapper_;
+  Mapper* const mapper_;
 };
 
 }  // namespace core

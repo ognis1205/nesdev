@@ -9,7 +9,6 @@
 #include <array>
 #include <vector>
 #include "nesdev/core/rom.h"
-#include "nesdev/core/ines_header.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -17,20 +16,9 @@ namespace core {
 namespace detail {
 namespace roms {
 
-class NROM final : private nesdev::core::ROM {
+class NROM final : public nesdev::core::ROM {
  public:
-  NROM(const INESHeader& header, std::vector<Byte> prg_rom, std::vector<Byte> chr_rom);
-
- NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  [[nodiscard]]
-  Address Map(Mapper::Space space, Address address) const override;
-
- NESDEV_CORE_PRIVATE_UNLESS_TESTED:  
-  std::vector<Byte> chr_rom_;
-
-  std::vector<Byte> prg_rom_;
-
-  std::vector<Byte> prg_ram_;
+  NROM(ROM::Header* const header, ROM::Chips* const chips, ROM::Mapper* const mapper);
 };
 
 }  // namespace roms

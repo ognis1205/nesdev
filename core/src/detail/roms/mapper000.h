@@ -6,8 +6,7 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_ROMS_MAPPER000_H_
 #define _NESDEV_CORE_DETAIL_ROMS_MAPPER000_H_
-#include "nesdev/core/ines_header.h"
-#include "nesdev/core/mapper.h"
+#include "nesdev/core/rom.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -15,7 +14,7 @@ namespace core {
 namespace detail {
 namespace roms {
 
-class Mapper000 final : public nesdev::core::Mapper {
+class Mapper000 final : public nesdev::core::ROM::Mapper {
  public:
   static const AddressSpace<0x0000, 0x1FFF> kCHRRom;
 
@@ -24,21 +23,14 @@ class Mapper000 final : public nesdev::core::Mapper {
   static const AddressSpace<0x8000, 0xFFFF> kPRGRom;
 
  public:
-  Mapper000(const INESHeader& header);
+  Mapper000(ROM::Header* const header, ROM::Chips* const chips);
 
   [[nodiscard]]
-  bool HasValidAddress(Space space, Address address) const noexcept override;
+  bool HasValidAddress(Space space, Address address) const override;
 
-  [[nodiscard]]
-  Address MapR(Mapper::Space space, Address address) const override;
+  Byte Read(Mapper::Space space, Address address) const override;
 
-  [[nodiscard]]
-  Address MapW(Mapper::Space space, Address address) const override;
-
-  [[nodiscard]]
-  Mirroring Mirror() const noexcept override {
-    return Mirroring::HARDWARE;
-  }
+  void Write(Mapper::Space space, Address address, Byte byte) const override;
 
   [[nodiscard]]
   bool IRQ() const noexcept override {

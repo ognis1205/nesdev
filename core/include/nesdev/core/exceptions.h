@@ -91,14 +91,14 @@ class InvalidOpcode : public Exception {
   InvalidOpcode(const char* what_arg) : Exception(what_arg) {}
 };
 
-class InvalidCartridge : public Exception {
+class InvalidROM : public Exception {
  public:
-  static InvalidCartridge Occur(const std::string& what_arg) {
-    return InvalidCartridge((Exception::Header("InvalidCartridge") + " " + what_arg).c_str());
+  static InvalidROM Occur(const std::string& what_arg) {
+    return InvalidROM((Exception::Header("InvalidCartridge") + " " + what_arg).c_str());
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  InvalidCartridge(const char* what_arg) : Exception(what_arg) {}
+  InvalidROM(const char* what_arg) : Exception(what_arg) {}
 };
 
 class NotImplemented : public Exception {

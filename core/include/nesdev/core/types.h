@@ -31,6 +31,7 @@ class AddressSpace {
   static const Address RBound = End;
 
  public:
+  [[nodiscard]]
   bool Contain(Address address) const noexcept {
     if constexpr (Start == 0) return address <= End;
     else return address >= Start && address <= End;

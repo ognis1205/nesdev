@@ -4,7 +4,7 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#include <filesystem>
+#include <fstream>
 #include <string>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,46 +39,46 @@ class ROMFactoryTest : public testing::Test {
 TEST_F(ROMFactoryTest, SuperMarioBrothers) {
   ifs_.open(super_mario_brothers_, std::ifstream::binary);
   auto rom = ROMFactory::NROM(ifs_);
-  EXPECT_TRUE(rom->header_.HasValidMagic());
-  EXPECT_EQ(1 * 32768u, rom->header_.SizeOfPRGRom());
-  EXPECT_EQ(1 * 32768u, static_cast<detail::roms::NROM*>(rom.get())->prg_rom_.size());
-  EXPECT_EQ(1 * 8192u, rom->header_.SizeOfCHRRom());
-  EXPECT_EQ(1 * 8192u, static_cast<detail::roms::NROM*>(rom.get())->chr_rom_.size());
-  EXPECT_EQ(Mirroring::VERTICAL, rom->header_.Mirror());
-  EXPECT_FALSE(rom->header_.ContainsPersistentMemory());
-  EXPECT_FALSE(rom->header_.ContainsTrainer());
-  EXPECT_FALSE(rom->header_.IgnoreMirroing());
-  EXPECT_FALSE(rom->header_.IsVSUnisystem());
-  EXPECT_FALSE(rom->header_.IsPlayChoice());
-  EXPECT_EQ(INESFormat::NES10, rom->header_.Format());
-  EXPECT_EQ(0, rom->header_.Mapper());
-  EXPECT_EQ(1 * 8192u, rom->header_.SizeOfPRGRam());
-  EXPECT_EQ(TVSystem::NTSC, rom->header_.TV());
-  EXPECT_TRUE(rom->header_.HasPRGRam());
-  EXPECT_FALSE(rom->header_.HasBusConflict());
+  EXPECT_TRUE(rom->header_->HasValidMagic());
+  EXPECT_EQ(1 * 32768u, rom->header_->SizeOfPRGRom());
+  EXPECT_EQ(1 * 32768u, static_cast<detail::roms::NROM*>(rom.get())->chips_->prg_rom.size());
+  EXPECT_EQ(1 * 8192u, rom->header_->SizeOfCHRRom());
+  EXPECT_EQ(1 * 8192u, static_cast<detail::roms::NROM*>(rom.get())->chips_->chr_rom.size());
+  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL, rom->header_->Mirroring());
+  EXPECT_FALSE(rom->header_->ContainsPersistentMemory());
+  EXPECT_FALSE(rom->header_->ContainsTrainer());
+  EXPECT_FALSE(rom->header_->IgnoreMirroing());
+  EXPECT_FALSE(rom->header_->IsVSUnisystem());
+  EXPECT_FALSE(rom->header_->IsPlayChoice());
+  EXPECT_EQ(ROM::Header::Format::NES10, rom->header_->Format());
+  EXPECT_EQ(0, rom->header_->Mapper());
+  EXPECT_EQ(1 * 8192u, rom->header_->SizeOfPRGRam());
+  EXPECT_EQ(ROM::Header::TVSystem::NTSC, rom->header_->TVSystem());
+  EXPECT_TRUE(rom->header_->HasPRGRam());
+  EXPECT_FALSE(rom->header_->HasBusConflict());
   ifs_.close();
 }
 
 TEST_F(ROMFactoryTest, Zelda) {
   ifs_.open(zelda_, std::ifstream::binary);
   auto rom = ROMFactory::NROM(ifs_);
-  EXPECT_TRUE(rom->header_.HasValidMagic());
-  EXPECT_EQ(4 * 32768u, rom->header_.SizeOfPRGRom());
-  EXPECT_EQ(4 * 32768u, static_cast<detail::roms::NROM*>(rom.get())->prg_rom_.size());
-  EXPECT_EQ(0 * 8192u, rom->header_.SizeOfCHRRom());
-  EXPECT_EQ(0 * 8192u, static_cast<detail::roms::NROM*>(rom.get())->chr_rom_.size());
-  EXPECT_EQ(Mirroring::HORIZONTAL, rom->header_.Mirror());
-  EXPECT_TRUE(rom->header_.ContainsPersistentMemory());
-  EXPECT_FALSE(rom->header_.ContainsTrainer());
-  EXPECT_FALSE(rom->header_.IgnoreMirroing());
-  EXPECT_FALSE(rom->header_.IsVSUnisystem());
-  EXPECT_FALSE(rom->header_.IsPlayChoice());
-  EXPECT_EQ(INESFormat::NES10, rom->header_.Format());
-  EXPECT_EQ(1, rom->header_.Mapper());
-  EXPECT_EQ(1 * 8192u, rom->header_.SizeOfPRGRam());
-  EXPECT_EQ(TVSystem::NTSC, rom->header_.TV());
-  EXPECT_TRUE(rom->header_.HasPRGRam());
-  EXPECT_FALSE(rom->header_.HasBusConflict());
+  EXPECT_TRUE(rom->header_->HasValidMagic());
+  EXPECT_EQ(4 * 32768u, rom->header_->SizeOfPRGRom());
+  EXPECT_EQ(4 * 32768u, static_cast<detail::roms::NROM*>(rom.get())->chips_->prg_rom.size());
+  EXPECT_EQ(0 * 8192u, rom->header_->SizeOfCHRRom());
+  EXPECT_EQ(0 * 8192u, static_cast<detail::roms::NROM*>(rom.get())->chips_->chr_rom.size());
+  EXPECT_EQ(ROM::Header::Mirroring::HORIZONTAL, rom->header_->Mirroring());
+  EXPECT_TRUE(rom->header_->ContainsPersistentMemory());
+  EXPECT_FALSE(rom->header_->ContainsTrainer());
+  EXPECT_FALSE(rom->header_->IgnoreMirroing());
+  EXPECT_FALSE(rom->header_->IsVSUnisystem());
+  EXPECT_FALSE(rom->header_->IsPlayChoice());
+  EXPECT_EQ(ROM::Header::Format::NES10, rom->header_->Format());
+  EXPECT_EQ(1, rom->header_->Mapper());
+  EXPECT_EQ(1 * 8192u, rom->header_->SizeOfPRGRam());
+  EXPECT_EQ(ROM::Header::TVSystem::NTSC, rom->header_->TVSystem());
+  EXPECT_TRUE(rom->header_->HasPRGRam());
+  EXPECT_FALSE(rom->header_->HasBusConflict());
   ifs_.close();
 }
 

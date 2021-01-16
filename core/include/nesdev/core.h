@@ -11,8 +11,6 @@
 #include "core/clock.h"
 #include "core/cpu.h"
 #include "core/exceptions.h"
-#include "core/ines_header.h"
-#include "core/mapper.h"
 #include "core/memory_bank.h"
 #include "core/mmu.h"
 #include "core/mmu_factory.h"

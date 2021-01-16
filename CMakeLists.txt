@@ -39,7 +39,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Appl
 endif ()
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CLANG)
-  add_compile_options (-Wall -Wextra -Werror -pedantic)
+  add_compile_options (-Wall -Wextra -Werror -Wno-type-limits -pedantic)
 elseif (MSVC)
   add_compile_options (/W4 /WX)
 endif ()
