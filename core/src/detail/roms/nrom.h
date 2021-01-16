@@ -6,8 +6,7 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_ROMS_NROM_H_
 #define _NESDEV_CORE_DETAIL_ROMS_NROM_H_
-#include <array>
-#include <vector>
+#include <memory>
 #include "nesdev/core/rom.h"
 #include "nesdev/core/types.h"
 
@@ -18,7 +17,7 @@ namespace roms {
 
 class NROM final : public nesdev::core::ROM {
  public:
-  NROM(ROM::Header* const header, ROM::Chips* const chips, ROM::Mapper* const mapper);
+  NROM(std::unique_ptr<Header> header, std::unique_ptr<ROM::Chips> chips, std::unique_ptr<ROM::Mapper> mapper);
 };
 
 }  // namespace roms

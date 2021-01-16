@@ -14,8 +14,8 @@ namespace core {
 namespace detail {
 namespace roms {
 
-NROM::NROM(ROM::Header* const header, ROM::Chips* const chips, ROM::Mapper* const mapper)
-  : nesdev::core::ROM(header, chips, mapper) {}
+NROM::NROM(std::unique_ptr<Header> header, std::unique_ptr<ROM::Chips> chips, std::unique_ptr<ROM::Mapper> mapper)
+  : nesdev::core::ROM(std::move(header), std::move(chips), std::move(mapper)) {}
 
 }  // namespace roms
 }  // namespace detail

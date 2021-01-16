@@ -239,17 +239,17 @@ class ROM {
   };
 
  public:
-  explicit ROM(Header* const header, Chips* const chips, Mapper* const mapper)
-    : header_{header}, chips_{chips}, mapper_{mapper} {};
+  explicit ROM(std::unique_ptr<Header> header, std::unique_ptr<Chips> chips, std::unique_ptr<Mapper> mapper)
+    : header_{std::move(header)}, chips_{std::move(chips)}, mapper_{std::move(mapper)} {};
 
   virtual ~ROM() = default;
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  Header* const header_;
+  const std::unique_ptr<Header> header_;
 
-  Chips* const chips_;
+  const std::unique_ptr<Chips> chips_;
 
-  Mapper* const mapper_;
+  const std::unique_ptr<Mapper> mapper_;
 };
 
 }  // namespace core

@@ -17,34 +17,11 @@
 #include "detail/roms/nrom.h"
 #include "detail/roms/mapper000.h"
 
-namespace {
-
-//std::size_t SizeOf(std::istream& is) {
-//  is.seekg(0, std::ios::end);
-//  std::istream::pos_type size = is.tellg();
-//  is.seekg(0, std::ios::beg);
-//  NESDEV_CORE_CASSERT(
-//    size >= 0,
-//    "ROM file must be non-empty");
-//  NESDEV_CORE_CASSERT(
-//    static_cast<uint64_t>(size) <= std::numeric_limits<std::size_t>::max(),
-//    "ROM file exceeds the file size limits");
-//  return static_cast<std::size_t>(size);
-//}
-
-}
-
 namespace nesdev {
 namespace core {
 
 std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
-//  std::vector<Byte> image(::SizeOf(is));
-//  if (image.size() < sizeof(ROM::Header))
-//    NESDEV_CORE_THROW(InvalidROM::Occur("Specified file does not have enough space to store heaader"));
-//  if (!is.read(reinterpret_cast<char*>(image.data()), image.size()))
-//    NESDEV_CORE_THROW(InvalidROM::Occur("Unable to load image from specified file"));
-
-  std::shared_ptr<ROM::Header> header = std::make_shared<ROM::Header>();
+  std::unique_ptr<ROM::Header> header = std::make_unique<ROM::Header>();
   is.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
   if (!header->HasValidMagic())
     NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible file format to iNES"));
@@ -53,7 +30,7 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   if (header->ContainsTrainer())
     is.seekg(512, std::ios_base::cur);
 
-  std::shared_ptr<ROM::Chips> chips = std::make_shared<ROM::Chips>();
+  std::unique_ptr<ROM::Chips> chips = std::make_unique<ROM::Chips>();
   std::unique_ptr<ROM::Mapper> mapper = std::make_unique<detail::roms::Mapper000>(header.get(), chips.get());
   chips->prg_rom.resize(header->SizeOfPRGRom());
   chips->prg_ram.resize(header->SizeOfPRGRam());
@@ -68,7 +45,7 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
     break;
   }
 
-  return static_cast<std::unique_ptr<ROM>>(std::make_unique<detail::roms::NROM>(header.get(), chips.get(), mapper.get()));
+  return std::make_unique<detail::roms::NROM>(std::move(header), std::move(chips), std::move(mapper));
 }
 
 }  // namespace core
