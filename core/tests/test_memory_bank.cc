@@ -27,7 +27,7 @@ class MemoryBankTest : public testing::Test {
 
   time_t start_time_;
 
-  detail::MemoryBank<0x0000, 0x1FFF, 0x800> memory_bank_;
+  detail::MemoryBank<0x0000, 0x1FFF> memory_bank_{0x800};
 };
 
 TEST_F(MemoryBankTest, HasValidAddress) {

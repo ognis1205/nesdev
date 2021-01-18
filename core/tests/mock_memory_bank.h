@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_TEST_MOCK_MEMORY_BANK_H_
 #define _NESDEV_CORE_TEST_MOCK_MEMORY_BANK_H_
+#include <cstddef>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
@@ -22,8 +23,18 @@ class MockMemoryBank : public MemoryBank {
 
   MOCK_METHOD2(Write, void(Address, Byte));
 
+  MOCK_CONST_METHOD0(MockSize, std::size_t());
+
+  MOCK_METHOD0(Data, Byte*());
+
+  MOCK_CONST_METHOD0(Data, const Byte*());
+
   virtual bool HasValidAddress(nesdev::core::Address address) const noexcept {
     return MockHasValidAddress(address);
+  }
+
+  virtual std::size_t Size() const noexcept {
+    return MockSize();
   }
 };
 

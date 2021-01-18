@@ -41,9 +41,9 @@ TEST_F(ROMFactoryTest, SuperMarioBrothers) {
   auto rom = ROMFactory::NROM(ifs_);
   EXPECT_TRUE(rom->header_->HasValidMagic());
   EXPECT_EQ(1 * 32768u, rom->header_->SizeOfPRGRom());
-  EXPECT_EQ(1 * 32768u, rom->chips_->prg_rom.size());
+  EXPECT_EQ(1 * 32768u, rom->chips_->prg_rom->Size());
   EXPECT_EQ(1 * 8192u, rom->header_->SizeOfCHRRom());
-  EXPECT_EQ(1 * 8192u, rom->chips_->chr_rom.size());
+  EXPECT_EQ(1 * 8192u, rom->chips_->chr_rom->Size());
   EXPECT_EQ(ROM::Header::Mirroring::VERTICAL, rom->header_->Mirroring());
   EXPECT_FALSE(rom->header_->ContainsPersistentMemory());
   EXPECT_FALSE(rom->header_->ContainsTrainer());
@@ -53,7 +53,7 @@ TEST_F(ROMFactoryTest, SuperMarioBrothers) {
   EXPECT_EQ(ROM::Header::Format::NES10, rom->header_->Format());
   EXPECT_EQ(0, rom->header_->Mapper());
   EXPECT_EQ(1 * 8192u, rom->header_->SizeOfPRGRam());
-  EXPECT_EQ(1 * 8192u, rom->chips_->prg_ram.size());
+  EXPECT_EQ(1 * 8192u, rom->chips_->prg_ram->Size());
   EXPECT_EQ(ROM::Header::TVSystem::NTSC, rom->header_->TVSystem());
   EXPECT_TRUE(rom->header_->HasPRGRam());
   EXPECT_FALSE(rom->header_->HasBusConflict());

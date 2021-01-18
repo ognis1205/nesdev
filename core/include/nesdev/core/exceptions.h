@@ -55,6 +55,16 @@ class Assertion {
 #  define NESDEV_CORE_CASSERT(expr, msg) nesdev::core::Assertion::CAssert(expr, msg)
 #endif
 
+class InvalidOperation : public Exception {
+ public:
+  static InvalidOperation Occur(const std::string& what_arg) {
+    return InvalidOperation((Exception::Header("InvalidOperation") + " " + what_arg).c_str());
+  }
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  InvalidOperation(const char* what_arg) : Exception(what_arg) {}
+};
+
 class InvalidAddress : public Exception {
  public:
   static InvalidAddress Occur(const std::string& what_arg, const Address& address) {

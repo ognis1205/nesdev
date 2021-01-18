@@ -23,7 +23,7 @@ class Mapper000 final : public nesdev::core::ROM::Mapper {
 
   Byte Read(Mapper::Space space, Address address) const override;
 
-  Byte Write(Mapper::Space space, Address address, Byte byte) const override;
+  void Write(Mapper::Space space, Address address, Byte byte) const override;
 
   [[nodiscard]]
   bool IRQ() const noexcept override {

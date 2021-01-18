@@ -4,25 +4,43 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#include <cstddef>
-#include <cstring>
+//#include <cstddef>
+//#include <cstring>
 #include <iosfwd>
 #include <istream>
-#include <limits>
+//#include <limits>
 #include <memory>
 #include "nesdev/core/rom.h"
 #include "nesdev/core/rom_factory.h"
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
+#include "nesdev/core/memory_bank.h"
+#include "detail/memory_bank.h"
 #include "detail/roms/nrom.h"
 #include "detail/roms/mapper000.h"
+
+namespace {
+
+using namespace nesdev::core;
+
+template<Address From, Address To>
+std::unique_ptr<MemoryBank> MakeCHRRxm(const ROM::Header& header, bool expression) {
+  if (expression)
+    return static_cast<std::unique_ptr<MemoryBank>>(std::make_unique<detail::MemoryBank<From, To>>(header.SizeOfCHRRom()));
+  else
+    return static_cast<std::unique_ptr<MemoryBank>>(std::make_unique<detail::VoidMemory>());
+}
+
+}
 
 namespace nesdev {
 namespace core {
 
 std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   std::unique_ptr<ROM::Header> header = std::make_unique<ROM::Header>();
+
   is.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
+
   if (!header->HasValidMagic())
     NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible file format to iNES"));
   if (header->Mapper() != 0)
@@ -30,13 +48,21 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   if (header->ContainsTrainer())
     is.seekg(512, std::ios_base::cur);
 
-  std::unique_ptr<ROM::Chips>   chips = std::make_unique<ROM::Chips>();
-  std::unique_ptr<ROM::Mapper> mapper = std::make_unique<detail::roms::Mapper000>(header.get(), chips.get());
-  chips->prg_rom.resize(header->SizeOfPRGRom());
-  chips->prg_ram.resize(header->SizeOfPRGRam());
-  chips->chr_rom.resize(header->SizeOfCHRRom());
-  is.read(reinterpret_cast<char*>(chips->prg_rom.data()), chips->prg_rom.size());
-  is.read(reinterpret_cast<char*>(chips->chr_rom.data()), chips->chr_rom.size());
+  std::unique_ptr<ROM::Chips> chips = std::make_unique<ROM::Chips>(
+    ::MakeCHRRxm<0x0000, 0x1FFF>(*header, header->NumOfCHRBanks() != 0),
+    ::MakeCHRRxm<0x0000, 0x1FFF>(*header, header->NumOfCHRBanks() == 0),
+    std::make_unique<detail::MemoryBank<0x8000, 0xFFFF>>(header->SizeOfPRGRom()),
+    std::make_unique<detail::MemoryBank<0x6000, 0x7FFF>>(header->SizeOfPRGRam()));
+
+  std::unique_ptr<ROM::Mapper> mapper = std::make_unique<detail::roms::Mapper000>(
+    header.get(),
+    chips.get());
+
+  is.read(reinterpret_cast<char*>(chips->chr_rom->Data()), chips->chr_rom->Size());
+  if (header->NumOfCHRBanks() != 0)
+    is.read(reinterpret_cast<char*>(chips->prg_rom->Data()), chips->prg_rom->Size());
+  else
+    is.read(reinterpret_cast<char*>(chips->prg_ram->Data()), chips->prg_ram->Size());
 
   return std::make_unique<detail::roms::NROM>(std::move(header), std::move(chips), std::move(mapper));
 }

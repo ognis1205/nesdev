@@ -6,6 +6,8 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
 #define _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
+#include <cstddef>
+#include <vector>
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
@@ -15,21 +17,18 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-template <Address From, Address To, Address Range>
+template <Address From, Address To>
 class MemoryBank final : public nesdev::core::MemoryBank {
  public:
   static_assert(
-    Range > 0u,
-    "Range must be greater than zero");
-  static_assert(
     From <= To,
     "Start address must be greater than end address");
-  static_assert(
-    (To - From + 1u) % Range == 0,
-    "Range does not match address range");
 
  public:
-  MemoryBank() = default;
+  MemoryBank(std::size_t size) {
+    NESDEV_CORE_CASSERT((To - From + 1u) % size == 0, "Size does not match address range");
+    data_.resize(size);
+  }
 
   [[nodiscard]]
   bool HasValidAddress(Address address) const noexcept override {
@@ -39,12 +38,24 @@ class MemoryBank final : public nesdev::core::MemoryBank {
 
   Byte Read(Address address) const override {
     if (HasValidAddress(address)) return *PtrTo(address);
-    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Read", address));
+    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
   }
 
   void Write(Address address, Byte byte) override {
     if (HasValidAddress(address)) *PtrTo(address) = byte;
-    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid Address specified to Write", address));
+    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+  }
+
+  std::size_t Size() const noexcept override {
+    return data_.size();
+  }
+
+  Byte* Data() override {
+    return const_cast<Byte*>(std::as_const(*this).Data());
+  }
+
+  const Byte* Data() const override {
+    return data_.data();
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -53,11 +64,41 @@ class MemoryBank final : public nesdev::core::MemoryBank {
   }
 
   const Byte* PtrTo(Address address) const {
-    return &bank_.data()[address % Range];
+    return &data_.data()[address % Size()];
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  std::array<Byte, Range> bank_ = {};
+  std::vector<Byte> data_;
+};
+
+class VoidMemory final : public nesdev::core::MemoryBank {
+ public:
+  VoidMemory() = default;
+
+  [[nodiscard]]
+  bool HasValidAddress([[maybe_unused]] Address address) const noexcept override {
+    return false;
+  }
+
+  Byte Read(Address address) const override {
+    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+  }
+
+  void Write(Address address, [[maybe_unused]] Byte byte) override {
+    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+  }
+
+  std::size_t Size() const noexcept override {
+    return 0;
+  }
+
+  Byte* Data() override {
+    NESDEV_CORE_THROW(InvalidOperation::Occur("Invalid operation specified to void memory"));
+  }
+
+  const Byte* Data() const override {
+    NESDEV_CORE_THROW(InvalidOperation::Occur("Invalid operation specified to void memory"));
+  }
 };
 
 }  // namespace detail

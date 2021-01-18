@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_MEMORY_BANK_H_
 #define _NESDEV_CORE_MEMORY_BANK_H_
+#include <cstddef>
 #include <memory>
 #include <vector>
 #include "nesdev/core/types.h"
@@ -23,6 +24,12 @@ class MemoryBank {
   virtual Byte Read(Address address) const = 0;
 
   virtual void Write(Address address, Byte byte) = 0;
+
+  virtual std::size_t Size() const noexcept = 0;
+
+  virtual Byte* Data() = 0;
+
+  virtual const Byte* Data() const = 0;
 };
 
 using MemoryBanks = std::vector<std::unique_ptr<MemoryBank>>;

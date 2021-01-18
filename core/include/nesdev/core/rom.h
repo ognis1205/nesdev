@@ -10,6 +10,7 @@
 #include <vector>
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
+#include "nesdev/core/memory_bank.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -64,11 +65,11 @@ class ROM {
     std::size_t NumOfPRGBanks() const {
       switch (Format()) {
       case Format::NES10:
-	return prg_rom_chunks_;
+        return prg_rom_chunks_;
       case Format::NES20:
-	return (flags8_.prg_rom_chunks_nibble_hi << 8) | prg_rom_chunks_;
+        return (flags8_.prg_rom_chunks_nibble_hi << 8) | prg_rom_chunks_;
       default:
-	NESDEV_CORE_THROW(InvalidROM::Occur("Invalid iNES format specified to iNES header"));
+        NESDEV_CORE_THROW(InvalidROM::Occur("Invalid iNES format specified to iNES header"));
       }
     }
 
@@ -81,9 +82,9 @@ class ROM {
     std::size_t NumOfCHRBanks() const {
       switch (Format()) {
       case Format::NES10:
-	return chr_rom_chunks_;
+        return chr_rom_chunks_;
       case Format::NES20:
-	return (flags8_.chr_rom_chunks_nibble_hi << 8) | prg_rom_chunks_;
+        return (flags8_.chr_rom_chunks_nibble_hi << 8) | prg_rom_chunks_;
       default:
         NESDEV_CORE_THROW(InvalidROM::Occur("Invalid iNES format specified to iNES header"));
       }
@@ -146,11 +147,11 @@ class ROM {
     Header::TVSystem TVSystem() const {
       switch(flags10_.tv_system) {
       case 0:
-	return Header::TVSystem::NTSC;
+        return Header::TVSystem::NTSC;
       case 2:
-	return Header::TVSystem::PAL;
+        return Header::TVSystem::PAL;
       case 1: case 3:
-	return Header::TVSystem::DUAL_COMPAT;
+        return Header::TVSystem::DUAL_COMPAT;
       default:
         NESDEV_CORE_THROW(InvalidROM::Occur("Invalid TV system specified to iNES header"));
       }
@@ -222,12 +223,24 @@ class ROM {
     Byte unused_[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
   };
 
-  struct Chips {
-    std::vector<Byte> chr_rom;
+  class Chips {
+   public:
+    explicit Chips(std::unique_ptr<MemoryBank> chr_rom,
+		   std::unique_ptr<MemoryBank> chr_ram,
+		   std::unique_ptr<MemoryBank> prg_rom,
+		   std::unique_ptr<MemoryBank> prg_ram)
+    : chr_rom{std::move(chr_rom)},
+      chr_ram{std::move(chr_ram)},
+      prg_rom{std::move(prg_rom)},
+      prg_ram{std::move(prg_ram)} {};
 
-    std::vector<Byte> prg_rom;
+    const std::unique_ptr<MemoryBank> chr_rom;
 
-    std::vector<Byte> prg_ram;
+    const std::unique_ptr<MemoryBank> chr_ram;
+
+    const std::unique_ptr<MemoryBank> prg_rom;
+
+    const std::unique_ptr<MemoryBank> prg_ram;
   };
 
   class Mapper {
@@ -247,7 +260,7 @@ class ROM {
 
     virtual Byte Read(Space space, Address address) const = 0;
 
-    virtual Byte Write(Space space, Address address, Byte byte) const = 0;
+    virtual void Write(Space space, Address address, Byte byte) const = 0;
 
     [[nodiscard]]
     virtual bool IRQ() const noexcept = 0;
@@ -266,8 +279,8 @@ class ROM {
 
  public:
   explicit ROM(std::unique_ptr<Header> header,
-	       std::unique_ptr<Chips> chips,
-	       std::unique_ptr<Mapper> mapper)
+               std::unique_ptr<Chips> chips,
+               std::unique_ptr<Mapper> mapper)
     : header_{std::move(header)},
       chips_{std::move(chips)},
       mapper_{std::move(mapper)} {};
