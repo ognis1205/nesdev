@@ -49,14 +49,14 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
       std::make_unique<detail::MemoryBank<0x8000, 0xFFFF>>(header->SizeOfPRGRom()),
       std::make_unique<detail::MemoryBank<0x6000, 0x7FFF>>(header->SizeOfPRGRam()));
 
-  std::unique_ptr<ROM::Mapper> mapper = std::make_unique<detail::roms::Mapper000>(header.get(), chips.get());
-
   is.read(reinterpret_cast<char*>(chips->prg_rom->Data()), chips->prg_rom->Size());
 
   if (header->NumOfCHRRoms() != 0)
     is.read(reinterpret_cast<char*>(chips->chr_rom->Data()), chips->chr_rom->Size());
   else
     is.read(reinterpret_cast<char*>(chips->chr_ram->Data()), chips->chr_ram->Size());
+
+  std::unique_ptr<ROM::Mapper> mapper = std::make_unique<detail::roms::Mapper000>(header.get(), chips.get());
 
   return std::make_unique<detail::roms::NROM>(std::move(header), std::move(chips), std::move(mapper));
 }

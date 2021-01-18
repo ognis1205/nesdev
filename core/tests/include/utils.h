@@ -42,6 +42,11 @@ class Utility {
     return From + rand() % (To - From + 1);
   }
 
+  template<Byte From, Byte To>
+  static Address RandomByte() noexcept {
+    return From + rand() % (To - From + 1);
+  }
+
  private:
   Utility();
 };

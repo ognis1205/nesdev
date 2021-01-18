@@ -46,8 +46,6 @@ class ROM {
     };
 
    public:
-
-   public:
     [[nodiscard]]
     bool HasValidMagic() const noexcept {
       return magic_[0] == 0x4E && magic_[1] == 0x45 && magic_[2] == 0x53 && magic_[3] == 0x1A;
@@ -212,6 +210,7 @@ class ROM {
     } flags8_ = {0x00};
 
     // FLAGS 9    : TV system (rarely used extension).
+    //[[maybe_unused]]
     union {
       Byte value;
       Bitfield<0, 1, Byte> tv_system;
@@ -227,10 +226,11 @@ class ROM {
     } flags10_ = {0x00};
 
     // FLAGS 11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15)
+    //[[maybe_unused]]
     Byte unused_[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
   };
 
-  class Chips {
+  struct Chips {
    public:
     explicit Chips(std::unique_ptr<MemoryBank> chr_rom,
                    std::unique_ptr<MemoryBank> chr_ram,

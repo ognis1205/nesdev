@@ -10,7 +10,7 @@
 #include <nesdev/core.h>
 #include "detail/roms/mapper000.h"
 #include "utils.h"
-#include "mocks/rom_chips.h"
+#include "mocks/chips.h"
 
 namespace nesdev {
 namespace core {
@@ -50,6 +50,55 @@ TEST_F(Mapper000Test, HasValidAddress) {
   EXPECT_TRUE (mapper1.HasValidAddress(ROM::Mapper::Space::CPU, Utility::RandomAddress<0x6000, 0xFFFF>()));
   EXPECT_FALSE(mapper1.HasValidAddress(ROM::Mapper::Space::PPU, Utility::RandomAddress<0x2000, 0xFFFF>()));
   EXPECT_TRUE (mapper1.HasValidAddress(ROM::Mapper::Space::PPU, Utility::RandomAddress<0x0000, 0x1FFF>()));
+}
+
+TEST_F(Mapper000Test, ReadWithValidAddress) {
+  auto mapper0 = detail::roms::Mapper000(header_.get(), mock_void_chr_rom_chips_.get());
+  EXPECT_EQ(0x00, mapper0.Read(ROM::Mapper::Space::CPU, Utility::RandomAddress<0x6000, 0xFFFF>()));
+  EXPECT_EQ(0x00, mapper0.Read(ROM::Mapper::Space::PPU, Utility::RandomAddress<0x0000, 0x1FFF>()));
+
+  auto mapper1 = detail::roms::Mapper000(header_.get(), mock_fill_chr_rom_chips_.get());
+  EXPECT_EQ(0x00, mapper1.Read(ROM::Mapper::Space::CPU, Utility::RandomAddress<0x6000, 0xFFFF>()));
+  EXPECT_EQ(0x00, mapper1.Read(ROM::Mapper::Space::PPU, Utility::RandomAddress<0x0000, 0x1FFF>()));
+}
+
+TEST_F(Mapper000Test, WriteWithValidAddress) {
+  auto mapper0 = detail::roms::Mapper000(header_.get(), mock_void_chr_rom_chips_.get());
+  auto address = Utility::RandomAddress<0x6000, 0x7FFF>();
+  auto byte    = Utility::RandomAddress<0x00, 0xFF>();
+  mapper0.Write(ROM::Mapper::Space::CPU, address, byte);
+  EXPECT_EQ(byte, mapper0.Read(ROM::Mapper::Space::CPU, address));
+  address = Utility::RandomAddress<0x0000, 0x1FFF>();
+  byte    = Utility::RandomAddress<0x00, 0xFF>();
+  mapper0.Write(ROM::Mapper::Space::PPU, address, byte);
+  EXPECT_EQ(byte, mapper0.Read(ROM::Mapper::Space::PPU, address));
+
+  auto mapper1 = detail::roms::Mapper000(header_.get(), mock_fill_chr_rom_chips_.get());
+  address = Utility::RandomAddress<0x6000, 0x7FFF>();
+  byte    = Utility::RandomAddress<0x00, 0xFF>();
+  mapper1.Write(ROM::Mapper::Space::CPU, address, byte);
+  EXPECT_EQ(byte, mapper1.Read(ROM::Mapper::Space::CPU, address));
+}
+
+TEST_F(Mapper000Test, WriteWithInvalidAddress) {
+  auto mapper0 = detail::roms::Mapper000(header_.get(), mock_void_chr_rom_chips_.get());
+  auto address = Utility::RandomAddress<0x8000, 0xFFFF>();
+  auto byte    = Utility::RandomAddress<0x00, 0xFF>();
+  EXPECT_THROW(mapper0.Write(ROM::Mapper::Space::CPU, address, byte), InvalidAddress);
+  address = Utility::RandomAddress<0x2000, 0xFFFF>();
+  byte    = Utility::RandomAddress<0x00, 0xFF>();
+  EXPECT_THROW(mapper0.Write(ROM::Mapper::Space::PPU, address, byte), InvalidAddress);
+
+  auto mapper1 = detail::roms::Mapper000(header_.get(), mock_fill_chr_rom_chips_.get());
+  address = Utility::RandomAddress<0x8000, 0xFFFF>();
+  byte    = Utility::RandomAddress<0x00, 0xFF>();
+  EXPECT_THROW(mapper1.Write(ROM::Mapper::Space::CPU, address, byte), InvalidAddress);
+  address = Utility::RandomAddress<0x0000, 0x1FFF>();
+  byte    = Utility::RandomAddress<0x00, 0xFF>();
+  EXPECT_THROW(mapper1.Write(ROM::Mapper::Space::PPU, address, byte), InvalidAddress);
+  address = Utility::RandomAddress<0x2000, 0xFFFF>();
+  byte    = Utility::RandomAddress<0x00, 0xFF>();
+  EXPECT_THROW(mapper1.Write(ROM::Mapper::Space::PPU, address, byte), InvalidAddress);
 }
 
 }  // namespace roms
