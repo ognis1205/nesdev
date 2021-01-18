@@ -46,9 +46,6 @@ class ROM {
     };
 
    public:
-    static constexpr std::size_t k16KByte = 16 * 1024;
-
-    static constexpr std::size_t k8KByte  =  8 * 1024;
 
    public:
     [[nodiscard]]
@@ -58,11 +55,11 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfPRGRom() const noexcept {
-      return NumOfPRGBanks() * Header::k16KByte;
+      return NumOfPRGRoms() * k16KByte;
     }
 
     [[nodiscard]]
-    std::size_t NumOfPRGBanks() const {
+    std::size_t NumOfPRGRoms() const {
       switch (Format()) {
       case Format::NES10:
         return prg_rom_chunks_;
@@ -75,11 +72,11 @@ class ROM {
 
     [[nodiscard]]
     std::size_t SizeOfCHRRom() const noexcept {
-      return NumOfCHRBanks() == 0 ? Header::k8KByte : NumOfCHRBanks() * Header::k8KByte;
+      return NumOfCHRRoms() * k8KByte;
     }
 
     [[nodiscard]]
-    std::size_t NumOfCHRBanks() const {
+    std::size_t NumOfCHRRoms() const {
       switch (Format()) {
       case Format::NES10:
         return chr_rom_chunks_;
@@ -88,6 +85,26 @@ class ROM {
       default:
         NESDEV_CORE_THROW(InvalidROM::Occur("Invalid iNES format specified to iNES header"));
       }
+    }
+
+    [[nodiscard]]
+    std::size_t SizeOfPRGRam() const noexcept {
+      return NumOfPRGRams() * k8KByte;
+    }
+
+    [[nodiscard]]
+    std::size_t NumOfPRGRams() const noexcept {
+      return flags8_.prg_ram_chunks == 0 ? 1 : flags8_.prg_ram_chunks;
+    }
+
+    [[nodiscard]]
+    std::size_t SizeOfCHRRam() const noexcept {
+      return NumOfCHRRams() * k8KByte;
+    }
+
+    [[nodiscard]]
+    std::size_t NumOfCHRRams() const noexcept {
+      return NumOfCHRRoms() == 0 ? 1 : 0;
     }
 
     [[nodiscard]]
@@ -131,16 +148,6 @@ class ROM {
     [[nodiscard]]
     Byte Mapper() const noexcept {
       return flags7_.mapper_nibble_hi << 4 | flags6_.mapper_nibble_lo;
-    }
-
-    [[nodiscard]]
-    std::size_t SizeOfPRGRam() const noexcept {
-      return NumOfPRGRams() == 0 ? Header::k8KByte : NumOfPRGRams() * Header::k8KByte;
-    }
-
-    [[nodiscard]]
-    std::size_t NumOfPRGRams() const noexcept {
-      return flags8_.prg_ram_chunks;
     }
 
     [[nodiscard]]
@@ -226,9 +233,9 @@ class ROM {
   class Chips {
    public:
     explicit Chips(std::unique_ptr<MemoryBank> chr_rom,
-		   std::unique_ptr<MemoryBank> chr_ram,
-		   std::unique_ptr<MemoryBank> prg_rom,
-		   std::unique_ptr<MemoryBank> prg_ram)
+                   std::unique_ptr<MemoryBank> chr_ram,
+                   std::unique_ptr<MemoryBank> prg_rom,
+                   std::unique_ptr<MemoryBank> prg_ram)
     : chr_rom{std::move(chr_rom)},
       chr_ram{std::move(chr_ram)},
       prg_rom{std::move(prg_rom)},

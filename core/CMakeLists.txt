@@ -1,4 +1,4 @@
-project (nesdev-core)
+project (nesdev)
 
 set (NESDEV_CORE_LIBRARY ${PROJECT_NAME})
 

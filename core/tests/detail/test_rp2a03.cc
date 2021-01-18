@@ -11,17 +11,18 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/rp2a03.h"
-#include "mock_mmu.h"
 #include "constants.h"
 #include "utils.h"
+#include "mocks/mmu.h"
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace detail {
 
 class RP2A03Test : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -32,7 +33,7 @@ class RP2A03Test : public testing::Test {
 
   time_t start_time_;
 
-  MockMMU mmu_;
+  mocks::MMU mmu_;
 
   detail::RP2A03::Registers registers_;
 
@@ -404,6 +405,6 @@ TEST_F(RP2A03Test, Next) {
   }
 }
 
-}  // namespace test
+}  // namespace detail
 }  // namespace core
 }  // namespace nesdev

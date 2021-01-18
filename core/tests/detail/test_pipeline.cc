@@ -13,11 +13,12 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace detail {
 
 class PipelineTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -88,7 +89,7 @@ TEST_F(PipelineTest, Tick) {
   EXPECT_TRUE(pipeline1_.Done());
 }
 
-}  // namespace test
+}  // namespace detail
 }  // namespace core
 }  // namespace nesdev
 

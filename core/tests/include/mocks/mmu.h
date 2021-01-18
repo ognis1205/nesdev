@@ -12,9 +12,9 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace mocks {
 
-class MockMMU : public MMU {
+class MMU : public nesdev::core::MMU {
  public:
   MOCK_METHOD1(MockSet, void(MemoryBanks));
 
@@ -27,7 +27,7 @@ class MockMMU : public MMU {
   }
 };
 
-}  // namespace test
+}  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
 #endif  // ifndef _NESDEV_CORE_TEST_MOCK_MMU_H_

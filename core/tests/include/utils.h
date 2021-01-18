@@ -6,13 +6,15 @@
  */
 #ifndef _NESDEV_CORE_TEST_UTILS_H_
 #define _NESDEV_CORE_TEST_UTILS_H_
+#include <cstdlib>
+#include <ctime>
 #include <sstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <nesdev/core.h>
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 #define DBG(...) \
   do { \
@@ -29,7 +31,21 @@ class DebugOut : public std::stringstream {
 
 #define COUT DebugOut()
 
-}  // namespace test
+class Utility {
+ public:
+  static void Init() noexcept {
+    srand(time(nullptr));
+  }
+
+  template<Address From, Address To>
+  static Address RandomAddress() noexcept {
+    return From + rand() % (To - From + 1);
+  }
+
+ private:
+  Utility();
+};
+
 }  // namespace core
 }  // namespace nesdev
 

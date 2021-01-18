@@ -14,11 +14,11 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 class ROMFactoryTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -39,24 +39,31 @@ class ROMFactoryTest : public testing::Test {
 TEST_F(ROMFactoryTest, SuperMarioBrothers) {
   ifs_.open(super_mario_brothers_, std::ifstream::binary);
   auto rom = ROMFactory::NROM(ifs_);
-  EXPECT_TRUE(rom->header_->HasValidMagic());
-  EXPECT_EQ(1 * 32768u, rom->header_->SizeOfPRGRom());
-  EXPECT_EQ(1 * 32768u, rom->chips_->prg_rom->Size());
-  EXPECT_EQ(1 * 8192u, rom->header_->SizeOfCHRRom());
-  EXPECT_EQ(1 * 8192u, rom->chips_->chr_rom->Size());
-  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL, rom->header_->Mirroring());
+
+  EXPECT_TRUE (rom->header_->HasValidMagic());
+  EXPECT_TRUE (rom->header_->HasPRGRam());
   EXPECT_FALSE(rom->header_->ContainsPersistentMemory());
   EXPECT_FALSE(rom->header_->ContainsTrainer());
   EXPECT_FALSE(rom->header_->IgnoreMirroing());
   EXPECT_FALSE(rom->header_->IsVSUnisystem());
   EXPECT_FALSE(rom->header_->IsPlayChoice());
-  EXPECT_EQ(ROM::Header::Format::NES10, rom->header_->Format());
-  EXPECT_EQ(0, rom->header_->Mapper());
-  EXPECT_EQ(1 * 8192u, rom->header_->SizeOfPRGRam());
-  EXPECT_EQ(1 * 8192u, rom->chips_->prg_ram->Size());
-  EXPECT_EQ(ROM::Header::TVSystem::NTSC, rom->header_->TVSystem());
-  EXPECT_TRUE(rom->header_->HasPRGRam());
   EXPECT_FALSE(rom->header_->HasBusConflict());
+
+  EXPECT_EQ(ROM::Header::Format::NES10,       rom->header_->Format());
+  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL, rom->header_->Mirroring());
+  EXPECT_EQ(ROM::Header::TVSystem::NTSC,      rom->header_->TVSystem());
+  EXPECT_EQ(0,                                rom->header_->Mapper());
+
+  EXPECT_EQ(1 * 32768u, rom->header_->SizeOfPRGRom());
+  EXPECT_EQ(1 * 8192u,  rom->header_->SizeOfPRGRam());
+  EXPECT_EQ(1 * 8192u,  rom->header_->SizeOfCHRRom());
+  EXPECT_EQ(0u,         rom->header_->SizeOfCHRRam());
+
+  EXPECT_EQ(1 * 32768u, rom->chips_->prg_rom->Size());
+  EXPECT_EQ(1 * 8192u,  rom->chips_->chr_rom->Size());
+  EXPECT_EQ(1 * 8192u,  rom->chips_->prg_ram->Size());
+  EXPECT_EQ(0u,         rom->chips_->chr_ram->Size());
+
   ifs_.close();
 }
 
@@ -66,6 +73,5 @@ TEST_F(ROMFactoryTest, Zelda) {
   ifs_.close();
 }
 
-}  // namespace test
 }  // namespace core
 }  // namespace nesdev

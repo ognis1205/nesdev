@@ -12,9 +12,9 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace mocks {
 
-class MockCPU : public CPU {
+class CPU : public nesdev::core::CPU {
  public:
   MOCK_METHOD0(Tick, void());
 
@@ -45,7 +45,7 @@ class MockCPU : public CPU {
   }
 };
 
-}  // namespace test
+}  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
 #endif  // ifndef _NESDEV_CORE_TEST_MOCK_CPU_H_

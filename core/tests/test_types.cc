@@ -12,11 +12,11 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 class TypesTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -437,6 +437,5 @@ TEST_F(TypesTest, InDecrement) {
   EXPECT_EQ(0b0000000011111111, pc_.value);
 }
 
-}  // namespace test
 }  // namespace core
 }  // namespace nesdev

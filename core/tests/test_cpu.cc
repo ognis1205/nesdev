@@ -10,16 +10,16 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mmu.h"
-#include "mock_cpu.h"
 #include "utils.h"
+#include "mocks/cpu.h"
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 class CPUTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -30,7 +30,7 @@ class CPUTest : public testing::Test {
 
   time_t start_time_;
 
-  MockCPU cpu_;
+  mocks::CPU cpu_;
 };
 
 TEST_F(CPUTest, Context) {
@@ -119,6 +119,5 @@ TEST_F(CPUTest, Ptr) {
   EXPECT_FALSE(cpu_.CrossPage());
 }
 
-}  // namespace test
 }  // namespace core
 }  // namespace nesdev

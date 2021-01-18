@@ -13,9 +13,9 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace mocks {
 
-class MockMemoryBank : public MemoryBank {
+class MemoryBank : public nesdev::core::MemoryBank {
  public:
   MOCK_CONST_METHOD1(MockHasValidAddress, bool(nesdev::core::Address));
 
@@ -38,7 +38,7 @@ class MockMemoryBank : public MemoryBank {
   }
 };
 
-}  // namespace test
+}  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
 #endif  // ifndef _NESDEV_CORE_TEST_MOCK_MEMORY_BANK_H_

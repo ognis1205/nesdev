@@ -10,16 +10,16 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mmu.h"
-#include "mock_memory_bank.h"
 #include "utils.h"
+#include "mocks/memory_bank.h"
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 class MMUFactoryTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -39,7 +39,7 @@ TEST_F(MMUFactoryTest, CreateEmpty) {
 TEST_F(MMUFactoryTest, Create) {
   std::vector<std::unique_ptr<MemoryBank>> memory_banks;
   for (int i = 0; i < 3; i++) {
-    auto memory_bank = std::make_unique<MockMemoryBank>();
+    auto memory_bank = std::make_unique<mocks::MemoryBank>();
     memory_banks.push_back(std::move(memory_bank));
   }
   auto mmu = MMUFactory::Create(std::move(memory_banks));
@@ -47,6 +47,5 @@ TEST_F(MMUFactoryTest, Create) {
   EXPECT_EQ(3, static_cast<detail::MMU*>(mmu.get())->memory_banks_.size());
 }
 
-}  // namespace test
 }  // namespace core
 }  // namespace nesdev

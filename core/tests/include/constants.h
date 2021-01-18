@@ -14,7 +14,6 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 struct Op {
   std::string inst;
@@ -298,7 +297,6 @@ static const std::vector<Op> kOpcodes = {
   {"???", "IMP", 0},
 };
 
-}  // namespace test
 }  // namespace core
 }  // namespace nesdev
 

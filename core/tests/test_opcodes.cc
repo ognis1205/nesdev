@@ -11,11 +11,11 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
 
 class OpcodesTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -42,6 +42,5 @@ TEST_F(OpcodesTest, ToString) {
   }
 }
 
-}  // namespace test
 }  // namespace core
 }  // namespace nesdev

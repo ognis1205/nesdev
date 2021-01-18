@@ -10,16 +10,17 @@
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
 #include "detail/mmu.h"
-#include "mock_memory_bank.h"
 #include "utils.h"
+#include "mocks/memory_bank.h"
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace detail {
 
 class MMUTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -34,7 +35,7 @@ class MMUTest : public testing::Test {
 };
 
 TEST_F(MMUTest, Clear) {
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   mmu_.Clear();
@@ -42,7 +43,7 @@ TEST_F(MMUTest, Clear) {
 }
 
 TEST_F(MMUTest, Add) {
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   mmu_.Add(std::move(memory_bank));
   EXPECT_FALSE(mmu_.memory_banks_.empty());
   EXPECT_EQ(1, mmu_.memory_banks_.size());
@@ -54,7 +55,7 @@ TEST_F(MMUTest, Add) {
 TEST_F(MMUTest, Set) {
   std::vector<std::unique_ptr<MemoryBank>> memory_banks;
   for (int i = 0; i < 3; i++) {
-    auto memory_bank = std::make_unique<MockMemoryBank>();
+    auto memory_bank = std::make_unique<mocks::MemoryBank>();
     memory_banks.push_back(std::move(memory_bank));
   }
   mmu_.Set(std::move(memory_banks));
@@ -63,7 +64,7 @@ TEST_F(MMUTest, Set) {
 }
 
 TEST_F(MMUTest, ReadWithValidAddress) {
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(true));
@@ -76,7 +77,7 @@ TEST_F(MMUTest, ReadWithValidAddress) {
 }
 
 TEST_F(MMUTest, ReadWithInvalidAddress) {
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(false));
@@ -87,7 +88,7 @@ TEST_F(MMUTest, ReadWithInvalidAddress) {
 
 TEST_F(MMUTest, WriteWithValidAddress) {
   Byte memory = 0x00;
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(true));
@@ -102,7 +103,7 @@ TEST_F(MMUTest, WriteWithValidAddress) {
 
 TEST_F(MMUTest, WriteWithInvalidAddress) {
   Byte memory = 0x00;
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(false));
@@ -113,7 +114,7 @@ TEST_F(MMUTest, WriteWithInvalidAddress) {
 }
 
 TEST_F(MMUTest, SwitchWithValidAddress) {
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(true));
@@ -123,7 +124,7 @@ TEST_F(MMUTest, SwitchWithValidAddress) {
 }
 
 TEST_F(MMUTest, SwitchWithInvalidAddress) {
-  auto memory_bank = std::make_unique<MockMemoryBank>();
+  auto memory_bank = std::make_unique<mocks::MemoryBank>();
   EXPECT_CALL(*memory_bank, MockHasValidAddress(testing::_))
     .Times(1)
     .WillOnce(testing::Return(false));

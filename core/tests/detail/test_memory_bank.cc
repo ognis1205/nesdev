@@ -12,11 +12,12 @@
 
 namespace nesdev {
 namespace core {
-namespace test {
+namespace detail {
 
 class MemoryBankTest : public testing::Test {
  protected:
   void SetUp() override {
+    Utility::Init();
     start_time_ = time(nullptr);
   }
 
@@ -70,6 +71,6 @@ TEST_F(MemoryBankTest, PtrTo) {
   }
 }
 
-}  // namespace test
+}  // namespace detail
 }  // namespace core
 }  // namespace nesdev
