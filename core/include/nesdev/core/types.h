@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <utility>
+#include "nesdev/core/macros.h"
 
 namespace nesdev {
 namespace core {
@@ -23,65 +24,46 @@ static constexpr std::size_t k8KByte  =  8 * 1024;
 
 static constexpr std::size_t k16KByte = 16 * 1024;
 
-template <Address Start, Address End>
-class AddressSpace {
- public:
-  static_assert(
-    Start <= End,
-    "Start address must be greater than end address");
-
- public:
-  [[nodiscard]]
-  bool Contain(Address address) const noexcept {
-    if constexpr (Start == 0) return address <= End;
-    else return address >= Start && address <= End;
-  }
-};
-
 template <size_t BitNo, size_t Width = 1, typename T = Byte>
-struct Bitfield {
+class Bitfield {
+ public:
   static constexpr auto mask = ((1u << Width) - 1u) << BitNo;
 
+ public:
   template <typename U>
   Bitfield& operator=(U that) {
-    value_ = (value_ & ~mask) |
-             ((Width > 1 ? that & (mask >> BitNo) : !!that) << BitNo);
+    value_ = (value_ & ~mask) | ((Width > 1 ? that & (mask >> BitNo) : !!that) << BitNo);
     return *this;
   }
 
   template <typename U>
   Bitfield& operator|=(U that) {
     unsigned value = *this;
-    value_ =
-        (value_ & ~mask) |
-        ((Width > 1 ? (value | (that & (mask >> BitNo))) : (value | !!that))
-         << BitNo);
+    value_ = (value_ & ~mask) | ((Width > 1 ? (value | (that & (mask >> BitNo))) : (value | !!that)) << BitNo);
     return *this;
   }
 
   template <typename U>
   Bitfield& operator&=(U that) {
     unsigned value = *this;
-    value_ =
-        (value_ & ~mask) |
-        ((Width > 1 ? (value & (that & (mask >> BitNo))) : (value & !!that))
-         << BitNo);
+    value_ = (value_ & ~mask) | ((Width > 1 ? (value & (that & (mask >> BitNo))) : (value & !!that)) << BitNo);
     return *this;
   }
 
   template <typename U>
   Bitfield& operator^=(U that) {
     unsigned value = *this;
-    value_ =
-        (value_ & ~mask) |
-        ((Width > 1 ? (value ^ (that & (mask >> BitNo))) : (value ^ !!that))
-         << BitNo);
+    value_ = (value_ & ~mask) | ((Width > 1 ? (value ^ (that & (mask >> BitNo))) : (value ^ !!that)) << BitNo);
     return *this;
   }
 
-  operator unsigned() const { return (value_ & mask) >> BitNo; }
+  operator unsigned() const {
+    return (value_ & mask) >> BitNo;
+  }
 
-  Bitfield& operator++() { return *this = *this + 1; }
+  Bitfield& operator++() {
+    return *this = *this + 1;
+  }
 
   unsigned operator++(int) {
     unsigned ret = *this;
@@ -89,7 +71,9 @@ struct Bitfield {
     return ret;
   }
 
-  Bitfield& operator--() { return *this = *this - 1; }
+  Bitfield& operator--() {
+    return *this = *this - 1;
+  }
 
   unsigned operator--(int) {
     unsigned ret = *this;
@@ -97,6 +81,7 @@ struct Bitfield {
     return ret;
   }
 
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   T value_;
 };
 

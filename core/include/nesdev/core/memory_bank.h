@@ -25,7 +25,7 @@ class MemoryBank {
 
   virtual void Write(Address address, Byte byte) = 0;
 
-  virtual std::size_t Size() const noexcept = 0;
+  virtual std::size_t Size() const = 0;
 
   virtual Byte* Data() = 0;
 

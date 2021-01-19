@@ -30,6 +30,8 @@ class ROMTest : public testing::Test {
 
   std::ifstream ifs_;
 
+  ROM::Header header_;
+
   std::string donkey_kong_ = "core/tests/data/donkey_kong.nes";
 
   std::string super_mario_brothers_ = "core/tests/data/super_mario_brothers.nes";
@@ -40,111 +42,103 @@ class ROMTest : public testing::Test {
 };
 
 TEST_F(ROMTest, DonkeyKong) {
-  std::unique_ptr<ROM::Header> header = std::make_unique<ROM::Header>();
-
   ifs_.open(donkey_kong_, std::ifstream::binary);
-  ifs_.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
+  ifs_.read(reinterpret_cast<char*>(&header_), sizeof(ROM::Header));
   ifs_.close();
 
-  EXPECT_TRUE (header->HasValidMagic());
-  EXPECT_TRUE (header->HasPRGRam());
-  EXPECT_FALSE(header->ContainsPersistentMemory());
-  EXPECT_FALSE(header->ContainsTrainer());
-  EXPECT_FALSE(header->IgnoreMirroing());
-  EXPECT_FALSE(header->IsVSUnisystem());
-  EXPECT_FALSE(header->IsPlayChoice());
-  EXPECT_FALSE(header->HasBusConflict());
+  EXPECT_TRUE (header_.HasValidMagic());
+  EXPECT_TRUE (header_.HasPRGRam());
+  EXPECT_FALSE(header_.ContainsPersistentMemory());
+  EXPECT_FALSE(header_.ContainsTrainer());
+  EXPECT_FALSE(header_.IgnoreMirroing());
+  EXPECT_FALSE(header_.IsVSUnisystem());
+  EXPECT_FALSE(header_.IsPlayChoice());
+  EXPECT_FALSE(header_.HasBusConflict());
 
-  EXPECT_EQ(ROM::Header::Format::NES10,         header->Format());
-  EXPECT_EQ(ROM::Header::Mirroring::HORIZONTAL, header->Mirroring());
-  EXPECT_EQ(ROM::Header::TVSystem::NTSC,        header->TVSystem());
-  EXPECT_EQ(0,                                  header->Mapper());
+  EXPECT_EQ(ROM::Header::Format::NES10,         header_.Format());
+  EXPECT_EQ(ROM::Header::Mirroring::HORIZONTAL, header_.Mirroring());
+  EXPECT_EQ(ROM::Header::TVSystem::NTSC,        header_.TVSystem());
+  EXPECT_EQ(0,                                  header_.Mapper());
 
-  EXPECT_EQ(2 * 8192u, header->SizeOfPRGRom());
-  EXPECT_EQ(1 * 8192u, header->SizeOfPRGRam());
-  EXPECT_EQ(1 * 8192u, header->SizeOfCHRRom());
-  EXPECT_EQ(0 * 8192u, header->SizeOfCHRRam());
+  EXPECT_EQ(2 * 8192u, header_.SizeOfPRGRom());
+  EXPECT_EQ(1 * 8192u, header_.SizeOfPRGRam());
+  EXPECT_EQ(1 * 8192u, header_.SizeOfCHRRom());
+  EXPECT_EQ(0 * 8192u, header_.SizeOfCHRRam());
 }
 
 TEST_F(ROMTest, SuperMarioBrothers) {
-  std::unique_ptr<ROM::Header> header = std::make_unique<ROM::Header>();
-
   ifs_.open(super_mario_brothers_, std::ifstream::binary);
-  ifs_.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
+  ifs_.read(reinterpret_cast<char*>(&header_), sizeof(ROM::Header));
   ifs_.close();
 
-  EXPECT_TRUE (header->HasValidMagic());
-  EXPECT_TRUE (header->HasPRGRam());
-  EXPECT_FALSE(header->ContainsPersistentMemory());
-  EXPECT_FALSE(header->ContainsTrainer());
-  EXPECT_FALSE(header->IgnoreMirroing());
-  EXPECT_FALSE(header->IsVSUnisystem());
-  EXPECT_FALSE(header->IsPlayChoice());
-  EXPECT_FALSE(header->HasBusConflict());
+  EXPECT_TRUE (header_.HasValidMagic());
+  EXPECT_TRUE (header_.HasPRGRam());
+  EXPECT_FALSE(header_.ContainsPersistentMemory());
+  EXPECT_FALSE(header_.ContainsTrainer());
+  EXPECT_FALSE(header_.IgnoreMirroing());
+  EXPECT_FALSE(header_.IsVSUnisystem());
+  EXPECT_FALSE(header_.IsPlayChoice());
+  EXPECT_FALSE(header_.HasBusConflict());
 
-  EXPECT_EQ(ROM::Header::Format::NES10,       header->Format());
-  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL, header->Mirroring());
-  EXPECT_EQ(ROM::Header::TVSystem::NTSC,      header->TVSystem());
-  EXPECT_EQ(0,                                header->Mapper());
+  EXPECT_EQ(ROM::Header::Format::NES10,       header_.Format());
+  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL, header_.Mirroring());
+  EXPECT_EQ(ROM::Header::TVSystem::NTSC,      header_.TVSystem());
+  EXPECT_EQ(0,                                header_.Mapper());
 
-  EXPECT_EQ(1 * 32768u, header->SizeOfPRGRom());
-  EXPECT_EQ(1 * 8192u,  header->SizeOfPRGRam());
-  EXPECT_EQ(1 * 8192u,  header->SizeOfCHRRom());
-  EXPECT_EQ(0 * 8192u,  header->SizeOfCHRRam());
+  EXPECT_EQ(1 * 32768u, header_.SizeOfPRGRom());
+  EXPECT_EQ(1 * 8192u,  header_.SizeOfPRGRam());
+  EXPECT_EQ(1 * 8192u,  header_.SizeOfCHRRom());
+  EXPECT_EQ(0 * 8192u,  header_.SizeOfCHRRam());
 }
 
 TEST_F(ROMTest, Tetris) {
-  std::unique_ptr<ROM::Header> header = std::make_unique<ROM::Header>();
-
   ifs_.open(tetris_, std::ifstream::binary);
-  ifs_.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
+  ifs_.read(reinterpret_cast<char*>(&header_), sizeof(ROM::Header));
   ifs_.close();
 
-  EXPECT_TRUE (header->HasValidMagic());
-  EXPECT_TRUE (header->HasPRGRam());
-  EXPECT_FALSE(header->ContainsPersistentMemory());
-  EXPECT_FALSE(header->ContainsTrainer());
-  EXPECT_FALSE(header->IgnoreMirroing());
-  EXPECT_FALSE(header->IsVSUnisystem());
-  EXPECT_FALSE(header->IsPlayChoice());
-  EXPECT_TRUE (header->HasBusConflict());
+  EXPECT_TRUE (header_.HasValidMagic());
+  EXPECT_TRUE (header_.HasPRGRam());
+  EXPECT_FALSE(header_.ContainsPersistentMemory());
+  EXPECT_FALSE(header_.ContainsTrainer());
+  EXPECT_FALSE(header_.IgnoreMirroing());
+  EXPECT_FALSE(header_.IsVSUnisystem());
+  EXPECT_FALSE(header_.IsPlayChoice());
+  EXPECT_TRUE (header_.HasBusConflict());
 
-  EXPECT_EQ(ROM::Header::Format::NES10,         header->Format());
-  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL,   header->Mirroring());
-  EXPECT_EQ(ROM::Header::TVSystem::DUAL_COMPAT, header->TVSystem());
-  EXPECT_EQ(65,                                 header->Mapper());
+  EXPECT_EQ(ROM::Header::Format::NES10,         header_.Format());
+  EXPECT_EQ(ROM::Header::Mirroring::VERTICAL,   header_.Mirroring());
+  EXPECT_EQ(ROM::Header::TVSystem::DUAL_COMPAT, header_.TVSystem());
+  EXPECT_EQ(65,                                 header_.Mapper());
 
-  EXPECT_EQ(4   * 32768u, header->SizeOfPRGRom());
-  EXPECT_EQ(105 * 8192u,  header->SizeOfPRGRam());
-  EXPECT_EQ(16  * 8192u,  header->SizeOfCHRRom());
-  EXPECT_EQ(0   * 8192u,  header->SizeOfCHRRam());
+  EXPECT_EQ(4   * 32768u, header_.SizeOfPRGRom());
+  EXPECT_EQ(105 * 8192u,  header_.SizeOfPRGRam());
+  EXPECT_EQ(16  * 8192u,  header_.SizeOfCHRRom());
+  EXPECT_EQ(0   * 8192u,  header_.SizeOfCHRRam());
 }
 
 TEST_F(ROMTest, Zelda) {
-  std::unique_ptr<ROM::Header> header = std::make_unique<ROM::Header>();
-
   ifs_.open(zelda_, std::ifstream::binary);
-  ifs_.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
+  ifs_.read(reinterpret_cast<char*>(&header_), sizeof(ROM::Header));
   ifs_.close();
 
-  EXPECT_TRUE (header->HasValidMagic());
-  EXPECT_TRUE (header->HasPRGRam());
-  EXPECT_TRUE (header->ContainsPersistentMemory());
-  EXPECT_FALSE(header->ContainsTrainer());
-  EXPECT_FALSE(header->IgnoreMirroing());
-  EXPECT_FALSE(header->IsVSUnisystem());
-  EXPECT_FALSE(header->IsPlayChoice());
-  EXPECT_FALSE(header->HasBusConflict());
+  EXPECT_TRUE (header_.HasValidMagic());
+  EXPECT_TRUE (header_.HasPRGRam());
+  EXPECT_TRUE (header_.ContainsPersistentMemory());
+  EXPECT_FALSE(header_.ContainsTrainer());
+  EXPECT_FALSE(header_.IgnoreMirroing());
+  EXPECT_FALSE(header_.IsVSUnisystem());
+  EXPECT_FALSE(header_.IsPlayChoice());
+  EXPECT_FALSE(header_.HasBusConflict());
 
-  EXPECT_EQ(ROM::Header::Format::NES10,         header->Format());
-  EXPECT_EQ(ROM::Header::Mirroring::HORIZONTAL, header->Mirroring());
-  EXPECT_EQ(ROM::Header::TVSystem::NTSC,        header->TVSystem());
-  EXPECT_EQ(1,                                  header->Mapper());
+  EXPECT_EQ(ROM::Header::Format::NES10,         header_.Format());
+  EXPECT_EQ(ROM::Header::Mirroring::HORIZONTAL, header_.Mirroring());
+  EXPECT_EQ(ROM::Header::TVSystem::NTSC,        header_.TVSystem());
+  EXPECT_EQ(1,                                  header_.Mapper());
 
-  EXPECT_EQ(4 * 32768u, header->SizeOfPRGRom());
-  EXPECT_EQ(1 * 8192u,  header->SizeOfPRGRam());
-  EXPECT_EQ(0 * 8192u,  header->SizeOfCHRRom());
-  EXPECT_EQ(1 * 8192u,  header->SizeOfCHRRam());
+  EXPECT_EQ(4 * 32768u, header_.SizeOfPRGRom());
+  EXPECT_EQ(1 * 8192u,  header_.SizeOfPRGRam());
+  EXPECT_EQ(0 * 8192u,  header_.SizeOfCHRRom());
+  EXPECT_EQ(1 * 8192u,  header_.SizeOfCHRRam());
 }
 
 }  // namespace core

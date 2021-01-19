@@ -88,16 +88,16 @@ class VoidMemory final : public nesdev::core::MemoryBank {
     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
   }
 
-  std::size_t Size() const noexcept override {
+  std::size_t Size() const override {
     return 0;
   }
 
   Byte* Data() override {
-    NESDEV_CORE_THROW(InvalidOperation::Occur("Invalid operation specified to void memory"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to void memory"));
   }
 
   const Byte* Data() const override {
-    NESDEV_CORE_THROW(InvalidOperation::Occur("Invalid operation specified to void memory"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to void memory"));
   }
 };
 

@@ -113,16 +113,8 @@ class InvalidROM : public Exception {
 
 class NotImplemented : public Exception {
  public:
-  static NotImplemented Occur(const std::string& what_arg, const Byte& byte) {
-    std::stringstream ss;
-    ss << "[0x"
-       << std::uppercase
-       << std::setfill('0')
-       << std::setw(2)
-       << std::hex
-       << unsigned(byte)
-       << "]";
-    return NotImplemented((Exception::Header("NotImplemented") + " " + what_arg + " " + ss.str()).c_str());
+  static NotImplemented Occur(const std::string& what_arg) {
+    return NotImplemented((Exception::Header("NotImplemented") + " " + what_arg).c_str());
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:

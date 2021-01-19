@@ -8,7 +8,6 @@
 #define _NESDEV_CORE_DETAIL_ROMS_NROM_H_
 #include <memory>
 #include "nesdev/core/rom.h"
-#include "nesdev/core/types.h"
 
 namespace nesdev {
 namespace core {
@@ -19,7 +18,10 @@ class NROM final : public nesdev::core::ROM {
  public:
   NROM(std::unique_ptr<Header> header,
        std::unique_ptr<ROM::Chips> chips,
-       std::unique_ptr<ROM::Mapper> mapper);
+       std::unique_ptr<ROM::Mapper> mapper)
+    : nesdev::core::ROM(std::move(header),
+                        std::move(chips),
+                        std::move(mapper)) {}
 };
 
 }  // namespace roms

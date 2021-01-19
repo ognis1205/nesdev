@@ -12,6 +12,7 @@
 #include "core/cpu.h"
 #include "core/exceptions.h"
 #include "core/memory_bank.h"
+#include "core/memory_bank_factory.h"
 #include "core/mmu.h"
 #include "core/mmu_factory.h"
 #include "core/opcodes.h"

@@ -16,8 +16,7 @@
 namespace nesdev {
 namespace core {
 
-class ROM {
- public:
+struct ROM {
   /*
    * The iNES format header.
    * [SEE] https://wiki.nesdev.com/w/index.php/INES
@@ -231,7 +230,6 @@ class ROM {
   };
 
   struct Chips {
-   public:
     explicit Chips(std::unique_ptr<MemoryBank> chr_rom,
                    std::unique_ptr<MemoryBank> chr_ram,
                    std::unique_ptr<MemoryBank> prg_rom,
@@ -279,27 +277,25 @@ class ROM {
     virtual void Reset() noexcept = 0;
 
    NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-    Header* const header_;
+    const Header* const header_;
 
     Chips* const chips_;
   };
 
- public:
   explicit ROM(std::unique_ptr<Header> header,
                std::unique_ptr<Chips> chips,
                std::unique_ptr<Mapper> mapper)
-    : header_{std::move(header)},
-      chips_{std::move(chips)},
-      mapper_{std::move(mapper)} {};
+    : header{std::move(header)},
+      mapper{std::move(mapper)},
+      chips{std::move(chips)} {};
 
   virtual ~ROM() = default;
 
- NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  const std::unique_ptr<Header> header_;
+  const std::unique_ptr<const Header> header;
 
-  const std::unique_ptr<Chips> chips_;
+  const std::unique_ptr<const Mapper> mapper;
 
-  const std::unique_ptr<Mapper> mapper_;
+  const std::unique_ptr<Chips> chips;
 };
 
 }  // namespace core
