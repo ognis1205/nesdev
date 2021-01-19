@@ -12,7 +12,7 @@
 #include "nesdev/core/memory_bank_factory.h"
 #include "nesdev/core/rom.h"
 #include "nesdev/core/types.h"
-#include "detail/memory_bank.h"
+#include "detail/memory_banks/chip.h"
 
 namespace {
 
@@ -91,8 +91,8 @@ namespace core {
 
 MemoryBanks MemoryBankFactory::PPUBus(ROM *rom) {
   MemoryBanks banks;
-  banks.push_back(std::make_unique<::PPUAdapter>(rom));                        // ROM
-  banks.push_back(std::make_unique<detail::MemoryBank<0x3F00, 0x3FFF>>(0x20)); // Pallete
+  banks.push_back(std::make_unique<::PPUAdapter>(rom));                                // ROM
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x3F00, 0x3FFF>>(0x20)); // Pallete
   return banks;
 }
 

@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
-#define _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
+#ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_CHIP_H_
+#define _NESDEV_CORE_DETAIL_MEMORY_BANKS_CHIP_H_
 #include <cstddef>
 #include <vector>
 #include "nesdev/core/exceptions.h"
@@ -16,16 +16,17 @@
 namespace nesdev {
 namespace core {
 namespace detail {
+namespace memory_banks {
 
 template <Address From, Address To>
-class MemoryBank final : public nesdev::core::MemoryBank {
+class Chip final : public nesdev::core::MemoryBank {
  public:
   static_assert(
     From <= To,
     "Start address must be greater than end address");
 
  public:
-  MemoryBank(std::size_t size) {
+  Chip(std::size_t size) {
     NESDEV_CORE_CASSERT((To - From + 1u) % size == 0, "Size does not match address range");
     data_.resize(size);
   }
@@ -71,37 +72,8 @@ class MemoryBank final : public nesdev::core::MemoryBank {
   std::vector<Byte> data_;
 };
 
-class VoidMemory final : public nesdev::core::MemoryBank {
- public:
-  VoidMemory() = default;
-
-  [[nodiscard]]
-  bool HasValidAddress([[maybe_unused]] Address address) const noexcept override {
-    return false;
-  }
-
-  Byte Read(Address address) const override {
-    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
-  }
-
-  void Write(Address address, [[maybe_unused]] Byte byte) override {
-    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
-  }
-
-  std::size_t Size() const override {
-    return 0;
-  }
-
-  Byte* Data() override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to void memory"));
-  }
-
-  const Byte* Data() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to void memory"));
-  }
-};
-
+}  // namespace memory_banks
 }  // namespace detail
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_DETAIL_MEMORY_BANK_H_
+#endif  // ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_CHIP_H_

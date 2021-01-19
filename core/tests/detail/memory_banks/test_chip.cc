@@ -7,14 +7,15 @@
 #include <time.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
-#include "detail/memory_bank.h"
+#include "detail/memory_banks/chip.h"
 #include "utils.h"
 
 namespace nesdev {
 namespace core {
 namespace detail {
+namespace memory_banks {
 
-class MemoryBankTest : public testing::Test {
+class ChipTest : public testing::Test {
  protected:
   void SetUp() override {
     Utility::Init();
@@ -28,10 +29,10 @@ class MemoryBankTest : public testing::Test {
 
   time_t start_time_;
 
-  detail::MemoryBank<0x0000, 0x1FFF> memory_bank_{0x800};
+  detail::memory_banks::Chip<0x0000, 0x1FFF> memory_bank_{0x800};
 };
 
-TEST_F(MemoryBankTest, HasValidAddress) {
+TEST_F(ChipTest, HasValidAddress) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     EXPECT_TRUE(memory_bank_.HasValidAddress(i));
   }
@@ -40,7 +41,7 @@ TEST_F(MemoryBankTest, HasValidAddress) {
   }
 }
 
-TEST_F(MemoryBankTest, Read) {
+TEST_F(ChipTest, Read) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     EXPECT_EQ(0x00, memory_bank_.Read(i));
   }
@@ -49,7 +50,7 @@ TEST_F(MemoryBankTest, Read) {
   }
 }
 
-TEST_F(MemoryBankTest, Write) {
+TEST_F(ChipTest, Write) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     memory_bank_.Write(i, static_cast<Byte>(i >> 2));
   }
@@ -61,7 +62,7 @@ TEST_F(MemoryBankTest, Write) {
   }
 }
 
-TEST_F(MemoryBankTest, PtrTo) {
+TEST_F(ChipTest, PtrTo) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     memory_bank_.Write(i, static_cast<Byte>(i >> 2));
   }
@@ -71,6 +72,7 @@ TEST_F(MemoryBankTest, PtrTo) {
   }
 }
 
+}  // namespace memory_banks
 }  // namespace detail
 }  // namespace core
 }  // namespace nesdev

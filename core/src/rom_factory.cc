@@ -14,7 +14,8 @@
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
-#include "detail/memory_bank.h"
+#include "detail/memory_banks/chip.h"
+#include "detail/memory_banks/void.h"
 #include "detail/roms/nrom.h"
 #include "detail/roms/mapper000.h"
 
@@ -38,16 +39,16 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   std::unique_ptr<ROM::Chips> chips;
   if (header->NumOfCHRRoms() != 0)
     chips = std::make_unique<ROM::Chips>(
-      std::make_unique<detail::MemoryBank<0x0000, 0x1FFF>>(header->SizeOfCHRRom()),
-      std::make_unique<detail::VoidMemory>(),
-      std::make_unique<detail::MemoryBank<0x8000, 0xFFFF>>(header->SizeOfPRGRom()),
-      std::make_unique<detail::MemoryBank<0x6000, 0x7FFF>>(header->SizeOfPRGRam()));
+      std::make_unique<detail::memory_banks::Chip<0x0000, 0x1FFF>>(header->SizeOfCHRRom()),
+      std::make_unique<detail::memory_banks::Void>(),
+      std::make_unique<detail::memory_banks::Chip<0x8000, 0xFFFF>>(header->SizeOfPRGRom()),
+      std::make_unique<detail::memory_banks::Chip<0x6000, 0x7FFF>>(header->SizeOfPRGRam()));
   else
     chips = std::make_unique<ROM::Chips>(
-      std::make_unique<detail::VoidMemory>(),
-      std::make_unique<detail::MemoryBank<0x0000, 0x1FFF>>(header->SizeOfCHRRam()),
-      std::make_unique<detail::MemoryBank<0x8000, 0xFFFF>>(header->SizeOfPRGRom()),
-      std::make_unique<detail::MemoryBank<0x6000, 0x7FFF>>(header->SizeOfPRGRam()));
+      std::make_unique<detail::memory_banks::Void>(),
+      std::make_unique<detail::memory_banks::Chip<0x0000, 0x1FFF>>(header->SizeOfCHRRam()),
+      std::make_unique<detail::memory_banks::Chip<0x8000, 0xFFFF>>(header->SizeOfPRGRom()),
+      std::make_unique<detail::memory_banks::Chip<0x6000, 0x7FFF>>(header->SizeOfPRGRam()));
 
   is.read(reinterpret_cast<char*>(chips->prg_rom->Data()), chips->prg_rom->Size());
 
