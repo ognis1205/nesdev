@@ -7,7 +7,6 @@
 #ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_VOID_H_
 #define _NESDEV_CORE_DETAIL_MEMORY_BANKS_VOID_H_
 #include <cstddef>
-#include <vector>
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
@@ -18,7 +17,7 @@ namespace core {
 namespace detail {
 namespace memory_banks {
 
-class Void final : public nesdev::core::MemoryBank {
+class Void final : public MemoryBank {
  public:
   Void() = default;
 

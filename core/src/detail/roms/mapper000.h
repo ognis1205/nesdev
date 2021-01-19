@@ -16,13 +16,13 @@ namespace core {
 namespace detail {
 namespace roms {
 
-class Mapper000 final : public nesdev::core::ROM::Mapper {
+class Mapper000 final : public ROM::Mapper {
  public:
   Mapper000(ROM::Header* const header, ROM::Chips* const chips)
-    : nesdev::core::ROM::Mapper(header, chips) {}
+    : ROM::Mapper(header, chips) {}
 
   [[nodiscard]]
-  bool HasValidAddress(Space space, Address address) const override {
+  bool HasValidAddress(ROM::Mapper::Space space, Address address) const override {
     switch (space) {
     case ROM::Mapper::Space::CPU:
       return chips_->prg_ram->HasValidAddress(address) || chips_->prg_rom->HasValidAddress(address);
@@ -33,7 +33,7 @@ class Mapper000 final : public nesdev::core::ROM::Mapper {
     }
   }
 
-  Byte Read(Mapper::Space space, Address address) const override {
+  Byte Read(ROM::Mapper::Space space, Address address) const override {
     switch (space) {
     case ROM::Mapper::Space::CPU:
       if (chips_->prg_ram->HasValidAddress(address))
@@ -52,15 +52,15 @@ class Mapper000 final : public nesdev::core::ROM::Mapper {
     }
   }
 
-  void Write(Mapper::Space space, Address address, Byte byte) const override {
+  void Write(ROM::Mapper::Space space, Address address, Byte byte) const override {
     switch (space) {
-    case Mapper::Space::CPU:
+    case ROM::Mapper::Space::CPU:
       if (chips_->prg_ram->HasValidAddress(address)) {
 	chips_->prg_ram->Write(address, byte);
 	return;
       }
       [[fallthrough]];
-    case Mapper::Space::PPU:
+    case ROM::Mapper::Space::PPU:
       if (chips_->chr_ram->HasValidAddress(address)) {
 	chips_->chr_ram->Write(address, byte);
 	return;

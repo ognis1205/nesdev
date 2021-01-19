@@ -14,14 +14,14 @@ namespace core {
 namespace detail {
 namespace roms {
 
-class NROM final : public nesdev::core::ROM {
+class NROM final : public ROM {
  public:
-  NROM(std::unique_ptr<Header> header,
+  NROM(std::unique_ptr<ROM::Header> header,
        std::unique_ptr<ROM::Chips> chips,
        std::unique_ptr<ROM::Mapper> mapper)
-    : nesdev::core::ROM(std::move(header),
-                        std::move(chips),
-                        std::move(mapper)) {}
+    : ROM(std::move(header),
+          std::move(chips),
+          std::move(mapper)) {}
 };
 
 }  // namespace roms

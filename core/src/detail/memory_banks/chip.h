@@ -19,7 +19,7 @@ namespace detail {
 namespace memory_banks {
 
 template <Address From, Address To>
-class Chip final : public nesdev::core::MemoryBank {
+class Chip final : public MemoryBank {
  public:
   static_assert(
     From <= To,
