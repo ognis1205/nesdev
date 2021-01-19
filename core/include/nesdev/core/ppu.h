@@ -23,6 +23,10 @@ class PPU : public Clock {
 
   virtual void Tick() override = 0;
 
+  virtual Byte Read(Address address) const = 0;
+
+  virtual void Write(Address address, Byte byte) = 0;
+
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {

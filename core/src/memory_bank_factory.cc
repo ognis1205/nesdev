@@ -5,14 +5,17 @@
  * Trademarks are owned by their respect owners.
  */
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
 #include "nesdev/core/memory_bank.h"
 #include "nesdev/core/memory_bank_factory.h"
+#include "nesdev/core/ppu.h"
 #include "nesdev/core/rom.h"
 #include "nesdev/core/types.h"
 #include "detail/memory_banks/chip.h"
+#include "detail/memory_banks/forward.h"
 
 namespace {
 
@@ -84,10 +87,28 @@ class PPUAdapter : public MemoryBank {
   ROM* const rom_;
 };
 
+std::function<Byte(Address)> PPUReader(PPU* ppu) {
+  return [ppu](Address address) { return ppu->Read(address); };
+}
+
+std::function<void(Address, Byte)> PPUWriter(PPU* ppu) {
+  return [ppu](Address address, Byte byte) { ppu->Write(address, byte); };
+}
+
 }
 
 namespace nesdev {
 namespace core {
+
+MemoryBanks MemoryBankFactory::CPUBus(ROM *rom, PPU* ppu) {
+  MemoryBanks banks;
+  banks.push_back(std::make_unique<::CPUAdapter>(rom));                                                                  // ROM
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x0000, 0x1FFF>>(0x800));                                  // RAM
+  banks.push_back(std::make_unique<detail::memory_banks::Forward<0x2000, 0x3FFF>>(0x8, PPUReader(ppu), PPUWriter(ppu))); // PPU
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4000, 0x4017>>(0x18));                                   // IO
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4018, 0x401F>>(0x8));                                    // IO device
+  return banks;
+}
 
 MemoryBanks MemoryBankFactory::PPUBus(ROM *rom) {
   MemoryBanks banks;
