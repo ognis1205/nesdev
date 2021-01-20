@@ -2,6 +2,8 @@
 
 C++ NES Implementation for My Own Learning Porpose.
 
+The implementation is NOT fully faithfull to the original NES hardware.
+
 # Archetecture
 
 ```
@@ -32,4 +34,6 @@ C++ NES Implementation for My Own Learning Porpose.
 # References
 
 1. [NesDev](http://nesdev.com/)
+2. [Bisqwit's implementation](https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/)
+3. [Javidx9's series of NES emulator](https://www.youtube.com/watch?v=F8kx56OZQhg)
 
