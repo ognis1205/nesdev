@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_TEST_MOCK_CPU_H_
-#define _NESDEV_CORE_TEST_MOCK_CPU_H_
+#ifndef _NESDEV_CORE_MOCKS_CPU_H_
+#define _NESDEV_CORE_MOCKS_CPU_H_
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
@@ -48,4 +48,4 @@ class CPU : public nesdev::core::CPU {
 }  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_TEST_MOCK_CPU_H_
+#endif  // ifndef _NESDEV_CORE_MOCKS_CPU_H_

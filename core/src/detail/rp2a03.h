@@ -84,7 +84,7 @@ class RP2A03 final : public CPU {
    public:
     static const Address kOffset = {0x0100};
 
-    static const Byte kHead = {0xFD};
+    static const Byte kHead      = {0xFD};
 
     Stack(Registers* const registers, MMU* const mmu)
       : registers_{registers}, mmu_{mmu} {}
@@ -220,6 +220,16 @@ class RP2A03 final : public CPU {
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Registers* const registers_;
   };
+
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
+  /*
+   * The high byte of the effective address may be invalid in indexed addressing
+   * modes. Because the processor cannot undo a write to an invalid address, it
+   * always reads from the address first.
+   */
+  static constexpr Address FixHiByte(Address address) noexcept {
+    return address - static_cast<Address>(0x0100);
+  }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Byte Fetch() noexcept override {

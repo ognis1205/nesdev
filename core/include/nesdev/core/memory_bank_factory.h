@@ -17,10 +17,10 @@ namespace core {
 class MemoryBankFactory {
  public:
   [[nodiscard]]
-  static MemoryBanks CPUBus(ROM* rom, PPU* ppu);
+  static MemoryBanks CPUBus(ROM* const rom, PPU* const ppu);
 
   [[nodiscard]]
-  static MemoryBanks PPUBus(ROM* rom);
+  static MemoryBanks PPUBus(ROM* const rom);
 };
 
 }  // namespace core

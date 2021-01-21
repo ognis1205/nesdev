@@ -42,7 +42,7 @@ class ForwardTest : public testing::Test {
     data_[address % 0x800] = byte;
   };
 
-  detail::memory_banks::Forward<0x0000, 0x1FFF> memory_bank_{0x800, reader_, writer_};
+  detail::memory_banks::Forward<0x0000, 0x1FFF> memory_bank_{reader_, writer_};
 };
 
 TEST_F(ForwardTest, HasValidAddress) {

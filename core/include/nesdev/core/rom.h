@@ -230,14 +230,14 @@ struct ROM {
   };
 
   struct Chips {
-    explicit Chips(std::unique_ptr<MemoryBank> chr_rom,
-                   std::unique_ptr<MemoryBank> chr_ram,
-                   std::unique_ptr<MemoryBank> prg_rom,
-                   std::unique_ptr<MemoryBank> prg_ram)
-    : chr_rom{std::move(chr_rom)},
-      chr_ram{std::move(chr_ram)},
-      prg_rom{std::move(prg_rom)},
-      prg_ram{std::move(prg_ram)} {};
+    Chips(std::unique_ptr<MemoryBank> chr_rom,
+          std::unique_ptr<MemoryBank> chr_ram,
+          std::unique_ptr<MemoryBank> prg_rom,
+          std::unique_ptr<MemoryBank> prg_ram)
+      : chr_rom{std::move(chr_rom)},
+        chr_ram{std::move(chr_ram)},
+        prg_rom{std::move(prg_rom)},
+        prg_ram{std::move(prg_ram)} {};
 
     const std::unique_ptr<MemoryBank> chr_rom;
 

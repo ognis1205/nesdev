@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_MOCKS_MMU_H_
-#define _NESDEV_CORE_MOCKS_MMU_H_
+#ifndef _NESDEV_CORE_MOCKS_PPU_H_
+#define _NESDEV_CORE_MOCKS_PPU_H_
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
@@ -14,20 +14,16 @@ namespace nesdev {
 namespace core {
 namespace mocks {
 
-class MMU : public nesdev::core::MMU {
+class PPU : public nesdev::core::PPU {
  public:
-  MOCK_METHOD1(MockSet, void(MemoryBanks));
+  MOCK_METHOD0(Tick, void());
 
-  MOCK_CONST_METHOD1(Read, Byte(Address));
+  MOCK_METHOD1(Read, Byte(Address));
 
   MOCK_METHOD2(Write, void(Address, Byte));
-
-  virtual void Set(MemoryBanks memory_banks) noexcept {
-    return MockSet(std::move(memory_banks));
-  }
 };
 
 }  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_MOCKS_MMU_H_
+#endif  // ifndef _NESDEV_CORE_MOCKS_PPU_H_

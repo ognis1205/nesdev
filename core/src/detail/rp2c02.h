@@ -7,6 +7,8 @@
 #ifndef _NESDEV_CORE_DETAIL_RP2C02_H_
 #define _NESDEV_CORE_DETAIL_RP2C02_H_
 #include <cstdint>
+#include <memory>
+#include "nesdev/core/exceptions.h"
 #include "nesdev/core/ppu.h"
 #include "nesdev/core/macros.h"
 #include "nesdev/core/mmu.h"
@@ -16,8 +18,27 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
+#define REG(x) registers_->x.value
+#define MSK(x) registers_->ppustatus.x.mask
+
 class RP2C02 final : public PPU {
  public:
+  enum class MemoryMap : Address {
+    PPUCTRL   = 0x0000,
+    PPUMASK   = 0x0001,
+    PPUSTATUS = 0x0002,
+    OAMADDR   = 0x0003,
+    OAMDATA   = 0x0004,
+    PPUSCROLL = 0x0005,
+    PPUADDR   = 0x0006,
+    PPUDATA   = 0x0007
+  };
+
+  enum class SpriteSize : Byte {
+    PIXELS_8x8,
+    PIXELS_8x16
+  };
+
   struct Registers {
     // $2000
     union {
@@ -48,7 +69,7 @@ class RP2C02 final : public PPU {
       Bitfield<0, 5, Byte> previous_lsb;    // Least significant bits previously written into a PPU register
       Bitfield<5, 1, Byte> sprite_overflow; // Sprite overflow
       Bitfield<6, 1, Byte> sprite_zero_hit; // Sprite 0 Hit
-      Bitfield<7, 1, Byte> vblank_started;  // Vertical blank has started (0: not in vblank; 1: in vblank)
+      Bitfield<7, 1, Byte> vblank_start;    // Vertical blank has started (0: not in vblank; 1: in vblank)
     } ppustatus = {0x00};
     // $2003 OAM read/write address
     union {
@@ -76,22 +97,270 @@ class RP2C02 final : public PPU {
     } oamdma = {0x00};
   };
 
+  struct Chips {
+    Chips(std::unique_ptr<MemoryBank> oam)
+      : oam{std::move(oam)} {}
+
+    const std::unique_ptr<MemoryBank> oam;
+  };
+
  public:
-  RP2C02(Registers* const registers, MMU* const mmu);
+  RP2C02(std::unique_ptr<Chips> chips, Registers* const registers, MMU* const mmu);
 
   ~RP2C02();
 
   void Tick() override;
 
-  Byte Read(Address address) const override;
+  Byte Read(Address address) override;
 
   void Write(Address address, Byte byte) override;
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  class Latch {
+   public:
+    Latch(Context* const context, Registers* const registers, MMU* const mmu, Chips* const chips)
+      : context_{context},
+        registers_{registers},
+        mmu_{mmu},
+        chips_{chips} {}
+
+      [[nodiscard]]
+
+    Address BaseNameTblAddr() const {
+      switch (registers_->ppuctrl.nametable) {
+      case 0:
+        return 0x2000;
+      case 1:
+        return 0x2400;
+      case 2:
+        return 0x2800;
+      case 3:
+        return 0x2C00;
+      default:
+        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/NAMETABLE", REG(ppuctrl)));
+      }
+    }
+
+    [[nodiscard]]
+    Address VRAMInc() const {
+      switch (registers_->ppuctrl.increment) {
+      case 0:
+        return 0x0001;
+      case 1:
+        return 0x0020;
+      default:
+        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/INCREMENT", REG(ppuctrl)));
+      }
+    }
+
+    [[nodiscard]]
+    Address SpritePtrAddr() const {
+      switch (registers_->ppuctrl.sprite_tile) {
+      case 0:
+        return 0x0000;
+      case 1:
+        return 0x1000;
+      default:
+        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_TILE", REG(ppuctrl)));
+      }
+    }
+
+    [[nodiscard]]
+    Address BackgroundPtrAddr() const {
+      switch (registers_->ppuctrl.background_tile) {
+      case 0:
+        return 0x0000;
+      case 1:
+        return 0x1000;
+      default:
+        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/BACKGROUND_TILE", REG(ppuctrl)));
+      }
+    }
+
+    [[nodiscard]]
+    RP2C02::SpriteSize SpriteSize() const {
+      switch (registers_->ppuctrl.sprite_height) {
+      case 0:
+        return RP2C02::SpriteSize::PIXELS_8x8;
+      case 1:
+        return RP2C02::SpriteSize::PIXELS_8x16;
+      default:
+        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_HEIGHT", REG(ppuctrl)));
+      }
+    }
+
+    [[nodiscard]]
+    bool IsMaster() const noexcept {
+      return registers_->ppuctrl.ppu_master_slave;
+    }
+
+    [[nodiscard]]
+    bool IsNMIEnable() const noexcept {
+      return registers_->ppuctrl.nmi_enable;
+    }
+
+    void ReadPPUCtrl() const noexcept {
+      /* Do nothing. */
+    }
+
+    void ReadPPUMask() const noexcept {
+      /* Do nothing. */
+    }
+    
+    void ReadPPUStatus() const noexcept {
+      context_->latched     = (context_->latched & 0x1F) | (REG(ppustatus) & 0xE0);
+      REG(ppustatus)       &= ~MSK(vblank_start);
+      context_->is_latched  = false;
+    }
+
+    void ReadOAMAddr() const noexcept {
+      /* Do nothing. */
+    }
+
+    void ReadOAMData() const {
+      context_->latched = chips_->oam->Read(context_->oam.address);
+    }
+
+    void ReadPPUScroll() const noexcept {
+      /* Do nothing. */
+    }
+
+    void ReadPPUAddr() const noexcept {
+      /* Do nothing. */
+    }
+
+    void ReadPPUData() {
+      // Reads from the NameTable ram get delayed one cycle, 
+      // so output buffer which contains the data from the 
+      // previous read request.
+      if (context_->vram.address <= 0x3EFF) {
+        context_->latched = deffered;
+        deffered          = mmu_->Read(context_->vram.address);
+      // However, if the address was in the palette range, the
+      // data is not delayed, so it returns immediately.
+      } else {
+        deffered          = mmu_->Read(context_->vram.address);
+        context_->latched = deffered;
+      }
+      context_->vram.address += VRAMInc();
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    Context* const context_;
+
+    Registers* const registers_;
+
+    MMU* const mmu_;
+
+    Chips* const chips_;
+
+    Byte deffered = {0x00};
+  };
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  static MemoryMap Map(Address address) {
+    switch (address % 0x08) {
+    case 0x0000:
+      return MemoryMap::PPUCTRL;
+    case 0x0001:
+      return MemoryMap::PPUMASK;
+    case 0x0002:
+      return MemoryMap::PPUSTATUS;
+    case 0x0003:
+      return MemoryMap::OAMADDR;
+    case 0x0004:
+      return MemoryMap::OAMDATA;
+    case 0x0005:
+      return MemoryMap::PPUSCROLL;
+    case 0x0006:
+      return MemoryMap::PPUADDR;
+    case 0x0007:
+      return MemoryMap::PPUDATA;
+    default:
+      NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Map", address));
+    }
+  }
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  [[nodiscard]]
+  Address BaseNameTblAddr() const {
+    return latch_.BaseNameTblAddr();
+  }
+
+  [[nodiscard]]
+  Address VRAMInc() const noexcept {
+    return latch_.VRAMInc();
+  }
+
+  [[nodiscard]]
+  Address SpritePtrAddr() const noexcept {
+    return latch_.SpritePtrAddr();
+  }
+
+  [[nodiscard]]
+  Address BackgroundPtrAddr() const noexcept {
+    return latch_.BackgroundPtrAddr();
+  }
+
+  [[nodiscard]]
+  RP2C02::SpriteSize SpriteSize() const {
+    return latch_.SpriteSize();
+  }
+
+  [[nodiscard]]
+  bool IsMaster() const noexcept {
+    return latch_.IsMaster();
+  }
+
+  [[nodiscard]]
+  bool IsNMIEnable() const noexcept {
+    return latch_.IsNMIEnable();
+  }
+
+  void ReadPPUCtrl() const noexcept {
+    latch_.ReadPPUCtrl();
+  }
+
+  void ReadPPUMask() const noexcept {
+    latch_.ReadPPUMask();
+  }
+    
+  void ReadPPUStatus() const noexcept {
+    latch_.ReadPPUStatus();
+  }
+
+  void ReadOAMAddr() const noexcept {
+    latch_.ReadOAMAddr();
+  }
+
+  void ReadOAMData() const {
+    latch_.ReadOAMData();
+  }
+
+  void ReadPPUScroll() const noexcept {
+    latch_.ReadPPUScroll();
+  }
+
+  void ReadPPUAddr() const noexcept {
+    latch_.ReadPPUAddr();
+  }
+
+  void ReadPPUData() {
+    latch_.ReadPPUData();
+  }
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  const std::unique_ptr<Chips> chips_;
+
   Registers* const registers_;
 
   MMU* const mmu_;
+
+  Latch latch_;
 };
+
+#undef REG
+#undef MSK
 
 }  // namespace detail
 }  // namespace core

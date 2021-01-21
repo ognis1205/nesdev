@@ -87,11 +87,11 @@ class PPUAdapter : public MemoryBank {
   ROM* const rom_;
 };
 
-std::function<Byte(Address)> PPUReader(PPU* ppu) {
+std::function<Byte(Address)> PPUReader(PPU* const ppu) {
   return [ppu](Address address) { return ppu->Read(address); };
 }
 
-std::function<void(Address, Byte)> PPUWriter(PPU* ppu) {
+std::function<void(Address, Byte)> PPUWriter(PPU* const ppu) {
   return [ppu](Address address, Byte byte) { ppu->Write(address, byte); };
 }
 
@@ -100,17 +100,17 @@ std::function<void(Address, Byte)> PPUWriter(PPU* ppu) {
 namespace nesdev {
 namespace core {
 
-MemoryBanks MemoryBankFactory::CPUBus(ROM *rom, PPU* ppu) {
+MemoryBanks MemoryBankFactory::CPUBus(ROM* const rom, PPU* const ppu) {
   MemoryBanks banks;
-  banks.push_back(std::make_unique<::CPUAdapter>(rom));                                                                  // ROM
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x0000, 0x1FFF>>(0x800));                                  // RAM
-  banks.push_back(std::make_unique<detail::memory_banks::Forward<0x2000, 0x3FFF>>(0x8, PPUReader(ppu), PPUWriter(ppu))); // PPU
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4000, 0x4017>>(0x18));                                   // IO
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4018, 0x401F>>(0x8));                                    // IO device
+  banks.push_back(std::make_unique<::CPUAdapter>(rom));                                                             // ROM
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x0000, 0x1FFF>>(0x800));                             // RAM
+  banks.push_back(std::make_unique<detail::memory_banks::Forward<0x2000, 0x3FFF>>(PPUReader(ppu), PPUWriter(ppu))); // PPU
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4000, 0x4017>>(0x18));                              // IO
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4018, 0x401F>>(0x8));                               // IO device
   return banks;
 }
 
-MemoryBanks MemoryBankFactory::PPUBus(ROM *rom) {
+MemoryBanks MemoryBankFactory::PPUBus(ROM* const rom) {
   MemoryBanks banks;
   banks.push_back(std::make_unique<::PPUAdapter>(rom));                                // ROM
   banks.push_back(std::make_unique<detail::memory_banks::Chip<0x3F00, 0x3FFF>>(0x20)); // Pallete

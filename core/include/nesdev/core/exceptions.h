@@ -83,6 +83,24 @@ class InvalidAddress : public Exception {
   InvalidAddress(const char* what_arg) : Exception(what_arg) {}
 };
 
+class InvalidRegister : public Exception {
+ public:
+  static InvalidRegister Occur(const std::string& what_arg, const Byte& byte) {
+    std::stringstream ss;
+    ss << "[0x"
+       << std::uppercase
+       << std::setfill('0')
+       << std::setw(2)
+       << std::hex
+       << unsigned(byte)
+       << "]";
+    return InvalidRegister((Exception::Header("InvalidRegister") + " " + what_arg + " " + ss.str()).c_str());
+  }
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  InvalidRegister(const char* what_arg) : Exception(what_arg) {}
+};
+
 class InvalidOpcode : public Exception {
  public:
   static InvalidOpcode Occur(const std::string& what_arg, const Byte& byte) {

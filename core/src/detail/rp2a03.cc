@@ -13,21 +13,6 @@
 #include "pipeline.h"
 #include "detail/rp2a03.h"
 
-namespace {
-
-using namespace nesdev::core;
-
-/*
- * The high byte of the effective address may be invalid in indexed addressing
- * modes. Because the processor cannot undo a write to an invalid address, it
- * always reads from the address first.
- */
-constexpr Address FixHiByte(Address address) noexcept {
-  return address - static_cast<Address>(0x0100);
-}
-
-}
-
 namespace nesdev {
 namespace core {
 namespace detail {
@@ -35,8 +20,6 @@ namespace detail {
 #define REG(x)    registers_->x.value
 #define REG_LO(x) registers_->x.lo
 #define REG_HI(x) registers_->x.hi
-#define FLG(x)    !!registers_->p.x
-#define CLR(x)     !registers_->p.x
 #define MSK(x)    registers_->p.x.mask
 using A = AddressingMode;
 using I = Instruction;
@@ -97,16 +80,16 @@ bool RP2A03::Next() {
   case A::ABX:
     Stage([this] { AddrLo(Read(REG(pc)++));                                                                }                          );
     Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(x));                                          }                          );
-    Stage([this] { if (CrossPage()) Read(::FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
-    Stage([this] { if (CrossPage()) Read(::FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
     Stage([this] { Fetch();                                                                                }, If(M::READ_MODIFY_WRITE));
     Stage([this] { Write(Addr(), Fetched());                                                               }, If(M::READ_MODIFY_WRITE));
     break;
   case A::ABY:
     Stage([this] { AddrLo(Read(REG(pc)++));                                                                }                          );
     Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(y));                                          }                          );
-    Stage([this] { if (CrossPage()) Read(::FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
-    Stage([this] { if (CrossPage()) Read(::FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
     Stage([this] { Fetch();                                                                                }, If(M::READ_MODIFY_WRITE));
     Stage([this] { Write(Addr(), Fetched());                                                               }, If(M::READ_MODIFY_WRITE));
     break;
@@ -145,8 +128,8 @@ bool RP2A03::Next() {
     Stage([this] { Ptr(Read(REG(pc)++));                                                                   }                          );
     Stage([this] { AddrLo(Read(Ptr()));                                                                    }                          );
     Stage([this] { AddrHi(Read(Ptr() + 1)); Addr(Addr(), REG(y));                                          }                          );
-    Stage([this] { if (CrossPage()) Read(::FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
-    Stage([this] { if (CrossPage()) Read(::FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
+    Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
     Stage([this] { Fetch();                                                                                }, If(M::READ_MODIFY_WRITE));
     Stage([this] { Write(Addr(), Fetched());                                                               }, If(M::READ_MODIFY_WRITE));
     break;

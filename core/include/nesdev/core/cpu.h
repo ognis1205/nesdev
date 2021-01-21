@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_CPU_H_
 #define _NESDEV_CORE_CPU_H_
+#include <cstddef>
 #include <optional>
 #include "nesdev/core/clock.h"
 #include "nesdev/core/macros.h"
@@ -33,7 +34,7 @@ class CPU : public Clock {
 
  public:
   [[nodiscard]]
-  size_t Cycle() const noexcept {
+  std::size_t Cycle() const noexcept {
     return context_.cycle;
   }
 
@@ -77,7 +78,7 @@ class CPU : public Clock {
       pointer.effective = {0x0000};
     }
 
-    size_t cycle = {0};
+    std::size_t cycle = {0};
 
     Byte fetched = {0x00};
 

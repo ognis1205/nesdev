@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_TEST_MOCK_MEMORY_BANK_H_
-#define _NESDEV_CORE_TEST_MOCK_MEMORY_BANK_H_
+#ifndef _NESDEV_CORE_MOCKS_MEMORY_BANK_H_
+#define _NESDEV_CORE_MOCKS_MEMORY_BANK_H_
 #include <cstddef>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,4 +41,4 @@ class MemoryBank : public nesdev::core::MemoryBank {
 }  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_TEST_MOCK_MEMORY_BANK_H_
+#endif  // ifndef _NESDEV_CORE_MOCKS_MEMORY_BANK_H_

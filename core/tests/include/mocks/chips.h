@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_ROMS_TEST_MOCK_ROM_CHIPS_H_
-#define _NESDEV_CORE_ROMS_TEST_MOCK_ROM_CHIPS_H_
+#ifndef _NESDEV_CORE_MOCKS_CHIPS_H_
+#define _NESDEV_CORE_MOCKS_CHIPS_H_
 #include <memory>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -38,4 +38,4 @@ class Chips : public nesdev::core::ROM::Chips {
 }  // namespace mocks
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_ROMS_TEST_MOCK_ROM_CHIPS_H_
+#endif  // ifndef _NESDEV_CORE_MOCKS_CHIPS_H_

@@ -31,12 +31,9 @@ class Forward final : public MemoryBank {
     "Start address must be greater than end address");
 
  public:
-  Forward(std::size_t size, Reader reader, Writer writer)
-    : size_{size},
-      reader_{std::move(reader)},
-      writer_{std::move(writer)} {
-    NESDEV_CORE_CASSERT((To - From + 1u) % size == 0, "Size does not match address range");
-  }
+  Forward(Reader reader, Writer writer)
+    : reader_{std::move(reader)},
+      writer_{std::move(writer)} {}
 
   [[nodiscard]]
   bool HasValidAddress([[maybe_unused]] Address address) const noexcept override {
@@ -55,7 +52,7 @@ class Forward final : public MemoryBank {
   }
 
   std::size_t Size() const override {
-    return size_;
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to memory forwarding"));
   }
 
   Byte* Data() override {
@@ -67,8 +64,6 @@ class Forward final : public MemoryBank {
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  std::size_t size_;
-
   Reader reader_;
 
   Writer writer_;
