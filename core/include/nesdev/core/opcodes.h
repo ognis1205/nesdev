@@ -7,6 +7,7 @@
 #ifndef _NESDEV_CORE_OPCODES_H_
 #define _NESDEV_CORE_OPCODES_H_
 #include <string>
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -165,11 +166,17 @@ struct Opcode {
   MemoryAccess memory_access;
 };
 
-[[nodiscard]]
-Opcode Decode(Byte opcode) noexcept;
+class Opcodes {
+ public:
+  [[nodiscard]]
+  static Opcode Decode(Byte opcode) noexcept;
 
-[[nodiscard]]
-std::string ToString(Byte opcode) noexcept;
+  [[nodiscard]]
+  static std::string ToString(Byte opcode) noexcept;
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  Opcodes() {}
+};
 
 }  // namespace core
 }  // namespace nesdev

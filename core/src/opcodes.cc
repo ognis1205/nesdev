@@ -417,12 +417,12 @@ std::string ToString(AddressingMode addressing_mode) noexcept {
 namespace nesdev {
 namespace core {
 
-Opcode Decode(Byte byte) noexcept {
+Opcode Opcodes::Decode(Byte byte) noexcept {
   return ::lookup.at(byte);
 }
 
-std::string ToString(Byte byte) noexcept {
-  return ::ToString(Decode(byte).instruction) + ", " + ::ToString(Decode(byte).addressing_mode);
+std::string Opcodes::ToString(Byte byte) noexcept {
+  return ::ToString(Opcodes::Decode(byte).instruction) + ", " + ::ToString(Opcodes::Decode(byte).addressing_mode);
 }
 
 }  // namespace core

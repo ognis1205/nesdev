@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_MOCKS_PPU_H_
 #define _NESDEV_CORE_MOCKS_PPU_H_
+#include <vector>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
@@ -16,6 +17,8 @@ namespace mocks {
 
 class PPU : public nesdev::core::PPU {
  public:
+  PPU() : nesdev::core::PPU{std::vector<Byte>(0x40 * 3)} {}
+
   MOCK_METHOD0(Tick, void());
 
   MOCK_METHOD1(Read, Byte(Address));

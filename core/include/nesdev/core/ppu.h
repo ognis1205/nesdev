@@ -53,7 +53,7 @@ class PPU : public Clock {
     }
 
     std::size_t Size() const override {
-      return data_[0].size() + data_[1].size();
+      return data_[0x00].size() + data_[0x01].size();
     }
 
     Byte* Data() override {
@@ -74,23 +74,23 @@ class PPU : public Clock {
       switch(rom_->header->Mirroring()) {
       case ROM::Header::Mirroring::HORIZONTAL:
 	if (address >= 0x0000 && address <= 0x03FF)
-	  return &data_[0].data()[address & 0x03FF];
+	  return &data_[0x00].data()[address & 0x03FF];
 	if (address >= 0x0400 && address <= 0x07FF)
-	  return &data_[0].data()[address & 0x03FF];
+	  return &data_[0x00].data()[address & 0x03FF];
 	if (address >= 0x0800 && address <= 0x0BFF)
-	  return &data_[1].data()[address & 0x03FF];
+	  return &data_[0x01].data()[address & 0x03FF];
 	if (address >= 0x0C00 && address <= 0x0FFF)
-	  return &data_[1].data()[address & 0x03FF];
+	  return &data_[0x01].data()[address & 0x03FF];
 	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
       case ROM::Header::Mirroring::VERTICAL:
 	if (address >= 0x0000 && address <= 0x03FF)
-	  return &data_[0].data()[address & 0x03FF];
+	  return &data_[0x00].data()[address & 0x03FF];
 	if (address >= 0x0400 && address <= 0x07FF)
-	  return &data_[1].data()[address & 0x03FF];
+	  return &data_[0x01].data()[address & 0x03FF];
 	if (address >= 0x0800 && address <= 0x0BFF)
-	  return &data_[0].data()[address & 0x03FF];
+	  return &data_[0x00].data()[address & 0x03FF];
 	if (address >= 0x0C00 && address <= 0x0FFF)
-	  return &data_[1].data()[address & 0x03FF];
+	  return &data_[0x01].data()[address & 0x03FF];
 	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
       default:
 	NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible mirroring specified to ROM"));
@@ -100,10 +100,13 @@ class PPU : public Clock {
   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     ROM* const rom_;
 
-    std::array<std::vector<Byte>, 2> data_;
+    std::array<std::vector<Byte>, 0x02> data_;
   };
 
  public:
+  explicit PPU(const std::vector<Byte>& palette)
+    : palette_{palette} {};
+
   virtual ~PPU() = default;
 
   virtual void Tick() override = 0;
@@ -121,14 +124,72 @@ class PPU : public Clock {
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
-      cycle               = {0};
+      cycle = {0};
     }
 
     std::size_t cycle = {0};
   };
 
+  /*
+   * Predefined pallete stored in VGA Pallete format.
+   * [SEE] https://wiki.nesdev.com/w/index.php/.pal
+   */
+  class Palette {
+   public:
+    static constexpr double kIntensityFactor = 0.3;
+
+   public:
+    Palette(const std::vector<Byte>& pal) {
+      NESDEV_CORE_CASSERT(pal.size() == 0x40 * 3, "Size does not match palette size");
+
+      for (std::size_t colour = 0x00; colour < 0x40; ++colour) {
+	Byte r = pal[(colour * 3) + 0];
+	Byte g = pal[(colour * 3) + 1];
+	Byte b = pal[(colour * 3) + 2];
+	data_[0][colour] = (r << 16) | (g << 8) | b;
+      }
+
+      for (std::size_t intensity = 0x01; intensity < 0x08; ++intensity) {
+	for (std::size_t colour = 0x00; colour < 0x40; ++colour) {
+	  double dr = static_cast<Byte>(data_[0][colour] >> 16);
+	  double dg = static_cast<Byte>(data_[0][colour] >>  8);
+	  double db = static_cast<Byte>(data_[0][colour] >>  0);
+	  // Intensify red
+	  if (intensity & 0x01) {
+	    dr *= 1 + kIntensityFactor;
+	    dg *= 1 - kIntensityFactor;
+	    db *= 1 - kIntensityFactor;
+	  }
+	  // Intensify green
+	  if (intensity & 0x02) {
+	    dr *= 1 - kIntensityFactor;
+	    dg *= 1 + kIntensityFactor;
+	    db *= 1 - kIntensityFactor;
+	  }
+	  // Intensify blue
+	  if (intensity & 0x04) {
+	    dr *= 1 - kIntensityFactor;
+	    dg *= 1 - kIntensityFactor;
+	    db *= 1 + kIntensityFactor;
+	  }
+	  auto r = static_cast<Byte>(dr > 0xFF ? 0xFF : dr);
+	  auto g = static_cast<Byte>(dg > 0xFF ? 0xFF : dg);
+	  auto b = static_cast<Byte>(db > 0xFF ? 0xFF : db);
+	  data_[intensity][colour] = (r << 16) | (g << 8) | b;
+	}
+      }
+    };
+
+    ~Palette() = default;
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    std::array<std::array<RGBA, 0x40>, 0x08> data_;
+  };
+
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   Context context_;
+
+  Palette palette_;
 };
 
 }  // namespace core

@@ -16,8 +16,9 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips, RP2C02::Registers* const registers, MMU* const mmu)
-  : chips_{std::move(chips)},
+RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips, RP2C02::Registers* const registers, MMU* const mmu, const std::vector<Byte>& palette)
+  : PPU{palette},
+    chips_{std::move(chips)},
     registers_{registers},
     mmu_{mmu},
     latch_{&context_, registers_, mmu_, chips_.get()} {}

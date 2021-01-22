@@ -19,9 +19,9 @@ class NROM final : public ROM {
   NROM(std::unique_ptr<ROM::Header> header,
        std::unique_ptr<ROM::Chips> chips,
        std::unique_ptr<ROM::Mapper> mapper)
-    : ROM(std::move(header),
+    : ROM{std::move(header),
           std::move(chips),
-          std::move(mapper)) {}
+          std::move(mapper)} {}
 };
 
 }  // namespace roms

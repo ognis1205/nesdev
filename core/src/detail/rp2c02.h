@@ -135,7 +135,7 @@ class RP2C02 final : public PPU {
   };
 
  public:
-  RP2C02(std::unique_ptr<Chips> chips, Registers* const registers, MMU* const mmu);
+  RP2C02(std::unique_ptr<Chips> chips, Registers* const registers, MMU* const mmu, const std::vector<Byte>& palette);
 
   ~RP2C02();
 

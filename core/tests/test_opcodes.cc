@@ -30,15 +30,15 @@ class OpcodesTest : public testing::Test {
 TEST_F(OpcodesTest, Decode) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
     EXPECT_NO_THROW({
-      auto opcode = nesdev::core::Decode(i);
-      static_cast<void>(opcode);
-    });
+	auto opcode = Opcodes::Decode(i);
+	static_cast<void>(opcode);
+      });
   }
 }
 
 TEST_F(OpcodesTest, ToString) {
   for (auto i = 0x00u; i <= 0xFFu; i++) {
-    EXPECT_NE("UNKNOWN, UNKNOWN", nesdev::core::ToString(i));
+    EXPECT_NE("UNKNOWN, UNKNOWN", Opcodes::ToString(i));
   }
 }
 

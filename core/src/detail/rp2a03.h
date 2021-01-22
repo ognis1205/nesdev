@@ -261,7 +261,7 @@ class RP2A03 final : public CPU {
 
   void Parse() noexcept {
     context_.opcode_byte = Read(registers_->pc.value++);
-    context_.opcode = nesdev::core::Decode(context_.opcode_byte);
+    context_.opcode = Opcodes::Decode(context_.opcode_byte);
   }
 
   Byte Read(Address address) const {

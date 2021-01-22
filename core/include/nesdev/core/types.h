@@ -20,6 +20,8 @@ using Word    = std::uint16_t;
 
 using Address = std::uint16_t;
 
+using RGBA    = std::uint32_t;
+
 static constexpr std::size_t k8KByte  =  8 * 1024;
 
 static constexpr std::size_t k16KByte = 16 * 1024;

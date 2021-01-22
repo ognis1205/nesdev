@@ -388,7 +388,7 @@ TEST_F(RP2A03Test, Next) {
       EXPECT_THROW(rp2a03_.Next(), InvalidOpcode);
     } else {
       rp2a03_.Next();
-      std::stringstream ss(ToString(rp2a03_.Op()));
+      std::stringstream ss(Opcodes::ToString(rp2a03_.Op()));
       std::vector<std::string> decoded;
       while(ss.good()) {
 	std::string s;
