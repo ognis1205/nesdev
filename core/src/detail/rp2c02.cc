@@ -16,7 +16,10 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips, RP2C02::Registers* const registers, MMU* const mmu, const std::vector<Byte>& palette)
+RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
+               RP2C02::Registers* const registers,
+               MMU* const mmu,
+               const std::vector<Byte>& palette)
   : PPU{palette},
     chips_{std::move(chips)},
     registers_{registers},
@@ -27,64 +30,30 @@ RP2C02::~RP2C02() {}
 
 Byte RP2C02::Read(Address address) {
   switch (Map(address)) {
-  case MemoryMap::PPUCTRL:
-    ReadPPUCtrl();
-    break;
-  case MemoryMap::PPUMASK:
-    ReadPPUMask();
-    break;
-  case MemoryMap::PPUSTATUS:
-    ReadPPUStatus();
-    break;
-  case MemoryMap::OAMADDR:
-    ReadOAMAddr();
-    break;
-  case MemoryMap::OAMDATA:
-    ReadOAMData();
-    break;
-  case MemoryMap::PPUSCROLL:
-    ReadPPUScroll();
-    break;
-  case MemoryMap::PPUADDR:
-    ReadPPUAddr();
-    break;
-  case MemoryMap::PPUDATA:
-    ReadPPUData();
-    break;
-  default:
-    break;
+  case MemoryMap::PPUCTRL:   ReadPPUCtrl();   break;
+  case MemoryMap::PPUMASK:   ReadPPUMask();   break;
+  case MemoryMap::PPUSTATUS: ReadPPUStatus(); break;
+  case MemoryMap::OAMADDR:   ReadOAMAddr();   break;
+  case MemoryMap::OAMDATA:   ReadOAMData();   break;
+  case MemoryMap::PPUSCROLL: ReadPPUScroll(); break;
+  case MemoryMap::PPUADDR:   ReadPPUAddr();   break;
+  case MemoryMap::PPUDATA:   ReadPPUData();   break;
+  default:                                    break;
   }
   return Latched();
 }
 
 void RP2C02::Write(Address address, Byte byte) {
   switch (Map(address)) {
-  case MemoryMap::PPUCTRL:
-    WritePPUCtrl(byte);
-    break;
-  case MemoryMap::PPUMASK:
-    WritePPUMask(byte);
-    break;
-  case MemoryMap::PPUSTATUS:
-    WritePPUStatus(byte);
-    break;
-  case MemoryMap::OAMADDR:
-    WriteOAMAddr(byte);
-    break;
-  case MemoryMap::OAMDATA:
-    WriteOAMData(byte);
-    break;
-  case MemoryMap::PPUSCROLL:
-    WritePPUScroll(byte);
-    break;
-  case MemoryMap::PPUADDR:
-    WritePPUAddr(byte);
-    break;
-  case MemoryMap::PPUDATA:
-    WritePPUData(byte);
-    break;
-  default:
-    break;
+  case MemoryMap::PPUCTRL:   WritePPUCtrl(byte);   break;
+  case MemoryMap::PPUMASK:   WritePPUMask(byte);   break;
+  case MemoryMap::PPUSTATUS: WritePPUStatus(byte); break;
+  case MemoryMap::OAMADDR:   WriteOAMAddr(byte);   break;
+  case MemoryMap::OAMDATA:   WriteOAMData(byte);   break;
+  case MemoryMap::PPUSCROLL: WritePPUScroll(byte); break;
+  case MemoryMap::PPUADDR:   WritePPUAddr(byte);   break;
+  case MemoryMap::PPUDATA:   WritePPUData(byte);   break;
+  default:                                         break;
   }
 }
 

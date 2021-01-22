@@ -40,9 +40,6 @@ class RP2C02 final : public PPU {
     PIXELS_8x16
   };
 
-  enum class SpriteSync : Byte {
-  };
-
   /*
    * The following registers are defined according to the folloing Loopy's archetecture.
    * [SEE] https://wiki.nesdev.com/w/index.php/PPU_scrolling
@@ -135,7 +132,10 @@ class RP2C02 final : public PPU {
   };
 
  public:
-  RP2C02(std::unique_ptr<Chips> chips, Registers* const registers, MMU* const mmu, const std::vector<Byte>& palette);
+  RP2C02(std::unique_ptr<Chips> chips,
+         Registers* const registers,
+         MMU* const mmu,
+         const std::vector<Byte>& palette);
 
   ~RP2C02();
 
@@ -175,64 +175,47 @@ class RP2C02 final : public PPU {
     [[nodiscard]]
     Address BaseNameTblAddr() const {
       switch (BIT(ppuctrl, nametable)) {
-      case 0:
-        return 0x2000;
-      case 1:
-        return 0x2400;
-      case 2:
-        return 0x2800;
-      case 3:
-        return 0x2C00;
-      default:
-        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/NAMETABLE", REG(ppuctrl)));
+      case 0:  return 0x2000;
+      case 1:  return 0x2400;
+      case 2:  return 0x2800;
+      case 3:  return 0x2C00;
+      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/NAMETABLE", REG(ppuctrl)));
       }
     }
 
     [[nodiscard]]
     Address VRAMInc() const {
       switch (BIT(ppuctrl, increment)) {
-      case 0:
-        return 0x0001;
-      case 1:
-        return 0x0020;
-      default:
-        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/INCREMENT", REG(ppuctrl)));
+      case 0:  return 0x0001;
+      case 1:  return 0x0020;
+      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/INCREMENT", REG(ppuctrl)));
       }
     }
 
     [[nodiscard]]
     Address SpritePtrAddr() const {
       switch (BIT(ppuctrl, sprite_tile)) {
-      case 0:
-        return 0x0000;
-      case 1:
-        return 0x1000;
-      default:
-        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_TILE", REG(ppuctrl)));
+      case 0:  return 0x0000;
+      case 1:  return 0x1000;
+      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_TILE", REG(ppuctrl)));
       }
     }
 
     [[nodiscard]]
     Address BackgroundPtrAddr() const {
       switch (BIT(ppuctrl, background_tile)) {
-      case 0:
-        return 0x0000;
-      case 1:
-        return 0x1000;
-      default:
-        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/BACKGROUND_TILE", REG(ppuctrl)));
+      case 0:  return 0x0000;
+      case 1:  return 0x1000;
+      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/BACKGROUND_TILE", REG(ppuctrl)));
       }
     }
 
     [[nodiscard]]
     RP2C02::SpriteSize SpriteSize() const {
       switch (BIT(ppuctrl, sprite_height)) {
-      case 0:
-        return RP2C02::SpriteSize::PIXELS_8x8;
-      case 1:
-        return RP2C02::SpriteSize::PIXELS_8x16;
-      default:
-        NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_HEIGHT", REG(ppuctrl)));
+      case 0:  return RP2C02::SpriteSize::PIXELS_8x8;
+      case 1:  return RP2C02::SpriteSize::PIXELS_8x16;
+      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_HEIGHT", REG(ppuctrl)));
       }
     }
 
@@ -278,16 +261,16 @@ class RP2C02 final : public PPU {
 
     void ReadPPUData() {
       if (REG(vramaddr) <= 0x3EFF) {
-	// Reads from the NameTable ram get delayed one cycle, 
-	// so output buffer which contains the data from the 
-	// previous read request.
- 	Latched(Deffered());
- 	Deffered(mmu_->Read(REG(vramaddr)));
+        // Reads from the NameTable ram get delayed one cycle, 
+        // so output buffer which contains the data from the 
+        // previous read request.
+        Latched(Deffered());
+        Deffered(mmu_->Read(REG(vramaddr)));
       } else {
-	// However, if the address was in the palette range, the
-	// data is not delayed, so it returns immediately.
-	Deffered(mmu_->Read(REG(vramaddr)));
-	Latched(Deffered());
+        // However, if the address was in the palette range, the
+        // data is not delayed, so it returns immediately.
+        Deffered(mmu_->Read(REG(vramaddr)));
+        Latched(Deffered());
       }
       REG(vramaddr) += VRAMInc();
     }
@@ -316,36 +299,36 @@ class RP2C02 final : public PPU {
 
     void WritePPUScroll(Byte byte) {
       if (!is_latched_) {
-	// First write to scroll register contains X offset in pixel space
-	// which we split into coarse and fine x values
-	REG(fine_x)             = Latched(byte) & 0x07;
-  	BIT(tramaddr, coarse_x) = Latched(byte) >> 3;
-	is_latched_             = true;
+        // First write to scroll register contains X offset in pixel space
+        // which we split into coarse and fine x values
+        REG(fine_x)             = Latched(byte) & 0x07;
+        BIT(tramaddr, coarse_x) = Latched(byte) >> 3;
+        is_latched_             = true;
       } else {
-	// First write to scroll register contains Y offset in pixel space
-	// which we split into coarse and fine Y values
-  	BIT(tramaddr, fine_y)   = Latched(byte) & 0x07;
-  	BIT(tramaddr, coarse_y) = Latched(byte) >> 3;
-	is_latched_             = false;
+        // First write to scroll register contains Y offset in pixel space
+        // which we split into coarse and fine Y values
+        BIT(tramaddr, fine_y)   = Latched(byte) & 0x07;
+        BIT(tramaddr, coarse_y) = Latched(byte) >> 3;
+        is_latched_             = false;
       }
     }
 
     void WritePPUAddr(Byte byte) {
       if (!is_latched_) {
-	// PPU address bus can be accessed by CPU via the ADDR and DATA
-	// registers. The fisrt write to this register latches the high byte
-	// of the address, the second is the low byte. Note the writes
-	// are stored in the tram register...
-	BIT(tramaddr, hi) = Latched(byte) & 0x3F;
-	is_latched_       = true;
+        // PPU address bus can be accessed by CPU via the ADDR and DATA
+        // registers. The fisrt write to this register latches the high byte
+        // of the address, the second is the low byte. Note the writes
+        // are stored in the tram register...
+        BIT(tramaddr, hi) = Latched(byte) & 0x3F;
+        is_latched_       = true;
       } else {
-	// ...when a whole address has been written, the internal vram address
-	// buffer is updated. Writing to the PPU is unwise during rendering
-	// as the PPU will maintam the vram address automatically whilst
-	// rendering the scanline position.
-	BIT(tramaddr, lo) = Latched(byte);
-  	REG(vramaddr)     = REG(tramaddr);
-	is_latched_       = false;
+        // ...when a whole address has been written, the internal vram address
+        // buffer is updated. Writing to the PPU is unwise during rendering
+        // as the PPU will maintam the vram address automatically whilst
+        // rendering the scanline position.
+        BIT(tramaddr, lo) = Latched(byte);
+        REG(vramaddr)     = REG(tramaddr);
+        is_latched_       = false;
       }
     }
 
@@ -373,24 +356,15 @@ class RP2C02 final : public PPU {
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   static MemoryMap Map(Address address) {
     switch (address % 0x08) {
-    case 0x0000:
-      return MemoryMap::PPUCTRL;
-    case 0x0001:
-      return MemoryMap::PPUMASK;
-    case 0x0002:
-      return MemoryMap::PPUSTATUS;
-    case 0x0003:
-      return MemoryMap::OAMADDR;
-    case 0x0004:
-      return MemoryMap::OAMDATA;
-    case 0x0005:
-      return MemoryMap::PPUSCROLL;
-    case 0x0006:
-      return MemoryMap::PPUADDR;
-    case 0x0007:
-      return MemoryMap::PPUDATA;
-    default:
-      NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Map", address));
+    case 0x0000: return MemoryMap::PPUCTRL;
+    case 0x0001: return MemoryMap::PPUMASK;
+    case 0x0002: return MemoryMap::PPUSTATUS;
+    case 0x0003: return MemoryMap::OAMADDR;
+    case 0x0004: return MemoryMap::OAMDATA;
+    case 0x0005: return MemoryMap::PPUSCROLL;
+    case 0x0006: return MemoryMap::PPUADDR;
+    case 0x0007: return MemoryMap::PPUDATA;
+    default:     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Map", address));
     }
   }
 
