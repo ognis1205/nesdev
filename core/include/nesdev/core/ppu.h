@@ -36,44 +36,19 @@ class PPU : public Clock {
 
   [[nodiscard]]
   Byte Latched() const noexcept {
-    return context_.latched;
-  }
-
-  [[nodiscard]]
-  bool IsLatched() const noexcept {
-    return context_.is_latched;
+    return context_.latch;
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
-      cycle             = {0};
-      latched           = {0x00};
-      is_latched        = false;
-      address.effective = {0x0000};
-      oam.address       = {0x00};
-      vram.address      = {0x0000};
+      cycle               = {0};
+      latch               = {0x00};
     }
 
     std::size_t cycle = {0};
 
-    Byte latched = {0x00};
-
-    bool is_latched = false;
-
-    union {
-      Address effective;
-      Bitfield<0, 8, Address> lo;
-      Bitfield<8, 8, Address> hi;
-    } address = {0x0000};
-
-    union {
-      Byte address;
-    } oam = {0x00};
-
-    union {
-      Address address;
-    } vram = {0x0000};
+    Byte latch = {0x00};
   };
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:

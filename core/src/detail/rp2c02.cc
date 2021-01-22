@@ -56,6 +56,35 @@ Byte RP2C02::Read(Address address) {
   return Latched();
 }
 
+void RP2C02::Write(Address address, Byte byte) {
+  switch (Map(address)) {
+  case MemoryMap::PPUCTRL:
+    WritePPUCtrl(byte);
+    break;
+  case MemoryMap::PPUMASK:
+    WritePPUMask(byte);
+    break;
+  case MemoryMap::PPUSTATUS:
+    WritePPUStatus(byte);
+    break;
+  case MemoryMap::OAMADDR:
+    WriteOAMAddr(byte);
+    break;
+  case MemoryMap::OAMDATA:
+    WriteOAMData(byte);
+    break;
+  case MemoryMap::PPUSCROLL:
+    WritePPUScroll(byte);
+    break;
+  case MemoryMap::PPUADDR:
+    break;
+  case MemoryMap::PPUDATA:
+    break;
+  default:
+    break;
+  }
+}
+
 }  // namespace detail
 }  // namespace core
 }  // namespace nesdev

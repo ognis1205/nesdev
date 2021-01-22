@@ -18,8 +18,9 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-#define REG(x) registers_->x.value
-#define MSK(x) registers_->ppustatus.x.mask
+#define REG(x)      registers_->x.value
+#define BIT(x, y)   registers_->x.y
+#define MASK(x)     registers_->ppustatus.x.mask
 
 class RP2C02 final : public PPU {
  public:
@@ -39,17 +40,26 @@ class RP2C02 final : public PPU {
     PIXELS_8x16
   };
 
+  enum class SpriteSync : Byte {
+  };
+
+  /*
+   * The following registers are defined according to the folloing Loopy's archetecture.
+   * [SEE] https://wiki.nesdev.com/w/index.php/PPU_scrolling
+   */
   struct Registers {
     // $2000
     union {
       Byte value;
-      Bitfield<0, 2, Byte> nametable;        // Base nametable address (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
-      Bitfield<2, 1, Byte> increment;        // VRAM address increment per CPU read/write of PPUDATA (0: add 1, going across; 1: add 32, going down)
-      Bitfield<3, 1, Byte> sprite_tile;      // Sprite pattern table address for 8x8 sprites (0: $0000; 1: $1000; ignored in 8x16 mode)
-      Bitfield<4, 1, Byte> background_tile;  // Background pattern table address (0: $0000; 1: $1000)
-      Bitfield<5, 1, Byte> sprite_height;    // Sprite size (0: 8x8 pixels; 1: 8x16 pixels)
-      Bitfield<6, 1, Byte> ppu_master_slave; // PPU master/slave select (0: read backdrop from EXT pins; 1: output color on EXT pins)
-      Bitfield<7, 1, Byte> nmi_enable;       // Generate an NMI at the start of the vertical blanking interval (0: off; 1: on)
+      Bitfield<0, 2, Byte> nametable;                  // Base nametable address (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
+      Bitfield<0, 1, Byte> nametable_x;
+      Bitfield<1, 1, Byte> nametable_y;
+      Bitfield<2, 1, Byte> increment;                  // VRAM address increment per CPU read/write of PPUDATA (0: add 1, going across; 1: add 32, going down)
+      Bitfield<3, 1, Byte> sprite_tile;                // Sprite pattern table address for 8x8 sprites (0: $0000; 1: $1000; ignored in 8x16 mode)
+      Bitfield<4, 1, Byte> background_tile;            // Background pattern table address (0: $0000; 1: $1000)
+      Bitfield<5, 1, Byte> sprite_height;              // Sprite size (0: 8x8 pixels; 1: 8x16 pixels)
+      Bitfield<6, 1, Byte> ppu_master_slave;           // PPU master/slave select (0: read backdrop from EXT pins; 1: output color on EXT pins)
+      Bitfield<7, 1, Byte> nmi_enable;                 // Generate an NMI at the start of the vertical blanking interval (0: off; 1: on)
     } ppuctrl = {0x00};
     // $2001
     union {
@@ -66,10 +76,10 @@ class RP2C02 final : public PPU {
     // $2002
     union {
       Byte value;
-      Bitfield<0, 5, Byte> previous_lsb;    // Least significant bits previously written into a PPU register
-      Bitfield<5, 1, Byte> sprite_overflow; // Sprite overflow
-      Bitfield<6, 1, Byte> sprite_zero_hit; // Sprite 0 Hit
-      Bitfield<7, 1, Byte> vblank_start;    // Vertical blank has started (0: not in vblank; 1: in vblank)
+      Bitfield<0, 5, Byte> previous_lsb;               // Least significant bits previously written into a PPU register
+      Bitfield<5, 1, Byte> sprite_overflow;            // Sprite overflow
+      Bitfield<6, 1, Byte> sprite_zero_hit;            // Sprite 0 Hit
+      Bitfield<7, 1, Byte> vblank_start;               // Vertical blank has started (0: not in vblank; 1: in vblank)
     } ppustatus = {0x00};
     // $2003 OAM read/write address
     union {
@@ -79,14 +89,34 @@ class RP2C02 final : public PPU {
     union {
       Byte value;
     } oamdata = {0x00};
-    // $2005 fine scroll position (two writes: X scroll, Y scroll)
+    // $2005 fine scroll position (two writes: X scroll, Y scroll), CREDIT: Loopy
     union {
       Byte value;
-    } ppuscroll = {0x00};
-    // $2006 PPU read/write address (two writes: most significant byte, least significant byte)
+    } fine_x = {0x00};
+    // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
     union {
-      Byte value;
-    } ppuaddr = {0x00};
+      Address value;
+      Bitfield< 0, 5, Address> coarse_x;
+      Bitfield< 5, 5, Address> coarse_y;
+      Bitfield<10, 1, Address> nametable_x;
+      Bitfield<11, 1, Address> nametable_y;
+      Bitfield<12, 3, Address> fine_y;
+      Bitfield<15, 1, Address> unused;
+      Bitfield< 0, 8, Address> lo;
+      Bitfield< 8, 8, Address> hi;
+    } vramaddr = {0x0000};
+    // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
+    union {
+      Address value;
+      Bitfield< 0, 5, Address> coarse_x;
+      Bitfield< 5, 5, Address> coarse_y;
+      Bitfield<10, 1, Address> nametable_x;
+      Bitfield<11, 1, Address> nametable_y;
+      Bitfield<12, 3, Address> fine_y;
+      Bitfield<15, 1, Address> unused;
+      Bitfield< 0, 8, Address> lo;
+      Bitfield< 8, 8, Address> hi;
+    } tramaddr = {0x0000};
     // $2007 PPU data read/write
     union {
       Byte value;
@@ -124,10 +154,27 @@ class RP2C02 final : public PPU {
         mmu_{mmu},
         chips_{chips} {}
 
-      [[nodiscard]]
+    [[nodiscard]]
+    Byte Latched() const noexcept {
+      return latch_;
+    }
 
+    Byte Latched(Byte byte) noexcept {
+      return latch_ = byte;
+    }
+
+    [[nodiscard]]
+    Byte Deffered() const noexcept {
+      return deffered_;
+    }
+
+    Byte Deffered(Byte byte) noexcept {
+      return deffered_ = byte;
+    }
+
+    [[nodiscard]]
     Address BaseNameTblAddr() const {
-      switch (registers_->ppuctrl.nametable) {
+      switch (BIT(ppuctrl, nametable)) {
       case 0:
         return 0x2000;
       case 1:
@@ -143,7 +190,7 @@ class RP2C02 final : public PPU {
 
     [[nodiscard]]
     Address VRAMInc() const {
-      switch (registers_->ppuctrl.increment) {
+      switch (BIT(ppuctrl, increment)) {
       case 0:
         return 0x0001;
       case 1:
@@ -155,7 +202,7 @@ class RP2C02 final : public PPU {
 
     [[nodiscard]]
     Address SpritePtrAddr() const {
-      switch (registers_->ppuctrl.sprite_tile) {
+      switch (BIT(ppuctrl, sprite_tile)) {
       case 0:
         return 0x0000;
       case 1:
@@ -167,7 +214,7 @@ class RP2C02 final : public PPU {
 
     [[nodiscard]]
     Address BackgroundPtrAddr() const {
-      switch (registers_->ppuctrl.background_tile) {
+      switch (BIT(ppuctrl, background_tile)) {
       case 0:
         return 0x0000;
       case 1:
@@ -179,7 +226,7 @@ class RP2C02 final : public PPU {
 
     [[nodiscard]]
     RP2C02::SpriteSize SpriteSize() const {
-      switch (registers_->ppuctrl.sprite_height) {
+      switch (BIT(ppuctrl, sprite_height)) {
       case 0:
         return RP2C02::SpriteSize::PIXELS_8x8;
       case 1:
@@ -191,58 +238,115 @@ class RP2C02 final : public PPU {
 
     [[nodiscard]]
     bool IsMaster() const noexcept {
-      return registers_->ppuctrl.ppu_master_slave;
+      return BIT(ppuctrl, ppu_master_slave);
     }
 
     [[nodiscard]]
     bool IsNMIEnable() const noexcept {
-      return registers_->ppuctrl.nmi_enable;
+      return BIT(ppuctrl, nmi_enable);
     }
 
-    void ReadPPUCtrl() const noexcept {
+    void ReadPPUCtrl() {
       /* Do nothing. */
     }
 
-    void ReadPPUMask() const noexcept {
+    void ReadPPUMask() {
       /* Do nothing. */
     }
     
-    void ReadPPUStatus() const noexcept {
-      context_->latched     = (context_->latched & 0x1F) | (REG(ppustatus) & 0xE0);
-      REG(ppustatus)       &= ~MSK(vblank_start);
-      context_->is_latched  = false;
+    void ReadPPUStatus() {
+      Latched((Latched() & 0x1F) | (REG(ppustatus) & 0xE0));
+      REG(ppustatus) &= ~MASK(vblank_start);
+      is_latched_     = false;
     }
 
-    void ReadOAMAddr() const noexcept {
+    void ReadOAMAddr() {
       /* Do nothing. */
     }
 
-    void ReadOAMData() const {
-      context_->latched = chips_->oam->Read(context_->oam.address);
+    void ReadOAMData() {
+      Latched(chips_->oam->Read(REG(oamaddr)));
     }
 
-    void ReadPPUScroll() const noexcept {
+    void ReadPPUScroll() {
       /* Do nothing. */
     }
 
-    void ReadPPUAddr() const noexcept {
+    void ReadPPUAddr() {
       /* Do nothing. */
     }
 
     void ReadPPUData() {
-      // Reads from the NameTable ram get delayed one cycle, 
-      // so output buffer which contains the data from the 
-      // previous read request.
-      if (context_->vram.address <= 0x3EFF) {
-        context_->latched = deffered;
-        deffered          = mmu_->Read(context_->vram.address);
-      // However, if the address was in the palette range, the
-      // data is not delayed, so it returns immediately.
+      if (REG(vramaddr) <= 0x3EFF) {
+	// Reads from the NameTable ram get delayed one cycle, 
+	// so output buffer which contains the data from the 
+	// previous read request.
+ 	Latched(Deffered());
+ 	Deffered(mmu_->Read(REG(vramaddr)));
       } else {
-        deffered          = mmu_->Read(context_->vram.address);
-        context_->latched = deffered;
+	// However, if the address was in the palette range, the
+	// data is not delayed, so it returns immediately.
+	Deffered(mmu_->Read(REG(vramaddr)));
+	Latched(Deffered());
       }
-      context_->vram.address += VRAMInc();
+      REG(vramaddr) += VRAMInc();
+    }
+
+    void WritePPUCtrl(Byte byte) {
+      REG(ppuctrl)               = Latched(byte);
+      BIT(tramaddr, nametable_x) = BIT(ppuctrl, nametable_x);
+      BIT(tramaddr, nametable_y) = BIT(ppuctrl, nametable_y);
+    }
+
+    void WritePPUMask(Byte byte) {
+      REG(ppumask) = Latched(byte);
+    }
+
+    void WritePPUStatus(Byte byte) {
+      Latched(byte);
+    }
+
+    void WriteOAMAddr(Byte byte) {
+      REG(oamaddr) = Latched(byte);
+    }
+
+    void WriteOAMData(Byte byte) {
+      chips_->oam->Write(REG(oamaddr), Latched(byte));
+    }
+
+    void WritePPUScroll(Byte byte) {
+      if (!is_latched_) {
+	// First write to scroll register contains X offset in pixel space
+	// which we split into coarse and fine x values
+	REG(fine_x)             = Latched(byte) & 0x07;
+  	BIT(tramaddr, coarse_x) = Latched(byte) >> 3;
+	is_latched_             = true;
+      } else {
+	// First write to scroll register contains Y offset in pixel space
+	// which we split into coarse and fine Y values
+  	BIT(tramaddr, fine_y)   = Latched(byte) & 0x07;
+  	BIT(tramaddr, coarse_y) = Latched(byte) >> 3;
+	is_latched_             = false;
+      }
+    }
+
+    void WritePPUAddr(Byte byte) {
+      if (!is_latched_) {
+	// PPU address bus can be accessed by CPU via the ADDR and DATA
+	// registers. The fisrt write to this register latches the high byte
+	// of the address, the second is the low byte. Note the writes
+	// are stored in the tram register...
+	BIT(tramaddr, hi) = Latched(byte) & 0x3F;
+	is_latched_       = true;
+      } else {
+	// ...when a whole address has been written, the internal vram address
+	// buffer is updated. Writing to the PPU is unwise during rendering
+	// as the PPU will maintam the vram address automatically whilst
+	// rendering the scanline position.
+	BIT(tramaddr, lo) = Latched(byte);
+  	REG(vramaddr)     = REG(tramaddr);
+	is_latched_       = false;
+      }
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -254,7 +358,11 @@ class RP2C02 final : public PPU {
 
     Chips* const chips_;
 
-    Byte deffered = {0x00};
+    bool is_latched_ = false;
+
+    Byte latch_      = {0x00};
+
+    Byte deffered_   = {0x00};
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -282,6 +390,11 @@ class RP2C02 final : public PPU {
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  [[nodiscard]]
+  Byte Latched() const noexcept {
+    return latch_.Latched();
+  }
+
   [[nodiscard]]
   Address BaseNameTblAddr() const {
     return latch_.BaseNameTblAddr();
@@ -317,36 +430,60 @@ class RP2C02 final : public PPU {
     return latch_.IsNMIEnable();
   }
 
-  void ReadPPUCtrl() const noexcept {
+  void ReadPPUCtrl() {
     latch_.ReadPPUCtrl();
   }
 
-  void ReadPPUMask() const noexcept {
+  void ReadPPUMask() {
     latch_.ReadPPUMask();
   }
     
-  void ReadPPUStatus() const noexcept {
+  void ReadPPUStatus() {
     latch_.ReadPPUStatus();
   }
 
-  void ReadOAMAddr() const noexcept {
+  void ReadOAMAddr() {
     latch_.ReadOAMAddr();
   }
 
-  void ReadOAMData() const {
+  void ReadOAMData() {
     latch_.ReadOAMData();
   }
 
-  void ReadPPUScroll() const noexcept {
+  void ReadPPUScroll() {
     latch_.ReadPPUScroll();
   }
 
-  void ReadPPUAddr() const noexcept {
+  void ReadPPUAddr() {
     latch_.ReadPPUAddr();
   }
 
   void ReadPPUData() {
     latch_.ReadPPUData();
+  }
+
+  void WritePPUCtrl(Byte byte) {
+    latch_.WritePPUCtrl(byte);
+  }
+
+  void WritePPUMask(Byte byte) {
+    latch_.WritePPUMask(byte);
+  }
+
+  void WritePPUStatus(Byte byte) {
+    latch_.WritePPUStatus(byte);
+  }
+
+  void WriteOAMAddr(Byte byte) {
+    latch_.WriteOAMAddr(byte);
+  }
+
+  void WriteOAMData(Byte byte) {
+    latch_.WriteOAMData(byte);
+  }
+
+  void WritePPUScroll(Byte byte) {
+    latch_.WritePPUScroll(byte);
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -360,7 +497,8 @@ class RP2C02 final : public PPU {
 };
 
 #undef REG
-#undef MSK
+#undef BIT
+#undef MASK
 
 }  // namespace detail
 }  // namespace core

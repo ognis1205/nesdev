@@ -78,20 +78,20 @@ bool RP2A03::Next() {
     Stage([this] { Write(Addr(), Fetched());                  }, If(M::READ_MODIFY_WRITE)      );
     break;
   case A::ABX:
-    Stage([this] { AddrLo(Read(REG(pc)++));                                                                }                          );
-    Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(x));                                          }                          );
+    Stage([this] { AddrLo(Read(REG(pc)++));                                                              }                          );
+    Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(x));                                        }                          );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
-    Stage([this] { Fetch();                                                                                }, If(M::READ_MODIFY_WRITE));
-    Stage([this] { Write(Addr(), Fetched());                                                               }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
     break;
   case A::ABY:
-    Stage([this] { AddrLo(Read(REG(pc)++));                                                                }                          );
-    Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(y));                                          }                          );
+    Stage([this] { AddrLo(Read(REG(pc)++));                                                              }                          );
+    Stage([this] { AddrHi(Read(REG(pc)++)); Addr(Addr(), REG(y));                                        }                          );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
-    Stage([this] { Fetch();                                                                                }, If(M::READ_MODIFY_WRITE));
-    Stage([this] { Write(Addr(), Fetched());                                                               }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
     break;
   case A::ZP0:
     Stage([this] { Addr(Read(REG(pc)++));    }                          );
@@ -125,13 +125,13 @@ bool RP2A03::Next() {
     Stage([this] { Write(Addr(), Fetched());                               }, If(M::READ_MODIFY_WRITE));
     break;
   case A::IZY:
-    Stage([this] { Ptr(Read(REG(pc)++));                                                                   }                          );
-    Stage([this] { AddrLo(Read(Ptr()));                                                                    }                          );
-    Stage([this] { AddrHi(Read(Ptr() + 1)); Addr(Addr(), REG(y));                                          }                          );
+    Stage([this] { Ptr(Read(REG(pc)++));                                                                 }                          );
+    Stage([this] { AddrLo(Read(Ptr()));                                                                  }                          );
+    Stage([this] { AddrHi(Read(Ptr() + 1)); Addr(Addr(), REG(y));                                        }                          );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
-    Stage([this] { Fetch();                                                                                }, If(M::READ_MODIFY_WRITE));
-    Stage([this] { Write(Addr(), Fetched());                                                               }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
     break;
   default:
     NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Op()));
