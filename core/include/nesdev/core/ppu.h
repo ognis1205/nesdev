@@ -30,10 +30,13 @@ class PPU : public Clock {
 
    public:
     Nametables(std::size_t size, ROM* const rom)
-      : rom_{rom} {
-      NESDEV_CORE_CASSERT((To - From + 1u) % size == 0, "Size does not match address range");
-      data_[0].resize(size);
-      data_[1].resize(size);
+      : rom_{rom},
+	size_{size} {
+      NESDEV_CORE_CASSERT(
+	((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
+	"Size does not match address range");
+      data_[0].resize(size_);
+      data_[1].resize(size_);
     }
 
     [[nodiscard]]
@@ -53,7 +56,7 @@ class PPU : public Clock {
     }
 
     std::size_t Size() const override {
-      return data_[0x00].size() + data_[0x01].size();
+      return size_;
     }
 
     Byte* Data() override {
@@ -70,19 +73,19 @@ class PPU : public Clock {
     }
 
     const Byte* PtrTo(Address address) const {
-      address &= 0x0FFF;
+      address %= 0x1000;
       switch(rom_->header->Mirroring()) {
       case ROM::Header::Mirroring::HORIZONTAL:
-	if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address & 0x03FF];
-	if (address >= 0x0400 && address <= 0x07FF) return &data_[0x00].data()[address & 0x03FF];
-	if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x01].data()[address & 0x03FF];
-	if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address & 0x03FF];
+	if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address % Size()];
+	if (address >= 0x0400 && address <= 0x07FF) return &data_[0x00].data()[address % Size()];
+	if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x01].data()[address % Size()];
+	if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address % Size()];
 	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
       case ROM::Header::Mirroring::VERTICAL:
-	if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address & 0x03FF];
-	if (address >= 0x0400 && address <= 0x07FF) return &data_[0x01].data()[address & 0x03FF];
-	if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x00].data()[address & 0x03FF];
-	if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address & 0x03FF];
+	if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address % Size()];
+	if (address >= 0x0400 && address <= 0x07FF) return &data_[0x01].data()[address % Size()];
+	if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x00].data()[address % Size()];
+	if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address % Size()];
 	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
       default:
 	NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible mirroring specified to ROM"));
@@ -91,6 +94,8 @@ class PPU : public Clock {
 
   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     ROM* const rom_;
+
+    std::size_t size_;
 
     std::array<std::vector<Byte>, 0x02> data_;
   };
@@ -114,20 +119,6 @@ class PPU : public Clock {
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  /*
-   *
-   * [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering#Line-by-line_timing
-   */
-  enum class ScanlineTiming : Byte {
-    PRERENDER,
-    VISIBLE_0,
-    VISIBLE_1_256,
-    VISIBLE_257_320,
-    VISIBLE_321_336,
-    VISIBLE_337_340,
-    POSTRENDER
-  };
-
   struct Context {
     void Clear() {
       cycle    = {0};
@@ -137,28 +128,6 @@ class PPU : public Clock {
     int cycle = {0};
 
     int scanline = {0};
-
-    union {
-      Address value;
-      Bitfield< 0, 5, Address> coarse_x;
-      Bitfield< 5, 5, Address> coarse_y;
-      Bitfield<10, 1, Address> nametable_x;
-      Bitfield<11, 1, Address> nametable_y;
-      Bitfield<12, 3, Address> fine_y;
-      Bitfield<15, 1, Address> unused;
-      Bitfield< 0, 8, Address> lo;
-      Bitfield< 8, 8, Address> hi;
-    } timing = {0x0000};
-
-    void Cycled() noexcept {
-      ++cycle;
-      if (cycle >= 341) {
-        cycle = 0;
-        ++scanline;
-        if (scanline >= 261)
- 	  scanline = -1;
-      }
-    }
   };
 
   /*
@@ -216,6 +185,48 @@ class PPU : public Clock {
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     std::array<std::array<RGBA, 0x40>, 0x08> data_;
   };
+
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  void Cycled() noexcept {
+      ++context_.cycle;
+      if (context_.cycle >= 341) {
+        context_.cycle = 0;
+        ++context_.scanline;
+        if (context_.scanline >= 261)
+ 	  context_.scanline = -1;
+      }
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsPreRenderOrVisibleLine() const noexcept {
+    return context_.scanline >= -1 && context_.scanline < 240;
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsPostRenderLine() const noexcept {
+    return context_.scanline == 240;
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsVerticalBlankingLine() const noexcept {
+    return context_.scanline >= 241 && context_.scanline < 261;
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsNotIdleCycle() const noexcept {
+    return (context_.cycle >= 2 && context_.cycle < 258) || (context_.cycle >= 321 && context_.cycle < 338);
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsEndOfVisibleCycle() const noexcept {
+    return context_.cycle == 256;
+  }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   Context context_;
