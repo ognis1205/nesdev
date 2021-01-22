@@ -7,6 +7,7 @@
 #ifndef _NESDEV_CORE_PALETTES_H_
 #define _NESDEV_CORE_PALETTES_H_
 #include <vector>
+#include "nesdev/core/macros.h"
 #include "nesdev/core/types.h"
 
 namespace nesdev {
@@ -16,13 +17,15 @@ namespace core {
  * The following palettes are defined according to these references:
  * [SEE] https://wiki.nesdev.com/w/index.php/PPU_palettes
  */
-enum Palette : Byte {
-  PL2C02 // 2C02 PPU Palette
-};
+class Palettes {
+ public:
+  [[nodiscard]]
+  static std::vector<Byte> RP2C02() noexcept;
 
-[[nodiscard]]
-std::vector<Byte> Decode(Palette palette) noexcept;
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  Palettes() {}
+};
 
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_PALLETS_H_
+#endif  // ifndef _NESDEV_CORE_PALETTES_H_
