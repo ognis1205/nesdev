@@ -349,6 +349,11 @@ class RP2C02 final : public PPU {
       }
     }
 
+    void WritePPUData(Byte byte) {
+      mmu_->Write(REG(vramaddr), byte);
+      REG(vramaddr) += VRAMInc();
+    }
+
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Context* const context_;
 
@@ -484,6 +489,14 @@ class RP2C02 final : public PPU {
 
   void WritePPUScroll(Byte byte) {
     latch_.WritePPUScroll(byte);
+  }
+
+  void WritePPUAddr(Byte byte) {
+    latch_.WritePPUAddr(byte);
+  }
+
+  void WritePPUData(Byte byte) {
+    latch_.WritePPUData(byte);
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:

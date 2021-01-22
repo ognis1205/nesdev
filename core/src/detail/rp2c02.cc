@@ -77,8 +77,10 @@ void RP2C02::Write(Address address, Byte byte) {
     WritePPUScroll(byte);
     break;
   case MemoryMap::PPUADDR:
+    WritePPUAddr(byte);
     break;
   case MemoryMap::PPUDATA:
+    WritePPUData(byte);
     break;
   default:
     break;
