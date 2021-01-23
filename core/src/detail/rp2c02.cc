@@ -23,15 +23,16 @@ namespace detail {
 
 RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
                RP2C02::Registers* const registers,
-	       RP2C02::Shifters* const shifters,
+               RP2C02::Shifters* const shifters,
                MMU* const mmu,
-	       const std::vector<Byte>& palette)
+               const std::vector<Byte>& palette)
   : PPU{palette},
     chips_{std::move(chips)},
     registers_{registers},
     shifters_{shifters},
     mmu_{mmu},
-    latch_{registers_, mmu_, chips_.get()} {}
+    latch_{registers_, mmu_, chips_.get()},
+    shift_{registers_, shifters, mmu_} {}
 
 RP2C02::~RP2C02() {}
 
@@ -77,8 +78,8 @@ void RP2C02::Tick() {
       REG(ppustatus) &= ~(MSK(vblank_start) | MSK(sprite_overflow) | MSK(sprite_zero_hit));
       // Clear Shifters
 //      for (int i = 0; i < 8; i++) {
-//	sprite_shifter_pattern_lo[i] = 0;
-//	sprite_shifter_pattern_hi[i] = 0;
+//      sprite_shifter_pattern_lo[i] = 0;
+//      sprite_shifter_pattern_hi[i] = 0;
 //      }
     }
 

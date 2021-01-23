@@ -159,7 +159,7 @@ class RP2C02 final : public PPU {
  public:
   RP2C02(std::unique_ptr<Chips> chips,
          Registers* const registers,
-	 Shifters* const shifters,
+         Shifters* const shifters,
          MMU* const mmu,
          const std::vector<Byte>& palette);
 
@@ -321,20 +321,37 @@ class RP2C02 final : public PPU {
 
   class Shift {
    public:
-    Shift(Registers* const registers, MMU* const mmu)
+    Shift(Registers* const registers, Shifters* const shifters, MMU* const mmu)
       : registers_{registers},
+        shifters_{shifters},
         mmu_{mmu} {}
 
+    void Update() {
+      if (BIT(ppumask, background_enable)) {
+        shifters_->background_pttr_lo.shift <<= 1u;
+        shifters_->background_pttr_hi.shift <<= 1u;
+        shifters_->background_attr_lo.shift <<= 1u;
+        shifters_->background_attr_hi.shift <<= 1u;
+      }
+    }
+
+    void LoadBackground() {
+      shifters_->background_pttr_lo.shift(bg_next_tile_lsb);
+      shifters_->background_pttr_hi.shift(bg_next_tile_msb);
+      shifters_->background_attr_lo.shift(static_cast<Byte>((bg_next_tile_attr & 0x01) ? 0xFF : 0x00));
+      shifters_->background_attr_hi.shift(static_cast<Byte>((bg_next_tile_attr & 0x02) ? 0xFF : 0x00));
+    }
+
     void ReadBgTileId() {
-      background_.id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
+      bg_next_tile_id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
     }
 
     void ReadBgTileAttr() {
-      background_.attr = mmu_->Read(0x23C0
-                                    | ( BIT(vramaddr, nametable_y)    << 11)
-                                    | ( BIT(vramaddr, nametable_x)    << 10) 
-                                    | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
-                                    | ( BIT(vramaddr, coarse_x)       >>  2));
+      bg_next_tile_attr = mmu_->Read(0x23C0
+                                     | ( BIT(vramaddr, nametable_y)    << 11)
+                                     | ( BIT(vramaddr, nametable_x)    << 10) 
+                                     | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
+                                     | ( BIT(vramaddr, coarse_x)       >>  2));
       // Since we know we can access a tile directly from the 12 bit address, we
       // can analyse the bottom bits of the coarse coordinates to provide us with
       // the correct offset into the 8-bit word, to yield the 2 bits we are
@@ -343,41 +360,38 @@ class RP2C02 final : public PPU {
       // Likewise if "coarse x % 4" < 2 we are in the left half else right half.
       // Ultimately we want the bottom two bits of our attribute word to be the
       // palette selected. So shift as required...              
-      if (BIT(vramaddr, coarse_y) & 0x02) background_.attr >>= 4;
-      if (BIT(vramaddr, coarse_x) & 0x02) background_.attr >>= 2;
-      background_.attr &= 0x03;
+      if (BIT(vramaddr, coarse_y) & 0x02) bg_next_tile_attr >>= 4;
+      if (BIT(vramaddr, coarse_x) & 0x02) bg_next_tile_attr >>= 2;
+      bg_next_tile_attr &= 0x03;
     }
 
     void ReadBgTileLSB() {
-      background_.id = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-                                  + (static_cast<Address>(background_.id) << 4)
-                                  + BIT(vramaddr, fine_y));
+      bg_next_tile_lsb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                    + (static_cast<Address>(bg_next_tile_id) << 4)
+                                    + BIT(vramaddr, fine_y));
     }
 
     void ReadBgTileMSB() {
-      background_.id = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-                                  + (static_cast<Address>(background_.id) << 4)
-                                  + BIT(vramaddr, fine_y)
-                                  + 8);
+      bg_next_tile_msb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                    + (static_cast<Address>(bg_next_tile_id) << 4)
+                                    + BIT(vramaddr, fine_y)
+                                    + 8);
     }
-
-   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    struct Background {
-      Byte id   = {0x00};
-
-      Byte attr = {0x00};
-
-      Byte lsb  = {0x00};
-
-      Byte msb  = {0x00};
-    };
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     Registers* const registers_;
 
+    Shifters* const shifters_;
+
     MMU* const mmu_;
 
-    Background background_;
+    Byte bg_next_tile_id;
+
+    Byte bg_next_tile_attr;
+
+    Byte bg_next_tile_lsb;
+
+    Byte bg_next_tile_msb;
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -502,6 +516,30 @@ class RP2C02 final : public PPU {
     latch_.WritePPUData(byte);
   }
 
+  void UpdateShifters() {
+    shift_.Update();
+  }
+
+  void LoadBackground() {
+    shift_.LoadBackground();
+  }
+
+  void ReadBgTileId() {
+    shift_.ReadBgTileId();
+  }
+
+  void ReadBgTileAttr() {
+    shift_.ReadBgTileAttr();
+  }
+
+  void ReadBgTileLSB() {
+    shift_.ReadBgTileLSB();
+  }
+
+  void ReadBgTileMSB() {
+    shift_.ReadBgTileMSB();
+  }
+
   void ScrollX() noexcept {
     if (IsRendering()) {
       // A single name table is 32 x 30 tiles.
@@ -560,7 +598,7 @@ class RP2C02 final : public PPU {
 
   Latch latch_;
 
-//  ShiftRegister shifter_;
+  Shift shift_;
 };
 
 #undef REG
