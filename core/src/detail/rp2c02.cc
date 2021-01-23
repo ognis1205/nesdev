@@ -23,11 +23,13 @@ namespace detail {
 
 RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
                RP2C02::Registers* const registers,
+	       RP2C02::Shifters* const shifters,
                MMU* const mmu,
 	       const std::vector<Byte>& palette)
   : PPU{palette},
     chips_{std::move(chips)},
     registers_{registers},
+    shifters_{shifters},
     mmu_{mmu},
     latch_{registers_, mmu_, chips_.get()} {}
 

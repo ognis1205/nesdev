@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_PPU_H_
 #define _NESDEV_CORE_PPU_H_
+#include <climits>
 #include <cstddef>
 #include <array>
 #include <vector>
@@ -105,14 +106,24 @@ class PPU : public Clock {
    public:
     template <typename U>
     Shifter& operator<<=(const U& rhs) {
+      NESDEV_CORE_CASSERT(
+	CHAR_BIT * sizeof(T) > rhs,
+	"Right operand is greater than or equal to the number of bits in the left operand");
       value_ <<= rhs;
       return *this;
     }
 
     template <typename U>
     Shifter& operator()(const U& operand) {
-      value_ = value_ << sizeof(operand) | operand;
+      NESDEV_CORE_CASSERT(
+	CHAR_BIT * sizeof(T) > CHAR_BIT * sizeof(U),
+	"Right operand is greater than or equal to the number of bits in the left operand");
+      value_ = (value_ << CHAR_BIT * sizeof(U)) | operand;
       return *this;
+    }
+
+    operator unsigned() const {
+      return value_;
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:

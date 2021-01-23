@@ -43,7 +43,7 @@ class Utility {
   }
 
   template<Byte From, Byte To>
-  static Address RandomByte() noexcept {
+  static Byte RandomByte() noexcept {
     return From + rand() % (To - From + 1);
   }
 

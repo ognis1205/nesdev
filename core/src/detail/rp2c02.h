@@ -127,6 +127,26 @@ class RP2C02 final : public PPU {
   };
 
   struct Shifters {
+    // Background tile pattern low bits
+    union {
+      Address value;
+      PPU::Shifter<Address> shift;
+    } background_pttr_lo = {0x0000};
+    // Background tile pattern high bits
+    union {
+      Address value;
+      PPU::Shifter<Address> shift;
+    } background_pttr_hi = {0x0000};
+    // Background tile palette attributes low bits
+    union {
+      Address value;
+      PPU::Shifter<Address> shift;
+    } background_attr_lo = {0x0000};
+    // Background tile palette attributes high bits
+    union {
+      Address value;
+      PPU::Shifter<Address> shift;
+    } background_attr_hi = {0x0000};
   };
 
   struct Chips {
@@ -139,6 +159,7 @@ class RP2C02 final : public PPU {
  public:
   RP2C02(std::unique_ptr<Chips> chips,
          Registers* const registers,
+	 Shifters* const shifters,
          MMU* const mmu,
          const std::vector<Byte>& palette);
 
@@ -298,9 +319,9 @@ class RP2C02 final : public PPU {
     Byte deffered_   = {0x00};
   };
 
-  class ShiftRegister {
+  class Shift {
    public:
-    ShiftRegister(Registers* const registers, MMU* const mmu)
+    Shift(Registers* const registers, MMU* const mmu)
       : registers_{registers},
         mmu_{mmu} {}
 
@@ -532,6 +553,8 @@ class RP2C02 final : public PPU {
   const std::unique_ptr<Chips> chips_;
 
   Registers* const registers_;
+
+  Shifters* const shifters_;
 
   MMU* const mmu_;
 
