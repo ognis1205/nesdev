@@ -100,6 +100,25 @@ class PPU : public Clock {
     std::array<std::vector<Byte>, 0x02> data_;
   };
 
+  template <typename T = Address>
+  class Shifter {
+   public:
+    template <typename U>
+    Shifter& operator<<=(const U& rhs) {
+      value_ <<= rhs;
+      return *this;
+    }
+
+    template <typename U>
+    Shifter& operator()(const U& operand) {
+      value_ = value_ << sizeof(operand) | operand;
+      return *this;
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    T value_;
+  };
+
  public:
   explicit PPU(const std::vector<Byte>& palette)
     : palette_{palette} {};
@@ -113,21 +132,24 @@ class PPU : public Clock {
   virtual void Write(Address address, Byte byte) = 0;
 
  public:
-  [[nodiscard]]
-  std::size_t Cycle() const noexcept {
-    return context_.cycle;
+  void Connect(ROM* const rom) {
+    NESDEV_CORE_CASSERT(rom != nullptr, "Invalid ROM specified to Connect");
+    rom_ = rom;
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
-      cycle    = {0};
-      scanline = {0};
+      cycle           = {0};
+      scanline        = {0};
+      odd_frame       = false;
     }
 
     int cycle = {0};
 
     int scanline = {0};
+
+    bool odd_frame = false;
   };
 
   /*
@@ -187,15 +209,31 @@ class PPU : public Clock {
   };
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
-  void Cycled() noexcept {
-      ++context_.cycle;
-      if (context_.cycle >= 341) {
-        context_.cycle = 0;
-        ++context_.scanline;
-        if (context_.scanline >= 261)
- 	  context_.scanline = -1;
-      }
+  [[nodiscard]]
+  int& Cycle() noexcept {
+    return context_.cycle;
+  }
+
+  void Cycle(int cycle) noexcept {
+    context_.cycle = cycle;
+  }
+
+  [[nodiscard]]
+  int& Scanline() noexcept {
+    return context_.scanline;
+  }
+
+  void Scanline(int scanline) noexcept {
+    context_.scanline = scanline;
+  }
+
+  [[nodiscard]]
+  bool IsOddFrame() const noexcept {
+    return context_.odd_frame;
+  }
+
+  void TransitFrame() noexcept {
+    context_.odd_frame = !context_.odd_frame;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
@@ -232,6 +270,8 @@ class PPU : public Clock {
   Context context_;
 
   Palette palette_;
+
+  ROM* rom_ = nullptr;
 };
 
 }  // namespace core

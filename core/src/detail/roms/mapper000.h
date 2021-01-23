@@ -80,7 +80,7 @@ class Mapper000 final : public ROM::Mapper {
     // Do nothing.
   }
 
-  void Scanline() noexcept override {
+  void Callback() noexcept override {
     // Do nothing.
   }
 

@@ -18,9 +18,9 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-#define REG(x)      registers_->x.value
-#define BIT(x, y)   registers_->x.y
-#define MASK(x)     registers_->ppustatus.x.mask
+#define REG(x)    registers_->x.value
+#define BIT(x, y) registers_->x.y
+#define MSK(x)    registers_->ppustatus.x.mask
 
 class RP2C02 final : public PPU {
  public:
@@ -93,26 +93,28 @@ class RP2C02 final : public PPU {
     // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
     union {
       Address value;
-      Bitfield< 0, 5, Address> coarse_x;
-      Bitfield< 5, 5, Address> coarse_y;
-      Bitfield<10, 1, Address> nametable_x;
-      Bitfield<11, 1, Address> nametable_y;
-      Bitfield<12, 3, Address> fine_y;
-      Bitfield<15, 1, Address> unused;
-      Bitfield< 0, 8, Address> lo;
-      Bitfield< 8, 8, Address> hi;
+      Bitfield< 0, 12, Address> tile_id;
+      Bitfield< 0,  5, Address> coarse_x;
+      Bitfield< 5,  5, Address> coarse_y;
+      Bitfield<10,  1, Address> nametable_x;
+      Bitfield<11,  1, Address> nametable_y;
+      Bitfield<12,  3, Address> fine_y;
+      Bitfield<15,  1, Address> unused;
+      Bitfield< 0,  8, Address> lo;
+      Bitfield< 8,  8, Address> hi;
     } vramaddr = {0x0000};
     // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
     union {
       Address value;
-      Bitfield< 0, 5, Address> coarse_x;
-      Bitfield< 5, 5, Address> coarse_y;
-      Bitfield<10, 1, Address> nametable_x;
-      Bitfield<11, 1, Address> nametable_y;
-      Bitfield<12, 3, Address> fine_y;
-      Bitfield<15, 1, Address> unused;
-      Bitfield< 0, 8, Address> lo;
-      Bitfield< 8, 8, Address> hi;
+      Bitfield< 0, 12, Address> tile_id;
+      Bitfield< 0,  5, Address> coarse_x;
+      Bitfield< 5,  5, Address> coarse_y;
+      Bitfield<10,  1, Address> nametable_x;
+      Bitfield<11,  1, Address> nametable_y;
+      Bitfield<12,  3, Address> fine_y;
+      Bitfield<15,  1, Address> unused;
+      Bitfield< 0,  8, Address> lo;
+      Bitfield< 8,  8, Address> hi;
     } tramaddr = {0x0000};
     // $2007 PPU data read/write
     union {
@@ -122,6 +124,9 @@ class RP2C02 final : public PPU {
     union {
       Byte value;
     } oamdma = {0x00};
+  };
+
+  struct Shifters {
   };
 
   struct Chips {
@@ -148,9 +153,8 @@ class RP2C02 final : public PPU {
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Latch {
    public:
-    Latch(Context* const context, Registers* const registers, MMU* const mmu, Chips* const chips)
-      : context_{context},
-        registers_{registers},
+    Latch(Registers* const registers, MMU* const mmu, Chips* const chips)
+      : registers_{registers},
         mmu_{mmu},
         chips_{chips} {}
 
@@ -172,63 +176,6 @@ class RP2C02 final : public PPU {
       return deffered_ = byte;
     }
 
-    [[nodiscard]]
-    Address BaseNameTblAddr() const {
-      switch (BIT(ppuctrl, nametable)) {
-      case 0:  return 0x2000;
-      case 1:  return 0x2400;
-      case 2:  return 0x2800;
-      case 3:  return 0x2C00;
-      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/NAMETABLE", REG(ppuctrl)));
-      }
-    }
-
-    [[nodiscard]]
-    Address VRAMInc() const {
-      switch (BIT(ppuctrl, increment)) {
-      case 0:  return 0x0001;
-      case 1:  return 0x0020;
-      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/INCREMENT", REG(ppuctrl)));
-      }
-    }
-
-    [[nodiscard]]
-    Address SpritePtrAddr() const {
-      switch (BIT(ppuctrl, sprite_tile)) {
-      case 0:  return 0x0000;
-      case 1:  return 0x1000;
-      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_TILE", REG(ppuctrl)));
-      }
-    }
-
-    [[nodiscard]]
-    Address BackgroundPtrAddr() const {
-      switch (BIT(ppuctrl, background_tile)) {
-      case 0:  return 0x0000;
-      case 1:  return 0x1000;
-      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/BACKGROUND_TILE", REG(ppuctrl)));
-      }
-    }
-
-    [[nodiscard]]
-    RP2C02::SpriteSize SpriteSize() const {
-      switch (BIT(ppuctrl, sprite_height)) {
-      case 0:  return RP2C02::SpriteSize::PIXELS_8x8;
-      case 1:  return RP2C02::SpriteSize::PIXELS_8x16;
-      default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_HEIGHT", REG(ppuctrl)));
-      }
-    }
-
-    [[nodiscard]]
-    bool IsMaster() const noexcept {
-      return BIT(ppuctrl, ppu_master_slave);
-    }
-
-    [[nodiscard]]
-    bool IsNMIEnable() const noexcept {
-      return BIT(ppuctrl, nmi_enable);
-    }
-
     void ReadPPUCtrl() {
       /* Do nothing. */
     }
@@ -239,7 +186,7 @@ class RP2C02 final : public PPU {
     
     void ReadPPUStatus() {
       Latched((Latched() & 0x1F) | (REG(ppustatus) & 0xE0));
-      REG(ppustatus) &= ~MASK(vblank_start);
+      REG(ppustatus) &= ~MSK(vblank_start);
       is_latched_     = false;
     }
 
@@ -272,7 +219,7 @@ class RP2C02 final : public PPU {
         Deffered(mmu_->Read(REG(vramaddr)));
         Latched(Deffered());
       }
-      REG(vramaddr) += VRAMInc();
+      REG(vramaddr) += BIT(ppuctrl, increment) ? 0x0020 : 0x0001;
     }
 
     void WritePPUCtrl(Byte byte) {
@@ -333,13 +280,11 @@ class RP2C02 final : public PPU {
     }
 
     void WritePPUData(Byte byte) {
-      mmu_->Write(REG(vramaddr), byte);
-      REG(vramaddr) += VRAMInc();
+      mmu_->Write(REG(vramaddr), Latched(byte));
+      REG(vramaddr) += BIT(ppuctrl, increment) ? 0x0020 : 0x0001;
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    Context* const context_;
-
     Registers* const registers_;
 
     MMU* const mmu_;
@@ -351,6 +296,67 @@ class RP2C02 final : public PPU {
     Byte latch_      = {0x00};
 
     Byte deffered_   = {0x00};
+  };
+
+  class ShiftRegister {
+   public:
+    ShiftRegister(Registers* const registers, MMU* const mmu)
+      : registers_{registers},
+        mmu_{mmu} {}
+
+    void ReadBgTileId() {
+      background_.id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
+    }
+
+    void ReadBgTileAttr() {
+      background_.attr = mmu_->Read(0x23C0
+                                    | ( BIT(vramaddr, nametable_y)    << 11)
+                                    | ( BIT(vramaddr, nametable_x)    << 10) 
+                                    | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
+                                    | ( BIT(vramaddr, coarse_x)       >>  2));
+      // Since we know we can access a tile directly from the 12 bit address, we
+      // can analyse the bottom bits of the coarse coordinates to provide us with
+      // the correct offset into the 8-bit word, to yield the 2 bits we are
+      // actually interested in which specifies the palette for the 2x2 group of
+      // tiles. We know if "coarse y % 4" < 2 we are in the top half else bottom half.
+      // Likewise if "coarse x % 4" < 2 we are in the left half else right half.
+      // Ultimately we want the bottom two bits of our attribute word to be the
+      // palette selected. So shift as required...              
+      if (BIT(vramaddr, coarse_y) & 0x02) background_.attr >>= 4;
+      if (BIT(vramaddr, coarse_x) & 0x02) background_.attr >>= 2;
+      background_.attr &= 0x03;
+    }
+
+    void ReadBgTileLSB() {
+      background_.id = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                  + (static_cast<Address>(background_.id) << 4)
+                                  + BIT(vramaddr, fine_y));
+    }
+
+    void ReadBgTileMSB() {
+      background_.id = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                  + (static_cast<Address>(background_.id) << 4)
+                                  + BIT(vramaddr, fine_y)
+                                  + 8);
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    struct Background {
+      Byte id   = {0x00};
+
+      Byte attr = {0x00};
+
+      Byte lsb  = {0x00};
+
+      Byte msb  = {0x00};
+    };
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    Registers* const registers_;
+
+    MMU* const mmu_;
+
+    Background background_;
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -368,45 +374,47 @@ class RP2C02 final : public PPU {
     }
   }
 
- NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  [[nodiscard]]
-  Byte Latched() const noexcept {
-    return latch_.Latched();
-  }
-
-  [[nodiscard]]
-  Address BaseNameTblAddr() const {
-    return latch_.BaseNameTblAddr();
-  }
-
-  [[nodiscard]]
-  Address VRAMInc() const noexcept {
-    return latch_.VRAMInc();
-  }
-
-  [[nodiscard]]
-  Address SpritePtrAddr() const noexcept {
-    return latch_.SpritePtrAddr();
-  }
-
-  [[nodiscard]]
-  Address BackgroundPtrAddr() const noexcept {
-    return latch_.BackgroundPtrAddr();
-  }
-
   [[nodiscard]]
   RP2C02::SpriteSize SpriteSize() const {
-    return latch_.SpriteSize();
+    switch (BIT(ppuctrl, sprite_height)) {
+    case 0:  return RP2C02::SpriteSize::PIXELS_8x8;
+    case 1:  return RP2C02::SpriteSize::PIXELS_8x16;
+    default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_HEIGHT", REG(ppuctrl)));
+    }
   }
 
   [[nodiscard]]
   bool IsMaster() const noexcept {
-    return latch_.IsMaster();
+    return BIT(ppuctrl, ppu_master_slave);
   }
 
   [[nodiscard]]
   bool IsNMIEnable() const noexcept {
-    return latch_.IsNMIEnable();
+    return BIT(ppuctrl, nmi_enable);
+  }
+
+ NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  void Ticked() noexcept {
+    ++Cycle();
+    if (IsRendering() && (Cycle() == 260 && Scanline() < 240))
+      rom_->mapper->Callback();
+    if (Cycle() >= 341) {
+      Cycle(0); ++Scanline();
+      if (Scanline() >= 261) {
+        Scanline(-1); TransitFrame();
+      }
+    }
+  }
+
+  [[nodiscard]]
+  bool IsRendering() const noexcept {
+    return BIT(ppumask, background_enable) || BIT(ppumask, sprite_enable);
+  }
+
+  [[nodiscard]]
+  Byte Latched() const noexcept {
+    return latch_.Latched();
   }
 
   void ReadPPUCtrl() {
@@ -473,6 +481,53 @@ class RP2C02 final : public PPU {
     latch_.WritePPUData(byte);
   }
 
+  void ScrollX() noexcept {
+    if (IsRendering()) {
+      // A single name table is 32 x 30 tiles.
+      if (BIT(vramaddr, coarse_x) == 31) {
+        BIT(vramaddr, coarse_x)    = 0;
+        BIT(vramaddr, nametable_x) = ~BIT(vramaddr, nametable_x);
+      } else {
+        BIT(vramaddr, coarse_x)++;
+      }
+    }
+  }
+
+  void ScrollY() noexcept {
+    if (IsRendering()) {
+      // A single name table is 32 x 30 tiles.                
+      // According to the existence of attribute memory, an increment in Yx first adjusts the fine offset.
+      if (BIT(vramaddr, fine_y) < 7) {
+        BIT(vramaddr, fine_y)++;
+      } else {
+        BIT(vramaddr, fine_y) = 0;
+        if (BIT(vramaddr, coarse_y) == 29) {
+          BIT(vramaddr, coarse_y)    = 0;
+          BIT(vramaddr, nametable_y) = ~BIT(vramaddr, nametable_y);
+        } else if (BIT(vramaddr, coarse_y) == 31) {
+          BIT(vramaddr, coarse_y) = 0;
+        } else {
+          BIT(vramaddr, coarse_y)++;
+        }
+      }
+    }
+  }
+
+  void TransferX() noexcept {
+    if (IsRendering()) {
+      BIT(vramaddr, nametable_x) = BIT(tramaddr, nametable_x);
+      BIT(vramaddr, coarse_x)    = BIT(tramaddr, coarse_x);
+    }
+  }
+
+  void TransferY() noexcept {
+    if (IsRendering()) {
+      BIT(vramaddr, fine_y)      = BIT(tramaddr, fine_y);
+      BIT(vramaddr, nametable_y) = BIT(tramaddr, nametable_y);
+      BIT(vramaddr, coarse_y)    = BIT(tramaddr, coarse_y);
+    }
+  }
+
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   const std::unique_ptr<Chips> chips_;
 
@@ -481,11 +536,13 @@ class RP2C02 final : public PPU {
   MMU* const mmu_;
 
   Latch latch_;
+
+//  ShiftRegister shifter_;
 };
 
 #undef REG
 #undef BIT
-#undef MASK
+#undef MSK
 
 }  // namespace detail
 }  // namespace core

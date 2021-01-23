@@ -272,7 +272,7 @@ struct ROM {
 
     virtual void ClearIRQ() noexcept = 0;
 
-    virtual void Scanline() noexcept = 0;
+    virtual void Callback() noexcept = 0;
 
     virtual void Reset() noexcept = 0;
 
@@ -293,7 +293,7 @@ struct ROM {
 
   const std::unique_ptr<const Header> header;
 
-  const std::unique_ptr<const Mapper> mapper;
+  const std::unique_ptr<Mapper> mapper;
 
   const std::unique_ptr<Chips> chips;
 };
