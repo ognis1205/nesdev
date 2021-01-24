@@ -38,12 +38,52 @@ class PPUTest : public testing::Test {
     Bitfield<0, 8, Address> lo;
     Bitfield<8, 8, Address> hi;
   } shifter_;
+
+  PPU::ObjectAttributeMap<64> oam_;
 };
 
 TEST_F(PPUTest, Context) {
 //  EXPECT_EQ(0, ppu_.Cycle());
 //  EXPECT_EQ(0x00, ppu_.Latched());
 //  EXPECT_EQ(0x0000, ppu_.Addr());
+}
+
+TEST_F(PPUTest, ObjectAttributeMapHasValidAddress) {
+  for (auto i = 0x0000u; i <= 0x00FFu; i++) {
+    EXPECT_TRUE(oam_.HasValidAddress(i));
+  }
+  for (auto i = 0x0100u; i <= 0xFFFFu; i++) {
+    EXPECT_FALSE(oam_.HasValidAddress(i));
+  }
+}
+
+TEST_F(PPUTest, ObjectAttributeMapRead) {
+  for (auto i = 0x0000u; i <= 0x00FFu; i++) {
+    EXPECT_EQ(0x00, oam_.Read(i));
+  }
+  for (auto i = 0x0100u; i <= 0xFFFFu; i++) {
+    EXPECT_THROW(oam_.Read(i), InvalidAddress);
+  }
+}
+
+TEST_F(PPUTest, ObjectAttributeMapWrite) {
+  auto byte = Utility::RandomByte<0x00, 0xFF>();
+  for (auto i = 0x0000u; i <= 0x00FFu; i++) {
+    oam_.Write(i, byte);
+  }
+  for (auto i = 0x0000u; i <= 0x00FFu; i++) {
+    EXPECT_EQ(byte, oam_.Read(i));
+  }
+  for (auto i = 0u; i < 64u; i++) {
+    auto entry = oam_.data_[i];
+    EXPECT_EQ(byte, entry.y);
+    EXPECT_EQ(byte, entry.id);
+    EXPECT_EQ(byte, entry.attr);
+    EXPECT_EQ(byte, entry.x);
+  }
+  for (auto i = 0x0100u; i <= 0xFFFFu; i++) {
+    EXPECT_THROW(oam_.Write(i, byte), InvalidAddress);
+  }
 }
 
 TEST_F(PPUTest, ShifterAssignment) {

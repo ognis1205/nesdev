@@ -8,6 +8,7 @@
 #define _NESDEV_CORE_PPU_H_
 #include <climits>
 #include <cstddef>
+#include <algorithm>
 #include <array>
 #include <vector>
 #include "nesdev/core/clock.h"
@@ -22,6 +23,8 @@ namespace core {
 
 class PPU : public Clock {
  public:
+  using Framebuffer = RGBA[256][240];
+
   template <Address From, Address To>
   class Nametables final : public MemoryBank {
    public:
@@ -101,6 +104,57 @@ class PPU : public Clock {
     std::array<std::vector<Byte>, 0x02> data_;
   };
 
+  template <std::size_t Entries = 64>
+  class ObjectAttributeMap final : public MemoryBank {
+   public:
+    [[nodiscard]]
+    bool HasValidAddress(Address address) const noexcept override {
+      return address >= 0 && address < sizeof(Entry) * Entries;
+    }
+
+    Byte Read(Address address) const override {
+      if (HasValidAddress(address)) return *PtrTo(address);
+      else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+    }
+
+    void Write(Address address, Byte byte) override {
+      if (HasValidAddress(address)) *PtrTo(address) = byte;
+      else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+    }
+
+    std::size_t Size() const override {
+      return Entries;
+    }
+
+    Byte* Data() override {
+      NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to Nametables"));
+    }
+
+    const Byte* Data() const override {
+      NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to Nametables"));
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    Byte* PtrTo(Address address) {
+      return const_cast<Byte*>(std::as_const(*this).PtrTo(address));
+    }
+
+    const Byte* PtrTo(Address address) const {
+      return &reinterpret_cast<const Byte*>(data_)[address];
+    }
+
+  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    struct Entry {
+      Byte y;
+      Byte id;
+      Byte attr;
+      Byte x;
+    } data_[Entries];
+  };
+
+  class PISO : public MemoryBank {
+  };
+
   template <typename T = Address>
   class Shifter {
    public:
@@ -148,12 +202,17 @@ class PPU : public Clock {
     rom_ = rom;
   }
 
+  Framebuffer& Buffer() {
+    return context_.framebuffer;
+  }
+
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
-      cycle           = {0};
-      scanline        = {0};
-      odd_frame       = false;
+      cycle     = {0};
+      scanline  = {0};
+      odd_frame = false;
+      std::fill(&framebuffer[0][0], &framebuffer[0][0] + sizeof(framebuffer), 0);
     }
 
     int cycle = {0};
@@ -161,6 +220,8 @@ class PPU : public Clock {
     int scanline = {0};
 
     bool odd_frame = false;
+
+    Framebuffer framebuffer = {};
   };
 
   /*
@@ -214,6 +275,10 @@ class PPU : public Clock {
     };
 
     ~Palette() = default;
+
+    RGBA Colour(Byte intensity, Byte colour) {
+      return data_.at(intensity).at(colour);
+    }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     std::array<std::array<RGBA, 0x40>, 0x08> data_;

@@ -69,6 +69,7 @@ class RP2C02 final : public PPU {
       Bitfield<5, 1, Byte> emphasize_red;              // Emphasize red (green on PAL/Dendy)
       Bitfield<6, 1, Byte> emphasize_green;            // Emphasize green (red on PAL/Dendy)
       Bitfield<7, 1, Byte> emphasize_blue;             // Emphasize blue
+      Bitfield<5, 3, Byte> intensity;
     } ppumask = {0x00};
     // $2002
     union {
@@ -150,10 +151,16 @@ class RP2C02 final : public PPU {
   };
 
   struct Chips {
-    Chips(std::unique_ptr<MemoryBank> oam)
-      : oam{std::move(oam)} {}
+    Chips(std::unique_ptr<MemoryBank> oam, std::unique_ptr<MemoryBank> controller_1, std::unique_ptr<MemoryBank> controller_2)
+      : oam{std::move(oam)},
+	controller_1{std::move(controller_1)},
+	controller_2{std::move(controller_2)} {}
 
     const std::unique_ptr<MemoryBank> oam;
+
+    const std::unique_ptr<MemoryBank> controller_1;
+
+    const std::unique_ptr<MemoryBank> controller_2;
   };
 
  public:
@@ -433,7 +440,7 @@ class RP2C02 final : public PPU {
   void Ticked() noexcept {
     ++Cycle();
     if (IsRendering() && (Cycle() == 260 && Scanline() < 240))
-      rom_->mapper->Callback();
+      rom_->mapper->OnVisibleCycleEnds();
     if (Cycle() >= 341) {
       Cycle(0); ++Scanline();
       if (Scanline() >= 261) {
@@ -538,6 +545,10 @@ class RP2C02 final : public PPU {
 
   void ReadBgTileMSB() {
     shift_.ReadBgTileMSB();
+  }
+
+  RGBA Colour(Byte palette, Byte pixel) {
+    return palette_.Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (palette << 2) + pixel) & 0x3F);
   }
 
   void ScrollX() noexcept {

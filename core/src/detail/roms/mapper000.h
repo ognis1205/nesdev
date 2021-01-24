@@ -80,7 +80,7 @@ class Mapper000 final : public ROM::Mapper {
     // Do nothing.
   }
 
-  void Callback() noexcept override {
+  void OnVisibleCycleEnds() noexcept override {
     // Do nothing.
   }
 

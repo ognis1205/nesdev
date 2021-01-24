@@ -8,7 +8,9 @@
 #define _NESDEV_CORE_H_
 
 #include "core/macros.h"
+#include "core/apu.h"
 #include "core/clock.h"
+#include "core/controller.h"
 #include "core/cpu.h"
 #include "core/exceptions.h"
 #include "core/memory_bank.h"

@@ -272,7 +272,7 @@ struct ROM {
 
     virtual void ClearIRQ() noexcept = 0;
 
-    virtual void Callback() noexcept = 0;
+    virtual void OnVisibleCycleEnds() noexcept = 0;
 
     virtual void Reset() noexcept = 0;
 
