@@ -4,19 +4,19 @@ C++ NES Implementation for My Own Learning Porpose.
 
 The implementation is NOT fully faithfull to the original NES hardware.
 
-# Things NOT faithfull to the original NES hardware so far (01/24/2021)
+### Things NOT faithfull to the original NES hardware so far (01/24/2021)
 
 1. PPU Foregound/Sprites Rendering
  In original NES hardware archetecture, sprite gathering, sprite clearing and sprite evaluation for the next scanline,
 natural on the digital circuit, these things are distributed in parallel, but in my implementation, these are embedded
 in the PPU cycle along with the background rendering. This may limit compatibility with some games.
 
-# TODO
+### TODO
 
 - [ ] Implement testsuites for all opcodes
 - [ ] Implement APU/RP2C02 unit
 
-# Archetecture
+### Archetecture
 
 ```
                         +-------------+   +---------------+   +---------------+   +------------------------------+
@@ -43,7 +43,7 @@ in the PPU cycle along with the background rendering. This may limit compatibili
                         +-------------------+--------------------+-------------------+---------------------------> BUS
 ```
 
-# References
+### References
 
 1. [NesDev](http://nesdev.com/)
 2. [Bisqwit's implementation](https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/)
