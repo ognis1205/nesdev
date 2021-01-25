@@ -19,9 +19,16 @@ namespace nesdev {
 namespace core {
 namespace detail {
 
-#define REG(x)    registers_->x.value
-#define BIT(x, y) registers_->x.y
-#define MSK(x)    registers_->ppustatus.x.mask
+#define REG(x)              registers_->x.value
+#define BIT(x, y)           registers_->x.y
+#define MSK(x)              registers_->ppustatus.x.mask
+#define BACK(x)             shifters_->background_##x.value
+#define SHIFT_BACK(x, s)    shifters_->background_##x.shift <<= s
+#define PUSH_BACK(x, s)     shifters_->background_##x.shift(s)
+#define SPRT(x, e)          shifters_->sprite_##x[e].value
+#define SHIFT_SPRT(x, e, s) shifters_->sprite_##x[e].shift <<= s
+#define PUSH_SPRT(x, e, s)  shifters_->sprite_##x[e].shift(s)
+#define FINE_X              (0x8000 >> REG(fine_x))
 
 class RP2C02 final : public PPU {
  public:
@@ -337,36 +344,43 @@ class RP2C02 final : public PPU {
 
   class Shift {
    public:
-    Shift(Registers* const registers, Shifters* const shifters, MMU* const mmu, Chips* const chips)
-      : registers_{registers},
+    Shift(PPU::Context* const context,
+          PPU::Palette* const palette,
+          Registers* const registers,
+          Shifters* const shifters,
+          MMU* const mmu,
+          Chips* const chips)
+      : context_{context},
+        palette_{palette},
+        registers_{registers},
         shifters_{shifters},
         mmu_{mmu},
         chips_{chips} {}
 
     void UpdateAt(std::int16_t cycle) {
       if (BIT(ppumask, background_enable)) {
-        shifters_->background_pttr_lo.shift <<= 1u;
-        shifters_->background_pttr_hi.shift <<= 1u;
-        shifters_->background_attr_lo.shift <<= 1u;
-        shifters_->background_attr_hi.shift <<= 1u;
+        SHIFT_BACK(pttr_lo, 1u);
+        SHIFT_BACK(pttr_hi, 1u);
+        SHIFT_BACK(attr_lo, 1u);
+        SHIFT_BACK(attr_hi, 1u);
       }
       if (BIT(ppumask, sprite_enable) && cycle >= 1 && cycle < 258) {
         for (std::size_t i = 0; i < num_sprites_; i++) {
           if (sprite_[i].x > 0) {
             sprite_[i].x--;
           } else {
-            shifters_->sprite_pttr_lo[i].shift <<= 1u;
-            shifters_->sprite_pttr_hi[i].shift <<= 1u;
+            SHIFT_SPRT(pttr_lo, i, 1u);
+            SHIFT_SPRT(pttr_hi, i, 1u);
           }
         }
       }
     }
 
     void LoadBg() {
-      shifters_->background_pttr_lo.shift(static_cast<Byte>(background_.lsb));
-      shifters_->background_pttr_hi.shift(static_cast<Byte>(background_.msb));
-      shifters_->background_attr_lo.shift(static_cast<Byte>((background_.attr & 0x01) ? 0xFF : 0x00));
-      shifters_->background_attr_hi.shift(static_cast<Byte>((background_.attr & 0x02) ? 0xFF : 0x00));
+      PUSH_BACK(pttr_lo, static_cast<Byte>(background_.lsb));
+      PUSH_BACK(pttr_hi, static_cast<Byte>(background_.msb));
+      PUSH_BACK(attr_lo, static_cast<Byte>((background_.attr & 0x01) ? 0xFF : 0x00));
+      PUSH_BACK(attr_hi, static_cast<Byte>((background_.attr & 0x02) ? 0xFF : 0x00));
     }
 
     void ReadBgId() {
@@ -407,8 +421,8 @@ class RP2C02 final : public PPU {
 
     void ClearSp() {
       for (std::size_t entry = 0; entry < kNumSprites; entry++) {
- 	shifters_->sprite_pttr_lo[entry].value = 0x0000;
-	shifters_->sprite_pttr_hi[entry].value = 0x0000;
+        SPRT(pttr_lo, entry) = 0x0000;
+        SPRT(pttr_hi, entry) = 0x0000;
       }
     }
 
@@ -419,15 +433,15 @@ class RP2C02 final : public PPU {
       ClearSp();
       // Populate sprites to be rendered, that is, sprites which "collide" to the scanline.
       std::size_t entry = 0;
-      sprite_zero_hit_ = true;
+      may_sprite_zero_hit_ = false;
       while (entry < chips_->oam->Size() && num_sprites_ < kNumSprites + 1) {
         Byte entry_addr = 4 * entry;
         // To evaluate "collide", compare y coordinate.
         std::int16_t diff = scanline - static_cast<std::int16_t>(chips_->oam->Read(entry_addr));
         if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < kNumSprites) {
           std::memcpy(&sprite_[num_sprites_++], &chips_->oam->Data()[entry_addr], sizeof(PPU::ObjectAttributeMap<>::Entry));
-	  sprite_zero_hit_ = false;
-	}
+          if (entry == 0) may_sprite_zero_hit_ = true;
+        }
         entry++;
       }
       BIT(ppustatus, sprite_overflow) = (num_sprites_ > kNumSprites);
@@ -459,9 +473,47 @@ class RP2C02 final : public PPU {
           pttr_hi = flip(pttr_hi);
         }
 
-        shifters_->sprite_pttr_lo[entry].value = pttr_lo;
-        shifters_->sprite_pttr_hi[entry].value = pttr_hi;
+        SPRT(pttr_lo, entry) = pttr_lo; 
+        SPRT(pttr_hi, entry) = pttr_hi;
       }
+    }
+
+    void ComposeAt(std::int16_t cycle, std::int16_t scanline) {
+      Byte bg_pix = 0x00;
+      Byte bg_pal = 0x00;
+      if (BIT(ppumask, background_enable) && (BIT(ppumask, background_leftmost_enable) || cycle >= 9)) {
+        bg_pix = (static_cast<Byte>((BACK(pttr_hi) & FINE_X) > 0) << 1) | static_cast<Byte>((BACK(pttr_lo) & FINE_X) > 0);
+        bg_pal = (static_cast<Byte>((BACK(attr_hi) & FINE_X) > 0) << 1) | static_cast<Byte>((BACK(attr_lo) & FINE_X) > 0);
+      }
+      Byte fg_pix = 0x00;
+      Byte fg_pal = 0x00;
+      Byte fg_pri = 0x00;
+      if (BIT(ppumask, sprite_enable) && (BIT(ppumask, sprite_leftmost_enable) || (cycle >= 9))) {
+        sprite_zero_rendered_ = false;
+        for (std::size_t entry = 0; entry < num_sprites_; entry++) {
+          if (sprite_[entry].x == 0) {
+            fg_pix = (static_cast<Byte>((SPRT(pttr_hi, entry) & 0x80) > 0) << 1) | static_cast<Byte>((SPRT(pttr_lo, entry) & 0x80) > 0);
+            fg_pal = (sprite_[entry].attr & 0x03) + 0x04;
+            fg_pri = (sprite_[entry].attr & 0x20) == 0;
+            if (fg_pix != 0) {
+              if (entry == 0) sprite_zero_rendered_ = true;
+              break;
+            }
+          }
+        }
+      }
+      Byte pix = 0x00;
+      Byte pal = 0x00;
+      if (bg_pix > 0 && fg_pix > 0) {
+        pix = fg_pri ? fg_pix : bg_pix;
+        pal = fg_pri ? fg_pal : bg_pal;
+        if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
+      } else {
+        pix = fg_pix + bg_pix;
+        pal = fg_pal + bg_pal;
+      }
+      context_->framebuffer[cycle - 1][scanline] =
+        palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -483,7 +535,26 @@ class RP2C02 final : public PPU {
       return sprite_[entry].attr & 0x40;
     }
 
+    bool SpriteZeroHitOccur() {
+      return may_sprite_zero_hit_
+        && sprite_zero_rendered_
+        && BIT(ppumask, background_enable)
+        && BIT(ppumask, sprite_enable);
+    }
+
+    void SpriteZeroHitAt(std::int16_t cycle) {
+      if (!(BIT(ppumask, background_leftmost_enable) || BIT(ppumask, sprite_leftmost_enable))) {
+        if (cycle >= 9 && cycle < 258) REG(ppustatus) |= MSK(sprite_zero_hit);
+      } else {
+        if (cycle >= 1 && cycle < 258) REG(ppustatus) |= MSK(sprite_zero_hit);
+      }
+    }
+
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    PPU::Context* context_;
+
+    PPU::Palette* palette_;
+
     Registers* const registers_;
 
     Shifters* const shifters_;
@@ -501,9 +572,11 @@ class RP2C02 final : public PPU {
 
     PPU::ObjectAttributeMap<>::Entry sprite_[kNumSprites];
 
-    std::size_t num_sprites_ = {0};
+    std::size_t num_sprites_   = {0};
 
-    bool sprite_zero_hit_ = true;
+    bool may_sprite_zero_hit_  = false;
+
+    bool sprite_zero_rendered_ = false;
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -655,8 +728,8 @@ class RP2C02 final : public PPU {
     shift_.GatherSpAt(scanline);
   }
 
-  RGBA Colour(Byte palette, Byte pixel) {
-    return palette_.Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (palette << 2) + pixel) & 0x3F);
+  void ComposeAt(std::int16_t cycle, std::int16_t scanline) {
+    shift_.ComposeAt(cycle, scanline);
   }
 
   void ScrollX() noexcept {
@@ -723,6 +796,13 @@ class RP2C02 final : public PPU {
 #undef REG
 #undef BIT
 #undef MSK
+#undef BACK
+#undef SHIFT_BACK
+#undef PUSH_BACK
+#undef SPRT
+#undef SHIFT_SPRT
+#undef PUSH_SPRT
+#undef FINE_X
 
 }  // namespace detail
 }  // namespace core
