@@ -32,9 +32,6 @@ namespace detail {
 
 class RP2C02 final : public PPU {
  public:
-  static const std::size_t kNumSprites = 8;
-
- public:
   enum class MemoryMap : Address {
     PPUCTRL   = 0x0000,
     PPUMASK   = 0x0001,
@@ -46,143 +43,10 @@ class RP2C02 final : public PPU {
     PPUDATA   = 0x0007
   };
 
-  /*
-   * The following registers are defined according to the folloing Loopy's archetecture.
-   * [SEE] https://wiki.nesdev.com/w/index.php/PPU_scrolling
-   */
-  struct Registers {
-    // $2000
-    union {
-      Byte value;
-      Bitfield<0, 2, Byte> nametable;                  // Base nametable address (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
-      Bitfield<0, 1, Byte> nametable_x;
-      Bitfield<1, 1, Byte> nametable_y;
-      Bitfield<2, 1, Byte> increment;                  // VRAM address increment per CPU read/write of PPUDATA (0: add 1, going across; 1: add 32, going down)
-      Bitfield<3, 1, Byte> sprite_tile;                // Sprite pattern table address for 8x8 sprites (0: $0000; 1: $1000; ignored in 8x16 mode)
-      Bitfield<4, 1, Byte> background_tile;            // Background pattern table address (0: $0000; 1: $1000)
-      Bitfield<5, 1, Byte> sprite_height;              // Sprite size (0: 8x8 pixels; 1: 8x16 pixels)
-      Bitfield<6, 1, Byte> ppu_master_slave;           // PPU master/slave select (0: read backdrop from EXT pins; 1: output color on EXT pins)
-      Bitfield<7, 1, Byte> nmi_enable;                 // Generate an NMI at the start of the vertical blanking interval (0: off; 1: on)
-    } ppuctrl = {0x00};
-    // $2001
-    union {
-      Byte value;
-      Bitfield<0, 1, Byte> greyscale;                  // Greyscale (0: normal color, 1: produce a greyscale display)
-      Bitfield<1, 1, Byte> background_leftmost_enable; // 1: Show background in leftmost 8 pixels of screen, 0: Hide
-      Bitfield<2, 1, Byte> sprite_leftmost_enable;     // 1: Show sprites in leftmost 8 pixels of screen, 0: Hide
-      Bitfield<3, 1, Byte> background_enable;          // 1: Show background
-      Bitfield<4, 1, Byte> sprite_enable;              // 1: Show sprites
-      Bitfield<5, 1, Byte> emphasize_red;              // Emphasize red (green on PAL/Dendy)
-      Bitfield<6, 1, Byte> emphasize_green;            // Emphasize green (red on PAL/Dendy)
-      Bitfield<7, 1, Byte> emphasize_blue;             // Emphasize blue
-      Bitfield<5, 3, Byte> intensity;
-    } ppumask = {0x00};
-    // $2002
-    union {
-      Byte value;
-      Bitfield<0, 5, Byte> previous_lsb;               // Least significant bits previously written into a PPU register
-      Bitfield<5, 1, Byte> sprite_overflow;            // Sprite overflow
-      Bitfield<6, 1, Byte> sprite_zero_hit;            // Sprite 0 Hit
-      Bitfield<7, 1, Byte> vblank_start;               // Vertical blank has started (0: not in vblank; 1: in vblank)
-    } ppustatus = {0x00};
-    // $2003 OAM read/write address
-    union {
-      Byte value;
-    } oamaddr = {0x00};
-    // $2004 OAM data read/write
-    union {
-      Byte value;
-    } oamdata = {0x00};
-    // $2005 fine scroll position (two writes: X scroll, Y scroll), CREDIT: Loopy
-    union {
-      Byte value;
-    } fine_x = {0x00};
-    // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
-    union {
-      Address value;
-      Bitfield< 0, 12, Address> tile_id;
-      Bitfield< 0,  5, Address> coarse_x;
-      Bitfield< 5,  5, Address> coarse_y;
-      Bitfield<10,  1, Address> nametable_x;
-      Bitfield<11,  1, Address> nametable_y;
-      Bitfield<12,  3, Address> fine_y;
-      Bitfield<15,  1, Address> unused;
-      Bitfield< 0,  8, Address> lo;
-      Bitfield< 8,  8, Address> hi;
-    } vramaddr = {0x0000};
-    // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
-    union {
-      Address value;
-      Bitfield< 0, 12, Address> tile_id;
-      Bitfield< 0,  5, Address> coarse_x;
-      Bitfield< 5,  5, Address> coarse_y;
-      Bitfield<10,  1, Address> nametable_x;
-      Bitfield<11,  1, Address> nametable_y;
-      Bitfield<12,  3, Address> fine_y;
-      Bitfield<15,  1, Address> unused;
-      Bitfield< 0,  8, Address> lo;
-      Bitfield< 8,  8, Address> hi;
-    } tramaddr = {0x0000};
-    // $2007 PPU data read/write
-    union {
-      Byte value;
-    } ppudata = {0x00};
-    // $2014 OAM DMA high address
-    union {
-      Byte value;
-    } oamdma = {0x00};
-  };
-
-  struct Shifters {
-    // Background tile pattern low bits
-    union {
-      Address value;
-      PPU::Shifter<Address> shift;
-    } background_pttr_lo = {0x0000};
-    // Background tile pattern high bits
-    union {
-      Address value;
-      PPU::Shifter<Address> shift;
-    } background_pttr_hi = {0x0000};
-    // Background tile palette attributes low bits
-    union {
-      Address value;
-      PPU::Shifter<Address> shift;
-    } background_attr_lo = {0x0000};
-    // Background tile palette attributes high bits
-    union {
-      Address value;
-      PPU::Shifter<Address> shift;
-    } background_attr_hi = {0x0000};
-    // Sprite pattern low bits
-    union {
-      Address value;
-      PPU::Shifter<Address> shift;
-    } sprite_pttr_lo[kNumSprites] = {{0x0000}};
-    // Sprite pattern high bits
-    union {
-      Address value;
-      PPU::Shifter<Address> shift;
-    } sprite_pttr_hi[kNumSprites] = {{0x0000}};
-  };
-
-  struct Chips {
-    Chips(std::unique_ptr<MemoryBank> oam, std::unique_ptr<MemoryBank> controller_1, std::unique_ptr<MemoryBank> controller_2)
-      : oam{std::move(oam)},
-        controller_1{std::move(controller_1)},
-        controller_2{std::move(controller_2)} {}
-
-    const std::unique_ptr<MemoryBank> oam;
-
-    const std::unique_ptr<MemoryBank> controller_1;
-
-    const std::unique_ptr<MemoryBank> controller_2;
-  };
-
  public:
-  RP2C02(std::unique_ptr<Chips> chips,
-         Registers* const registers,
-         Shifters* const shifters,
+  RP2C02(std::unique_ptr<PPU::Chips> chips,
+         PPU::Registers* const registers,
+         PPU::Shifters* const shifters,
          MMU* const mmu,
          const std::vector<Byte>& palette);
 
@@ -197,7 +61,7 @@ class RP2C02 final : public PPU {
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Latch {
    public:
-    Latch(Registers* const registers, MMU* const mmu, Chips* const chips)
+    Latch(PPU::Registers* const registers, MMU* const mmu, PPU::Chips* const chips)
       : registers_{registers},
         mmu_{mmu},
         chips_{chips} {}
@@ -329,11 +193,11 @@ class RP2C02 final : public PPU {
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    Registers* const registers_;
+    PPU::Registers* const registers_;
 
     MMU* const mmu_;
 
-    Chips* const chips_;
+    PPU::Chips* const chips_;
 
     bool is_latched_ = false;
 
@@ -346,10 +210,10 @@ class RP2C02 final : public PPU {
    public:
     Shift(PPU::Context* const context,
           PPU::Palette* const palette,
-          Registers* const registers,
-          Shifters* const shifters,
+          PPU::Registers* const registers,
+          PPU::Shifters* const shifters,
           MMU* const mmu,
-          Chips* const chips)
+          PPU::Chips* const chips)
       : context_{context},
         palette_{palette},
         registers_{registers},
@@ -420,7 +284,7 @@ class RP2C02 final : public PPU {
     }
 
     void ClearSp() {
-      for (std::size_t entry = 0; entry < kNumSprites; entry++) {
+      for (std::size_t entry = 0; entry < PPU::kNumSprites; entry++) {
         SPRT(pttr_lo, entry) = 0x0000;
         SPRT(pttr_hi, entry) = 0x0000;
       }
@@ -428,23 +292,23 @@ class RP2C02 final : public PPU {
 
     void EvaluateSpAt(std::int16_t scanline) {
       // Clear sprites scanline with 0xFF, because 0xFF y coordinate is not visible.
-      std::memset(sprite_, 0xFF, kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
+      std::memset(sprite_, 0xFF, PPU::kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
       num_sprites_ = 0;
       ClearSp();
       // Populate sprites to be rendered, that is, sprites which "collide" to the scanline.
       std::size_t entry = 0;
       may_sprite_zero_hit_ = false;
-      while (entry < chips_->oam->Size() && num_sprites_ < kNumSprites + 1) {
+      while (entry < chips_->oam->Size() && num_sprites_ < PPU::kNumSprites + 1) {
         Byte entry_addr = 4 * entry;
         // To evaluate "collide", compare y coordinate.
         std::int16_t diff = scanline - static_cast<std::int16_t>(chips_->oam->Read(entry_addr));
-        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < kNumSprites) {
+        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < PPU::kNumSprites) {
           std::memcpy(&sprite_[num_sprites_++], &chips_->oam->Data()[entry_addr], sizeof(PPU::ObjectAttributeMap<>::Entry));
           if (entry == 0) may_sprite_zero_hit_ = true;
         }
         entry++;
       }
-      BIT(ppustatus, sprite_overflow) = (num_sprites_ > kNumSprites);
+      BIT(ppustatus, sprite_overflow) = (num_sprites_ > PPU::kNumSprites);
     }
 
     void GatherSpAt(std::int16_t scanline) {
@@ -510,7 +374,7 @@ class RP2C02 final : public PPU {
         if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
       } else {
         pix = fg_pix + bg_pix;
-        pal = fg_pal + bg_pal;
+        pal = fg_pix ? fg_pal : bg_pal;
       }
       context_->framebuffer[cycle - 1][scanline] =
         palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
@@ -526,12 +390,12 @@ class RP2C02 final : public PPU {
     }
 
     bool IsFlippedV(std::size_t entry) const {
-      NESDEV_CORE_CASSERT(entry < kNumSprites + 1, "Invalid sprite entry specified");
+      NESDEV_CORE_CASSERT(entry < PPU::kNumSprites + 1, "Invalid sprite entry specified");
       return sprite_[entry].attr & 0x80;
     }
 
     bool IsFlippedH(std::size_t entry) const {
-      NESDEV_CORE_CASSERT(entry < kNumSprites + 1, "Invalid sprite entry specified");
+      NESDEV_CORE_CASSERT(entry < PPU::kNumSprites + 1, "Invalid sprite entry specified");
       return sprite_[entry].attr & 0x40;
     }
 
@@ -555,13 +419,13 @@ class RP2C02 final : public PPU {
 
     PPU::Palette* palette_;
 
-    Registers* const registers_;
+    PPU::Registers* const registers_;
 
-    Shifters* const shifters_;
+    PPU::Shifters* const shifters_;
 
     MMU* const mmu_;
 
-    Chips* const chips_;
+    PPU::Chips* const chips_;
 
     struct Background {
       Byte id;
@@ -570,7 +434,7 @@ class RP2C02 final : public PPU {
       Byte msb;
     } background_;
 
-    PPU::ObjectAttributeMap<>::Entry sprite_[kNumSprites];
+    PPU::ObjectAttributeMap<>::Entry sprite_[PPU::kNumSprites];
 
     std::size_t num_sprites_   = {0};
 
@@ -780,11 +644,11 @@ class RP2C02 final : public PPU {
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  const std::unique_ptr<Chips> chips_;
+  const std::unique_ptr<PPU::Chips> chips_;
 
-  Registers* const registers_;
+  PPU::Registers* const registers_;
 
-  Shifters* const shifters_;
+  PPU::Shifters* const shifters_;
 
   MMU* const mmu_;
 

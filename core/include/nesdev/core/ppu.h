@@ -23,7 +23,166 @@ namespace core {
 
 class PPU : public Clock {
  public:
+  static const std::size_t kNumSprites = 8;
+
+ public:
   using Framebuffer = RGBA[256][240];
+
+  /*
+   * The following registers are defined according to the folloing Loopy's archetecture.
+   * [SEE] https://wiki.nesdev.com/w/index.php/PPU_scrolling
+   */
+  struct Registers {
+    // $2000
+    union {
+      Byte value;
+      Bitfield<0, 2, Byte> nametable;                  // Base nametable address (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
+      Bitfield<0, 1, Byte> nametable_x;
+      Bitfield<1, 1, Byte> nametable_y;
+      Bitfield<2, 1, Byte> increment;                  // VRAM address increment per CPU read/write of PPUDATA (0: add 1, going across; 1: add 32, going down)
+      Bitfield<3, 1, Byte> sprite_tile;                // Sprite pattern table address for 8x8 sprites (0: $0000; 1: $1000; ignored in 8x16 mode)
+      Bitfield<4, 1, Byte> background_tile;            // Background pattern table address (0: $0000; 1: $1000)
+      Bitfield<5, 1, Byte> sprite_height;              // Sprite size (0: 8x8 pixels; 1: 8x16 pixels)
+      Bitfield<6, 1, Byte> ppu_master_slave;           // PPU master/slave select (0: read backdrop from EXT pins; 1: output color on EXT pins)
+      Bitfield<7, 1, Byte> nmi_enable;                 // Generate an NMI at the start of the vertical blanking interval (0: off; 1: on)
+    } ppuctrl = {0x00};
+    // $2001
+    union {
+      Byte value;
+      Bitfield<0, 1, Byte> greyscale;                  // Greyscale (0: normal color, 1: produce a greyscale display)
+      Bitfield<1, 1, Byte> background_leftmost_enable; // 1: Show background in leftmost 8 pixels of screen, 0: Hide
+      Bitfield<2, 1, Byte> sprite_leftmost_enable;     // 1: Show sprites in leftmost 8 pixels of screen, 0: Hide
+      Bitfield<3, 1, Byte> background_enable;          // 1: Show background
+      Bitfield<4, 1, Byte> sprite_enable;              // 1: Show sprites
+      Bitfield<5, 1, Byte> emphasize_red;              // Emphasize red (green on PAL/Dendy)
+      Bitfield<6, 1, Byte> emphasize_green;            // Emphasize green (red on PAL/Dendy)
+      Bitfield<7, 1, Byte> emphasize_blue;             // Emphasize blue
+      Bitfield<5, 3, Byte> intensity;
+    } ppumask = {0x00};
+    // $2002
+    union {
+      Byte value;
+      Bitfield<0, 5, Byte> previous_lsb;               // Least significant bits previously written into a PPU register
+      Bitfield<5, 1, Byte> sprite_overflow;            // Sprite overflow
+      Bitfield<6, 1, Byte> sprite_zero_hit;            // Sprite 0 Hit
+      Bitfield<7, 1, Byte> vblank_start;               // Vertical blank has started (0: not in vblank; 1: in vblank)
+    } ppustatus = {0x00};
+    // $2003 OAM read/write address
+    union {
+      Byte value;
+    } oamaddr = {0x00};
+    // $2004 OAM data read/write
+    union {
+      Byte value;
+    } oamdata = {0x00};
+    // $2005 fine scroll position (two writes: X scroll, Y scroll), CREDIT: Loopy
+    union {
+      Byte value;
+    } fine_x = {0x00};
+    // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
+    union {
+      Address value;
+      Bitfield< 0, 12, Address> tile_id;
+      Bitfield< 0,  5, Address> coarse_x;
+      Bitfield< 5,  5, Address> coarse_y;
+      Bitfield<10,  1, Address> nametable_x;
+      Bitfield<11,  1, Address> nametable_y;
+      Bitfield<12,  3, Address> fine_y;
+      Bitfield<15,  1, Address> unused;
+      Bitfield< 0,  8, Address> lo;
+      Bitfield< 8,  8, Address> hi;
+    } vramaddr = {0x0000};
+    // $2006 PPU read/write address (two writes: most significant byte, least significant byte), CREDIT: Loopy
+    union {
+      Address value;
+      Bitfield< 0, 12, Address> tile_id;
+      Bitfield< 0,  5, Address> coarse_x;
+      Bitfield< 5,  5, Address> coarse_y;
+      Bitfield<10,  1, Address> nametable_x;
+      Bitfield<11,  1, Address> nametable_y;
+      Bitfield<12,  3, Address> fine_y;
+      Bitfield<15,  1, Address> unused;
+      Bitfield< 0,  8, Address> lo;
+      Bitfield< 8,  8, Address> hi;
+    } tramaddr = {0x0000};
+    // $2007 PPU data read/write
+    union {
+      Byte value;
+    } ppudata = {0x00};
+    // $2014 OAM DMA high address
+    union {
+      Byte value;
+    } oamdma = {0x00};
+  };
+
+  template <typename T = Address>
+  class Shifter {
+   public:
+    template <typename U>
+    Shifter& operator<<=(const U& rhs) {
+      NESDEV_CORE_CASSERT(
+	CHAR_BIT * sizeof(T) > rhs,
+	"Right operand is greater than or equal to the number of bits in the left operand");
+      value_ <<= rhs;
+      return *this;
+    }
+
+    template <typename U>
+    Shifter& operator()(const U& operand) {
+      NESDEV_CORE_CASSERT(
+	CHAR_BIT * sizeof(T) > CHAR_BIT * sizeof(U),
+	"Right operand is greater than or equal to the number of bits in the left operand");
+      value_ = (value_ << CHAR_BIT * sizeof(U)) | operand;
+      return *this;
+    }
+
+    operator unsigned() const {
+      return value_;
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    T value_;
+  };
+
+  struct Shifters {
+    // Background tile pattern low bits
+    union {
+      Address value;
+      Shifter<Address> shift;
+    } background_pttr_lo = {0x0000};
+    // Background tile pattern high bits
+    union {
+      Address value;
+      Shifter<Address> shift;
+    } background_pttr_hi = {0x0000};
+    // Background tile palette attributes low bits
+    union {
+      Address value;
+      Shifter<Address> shift;
+    } background_attr_lo = {0x0000};
+    // Background tile palette attributes high bits
+    union {
+      Address value;
+      Shifter<Address> shift;
+    } background_attr_hi = {0x0000};
+    // Sprite pattern low bits
+    union {
+      Address value;
+      Shifter<Address> shift;
+    } sprite_pttr_lo[kNumSprites] = {{0x0000}};
+    // Sprite pattern high bits
+    union {
+      Address value;
+      Shifter<Address> shift;
+    } sprite_pttr_hi[kNumSprites] = {{0x0000}};
+  };
+
+  struct Chips {
+    Chips(std::unique_ptr<MemoryBank> oam)
+      : oam{std::move(oam)} {}
+
+    const std::unique_ptr<MemoryBank> oam;
+  };
 
   template <Address From, Address To>
   class Nametables final : public MemoryBank {
@@ -159,35 +318,6 @@ class PPU : public Clock {
    public:
     class Test {
     };
-  };
-
-  template <typename T = Address>
-  class Shifter {
-   public:
-    template <typename U>
-    Shifter& operator<<=(const U& rhs) {
-      NESDEV_CORE_CASSERT(
-	CHAR_BIT * sizeof(T) > rhs,
-	"Right operand is greater than or equal to the number of bits in the left operand");
-      value_ <<= rhs;
-      return *this;
-    }
-
-    template <typename U>
-    Shifter& operator()(const U& operand) {
-      NESDEV_CORE_CASSERT(
-	CHAR_BIT * sizeof(T) > CHAR_BIT * sizeof(U),
-	"Right operand is greater than or equal to the number of bits in the left operand");
-      value_ = (value_ << CHAR_BIT * sizeof(U)) | operand;
-      return *this;
-    }
-
-    operator unsigned() const {
-      return value_;
-    }
-
-   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    T value_;
   };
 
  public:

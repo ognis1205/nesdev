@@ -22,7 +22,7 @@ namespace detail {
 #define MSK(x)    registers_->ppustatus.x.mask
 
 RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
-               RP2C02::Registers* const registers,
+               PPU::Registers* const registers,
                RP2C02::Shifters* const shifters,
                MMU* const mmu,
                const std::vector<Byte>& palette)
@@ -104,6 +104,7 @@ void RP2C02::Tick() {
   if (IsStartOfVBlank())  { BIT(ppustatus, vblank_start) |= MSK(vblank_start); }
   // Draw Framebuffer.
   ComposeAt(Cycle(), Scanline());
+  // Update Context.
   Ticked();
 }
 

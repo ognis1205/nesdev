@@ -27,45 +27,8 @@ class RP2A03 final : public CPU {
 
   static const Address kNMIAddress = {0xFFFA};
 
-  struct Registers {
-    // Accumulator
-    union {
-      Byte value;
-    } a = {0x00};
-    // X index register
-    union {
-      Byte value;
-    } x = {0x00};
-    // Y index register
-    union {
-      Byte value;
-    } y = {0x00};
-    // Stack pointer
-    union {
-      Byte value;
-    } s = {0x00};
-    // Program counter
-    union {
-      Address value;
-      Bitfield<0, 8, Address> lo;
-      Bitfield<8, 8, Address> hi;
-    } pc = {0x0000};
-    // Status register
-    union {
-      Byte value;
-      Bitfield<0, 1, Byte> carry;
-      Bitfield<1, 1, Byte> zero;
-      Bitfield<2, 1, Byte> irq_disable;
-      Bitfield<3, 1, Byte> decimal_mode;
-      Bitfield<4, 1, Byte> brk_command;
-      Bitfield<5, 1, Byte> unused;
-      Bitfield<6, 1, Byte> overflow;
-      Bitfield<7, 1, Byte> negative;
-    } p = {0x00};
-  };
-
  public:
-  RP2A03(Registers* const registers, MMU* const mmu);
+  RP2A03(CPU::Registers* const registers, MMU* const mmu);
 
   ~RP2A03();
 
@@ -86,7 +49,7 @@ class RP2A03 final : public CPU {
 
     static const Byte kHead      = {0xFD};
 
-    Stack(Registers* const registers, MMU* const mmu)
+    Stack(CPU::Registers* const registers, MMU* const mmu)
       : registers_{registers}, mmu_{mmu} {}
 
     [[nodiscard]]
@@ -99,7 +62,7 @@ class RP2A03 final : public CPU {
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    Registers* const registers_;
+    CPU::Registers* const registers_;
 
     MMU* const mmu_;
   };
@@ -116,7 +79,7 @@ class RP2A03 final : public CPU {
       return {static_cast<Word>(a << 8 | b)};      
     };
 
-    ALU(Registers* const registers)
+    ALU(CPU::Registers* const registers)
       : registers_{registers} {}
 
     [[nodiscard]]
@@ -218,7 +181,7 @@ class RP2A03 final : public CPU {
     };
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    Registers* const registers_;
+    CPU::Registers* const registers_;
   };
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
@@ -432,7 +395,7 @@ class RP2A03 final : public CPU {
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  Registers* const registers_;
+  CPU::Registers* const registers_;
 
   MMU* const mmu_;
 
