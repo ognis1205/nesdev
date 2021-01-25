@@ -104,8 +104,16 @@ class PPU : public Clock {
     std::array<std::vector<Byte>, 0x02> data_;
   };
 
-  template <std::size_t Entries = 64>
+  template <std::size_t Entries=64>
   class ObjectAttributeMap final : public MemoryBank {
+   public:
+    struct Entry {
+      Byte y;
+      Byte id;
+      Byte attr;
+      Byte x;
+    };
+
    public:
     [[nodiscard]]
     bool HasValidAddress(Address address) const noexcept override {
@@ -127,11 +135,11 @@ class PPU : public Clock {
     }
 
     Byte* Data() override {
-      NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to Nametables"));
+      return PtrTo(0);
     }
 
     const Byte* Data() const override {
-      NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to Nametables"));
+      return PtrTo(0);
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -144,15 +152,13 @@ class PPU : public Clock {
     }
 
   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    struct Entry {
-      Byte y;
-      Byte id;
-      Byte attr;
-      Byte x;
-    } data_[Entries];
+    Entry data_[Entries];
   };
 
   class PISO : public MemoryBank {
+   public:
+    class Test {
+    };
   };
 
   template <typename T = Address>
@@ -215,9 +221,9 @@ class PPU : public Clock {
       std::fill(&framebuffer[0][0], &framebuffer[0][0] + sizeof(framebuffer), 0);
     }
 
-    int cycle = {0};
+    std::int16_t cycle = {0};
 
-    int scanline = {0};
+    std::int16_t scanline = {0};
 
     bool odd_frame = false;
 
@@ -286,7 +292,7 @@ class PPU : public Clock {
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   [[nodiscard]]
-  int& Cycle() noexcept {
+  std::int16_t& Cycle() noexcept {
     return context_.cycle;
   }
 
@@ -295,7 +301,7 @@ class PPU : public Clock {
   }
 
   [[nodiscard]]
-  int& Scanline() noexcept {
+  std::int16_t& Scanline() noexcept {
     return context_.scanline;
   }
 

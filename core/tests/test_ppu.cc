@@ -4,6 +4,7 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
+#include <cstring>
 #include <memory>
 #include <vector>
 #include <gmock/gmock.h>
@@ -40,6 +41,8 @@ class PPUTest : public testing::Test {
   } shifter_;
 
   PPU::ObjectAttributeMap<64> oam_;
+
+  PPU::ObjectAttributeMap<>::Entry entry_;
 };
 
 TEST_F(PPUTest, Context) {
@@ -84,6 +87,40 @@ TEST_F(PPUTest, ObjectAttributeMapWrite) {
   for (auto i = 0x0100u; i <= 0xFFFFu; i++) {
     EXPECT_THROW(oam_.Write(i, byte), InvalidAddress);
   }
+
+  auto addr = Utility::RandomByte<0x00, 0xFF>();
+  addr &= ~0x03;
+  auto y = Utility::RandomByte<0x00, 0xFF>();
+  auto id = Utility::RandomByte<0x00, 0xFF>();
+  auto attr = Utility::RandomByte<0x00, 0xFF>();
+  auto x = Utility::RandomByte<0x00, 0xFF>();
+  oam_.Write(addr + 0, y);
+  oam_.Write(addr + 1, id);
+  oam_.Write(addr + 2, attr);
+  oam_.Write(addr + 3, x);
+  auto entry = oam_.data_[addr / 4];
+  EXPECT_EQ(y, entry.y);
+  EXPECT_EQ(id, entry.id);
+  EXPECT_EQ(attr, entry.attr);
+  EXPECT_EQ(x, entry.x);
+}
+
+TEST_F(PPUTest, ObjectAttributeMapData) {
+  auto addr = Utility::RandomByte<0x00, 0xFF>();
+  addr &= ~0x03;
+  auto y = Utility::RandomByte<0x00, 0xFF>();
+  auto id = Utility::RandomByte<0x00, 0xFF>();
+  auto attr = Utility::RandomByte<0x00, 0xFF>();
+  auto x = Utility::RandomByte<0x00, 0xFF>();
+  oam_.Write(addr + 0, y);
+  oam_.Write(addr + 1, id);
+  oam_.Write(addr + 2, attr);
+  oam_.Write(addr + 3, x);
+  std::memcpy(&entry_, &oam_.Data()[addr], sizeof(PPU::ObjectAttributeMap<>::Entry));
+  EXPECT_EQ(y, entry_.y);
+  EXPECT_EQ(id, entry_.id);
+  EXPECT_EQ(attr, entry_.attr);
+  EXPECT_EQ(x, entry_.x);
 }
 
 TEST_F(PPUTest, ShifterAssignment) {

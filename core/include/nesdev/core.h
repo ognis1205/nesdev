@@ -17,6 +17,7 @@
 #include "core/memory_bank_factory.h"
 #include "core/mmu.h"
 #include "core/mmu_factory.h"
+#include "core/nes.h"
 #include "core/opcodes.h"
 #include "core/palettes.h"
 #include "core/ppu.h"

@@ -32,7 +32,7 @@ RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
     shifters_{shifters},
     mmu_{mmu},
     latch_{registers_, mmu_, chips_.get()},
-    shift_{registers_, shifters, mmu_} {}
+    shift_{registers_, shifters, mmu_, chips_.get()} {}
 
 RP2C02::~RP2C02() {}
 

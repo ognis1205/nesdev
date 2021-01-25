@@ -7,6 +7,7 @@
 #ifndef _NESDEV_CORE_DETAIL_RP2C02_H_
 #define _NESDEV_CORE_DETAIL_RP2C02_H_
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/ppu.h"
@@ -24,6 +25,9 @@ namespace detail {
 
 class RP2C02 final : public PPU {
  public:
+  static const std::size_t kNumSprites = 8;
+
+ public:
   enum class MemoryMap : Address {
     PPUCTRL   = 0x0000,
     PPUMASK   = 0x0001,
@@ -33,11 +37,6 @@ class RP2C02 final : public PPU {
     PPUSCROLL = 0x0005,
     PPUADDR   = 0x0006,
     PPUDATA   = 0x0007
-  };
-
-  enum class SpriteSize : Byte {
-    PIXELS_8x8,
-    PIXELS_8x16
   };
 
   /*
@@ -148,13 +147,23 @@ class RP2C02 final : public PPU {
       Address value;
       PPU::Shifter<Address> shift;
     } background_attr_hi = {0x0000};
+    // Sprite pattern low bits
+    union {
+      Address value;
+      PPU::Shifter<Address> shift;
+    } sprite_pttr_lo[kNumSprites] = {{0x0000}};
+    // Sprite pattern high bits
+    union {
+      Address value;
+      PPU::Shifter<Address> shift;
+    } sprite_pttr_hi[kNumSprites] = {{0x0000}};
   };
 
   struct Chips {
     Chips(std::unique_ptr<MemoryBank> oam, std::unique_ptr<MemoryBank> controller_1, std::unique_ptr<MemoryBank> controller_2)
       : oam{std::move(oam)},
-	controller_1{std::move(controller_1)},
-	controller_2{std::move(controller_2)} {}
+        controller_1{std::move(controller_1)},
+        controller_2{std::move(controller_2)} {}
 
     const std::unique_ptr<MemoryBank> oam;
 
@@ -293,11 +302,11 @@ class RP2C02 final : public PPU {
         // PPU address bus can be accessed by CPU via the ADDR and DATA
         // registers. The fisrt write to this register latches the high byte
         // of the address, the second is the low byte. Note the writes
-        // are stored in the tram register...
+        // are stored in the tram register.
         BIT(tramaddr, hi) = Latched(byte) & 0x3F;
         is_latched_       = true;
       } else {
-        // ...when a whole address has been written, the internal vram address
+        // When a whole address has been written, the internal vram address
         // buffer is updated. Writing to the PPU is unwise during rendering
         // as the PPU will maintam the vram address automatically whilst
         // rendering the scanline position.
@@ -321,44 +330,55 @@ class RP2C02 final : public PPU {
 
     bool is_latched_ = false;
 
-    Byte latch_      = {0x00};
+    Byte latch_ = {0x00};
 
-    Byte deffered_   = {0x00};
+    Byte deffered_ = {0x00};
   };
 
   class Shift {
    public:
-    Shift(Registers* const registers, Shifters* const shifters, MMU* const mmu)
+    Shift(Registers* const registers, Shifters* const shifters, MMU* const mmu, Chips* const chips)
       : registers_{registers},
         shifters_{shifters},
-        mmu_{mmu} {}
+        mmu_{mmu},
+        chips_{chips} {}
 
-    void Update() {
+    void UpdateAt(std::int16_t cycle) {
       if (BIT(ppumask, background_enable)) {
         shifters_->background_pttr_lo.shift <<= 1u;
         shifters_->background_pttr_hi.shift <<= 1u;
         shifters_->background_attr_lo.shift <<= 1u;
         shifters_->background_attr_hi.shift <<= 1u;
       }
+      if (BIT(ppumask, sprite_enable) && cycle >= 1 && cycle < 258) {
+        for (std::size_t i = 0; i < num_sprites_; i++) {
+          if (sprite_[i].x > 0) {
+            sprite_[i].x--;
+          } else {
+            shifters_->sprite_pttr_lo[i].shift <<= 1u;
+            shifters_->sprite_pttr_hi[i].shift <<= 1u;
+          }
+        }
+      }
     }
 
-    void LoadBackground() {
-      shifters_->background_pttr_lo.shift(bg_next_tile_lsb);
-      shifters_->background_pttr_hi.shift(bg_next_tile_msb);
-      shifters_->background_attr_lo.shift(static_cast<Byte>((bg_next_tile_attr & 0x01) ? 0xFF : 0x00));
-      shifters_->background_attr_hi.shift(static_cast<Byte>((bg_next_tile_attr & 0x02) ? 0xFF : 0x00));
+    void LoadBg() {
+      shifters_->background_pttr_lo.shift(static_cast<Byte>(background_.lsb));
+      shifters_->background_pttr_hi.shift(static_cast<Byte>(background_.msb));
+      shifters_->background_attr_lo.shift(static_cast<Byte>((background_.attr & 0x01) ? 0xFF : 0x00));
+      shifters_->background_attr_hi.shift(static_cast<Byte>((background_.attr & 0x02) ? 0xFF : 0x00));
     }
 
-    void ReadBgTileId() {
-      bg_next_tile_id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
+    void ReadBgId() {
+      background_.id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
     }
 
-    void ReadBgTileAttr() {
-      bg_next_tile_attr = mmu_->Read(0x23C0
-                                     | ( BIT(vramaddr, nametable_y)    << 11)
-                                     | ( BIT(vramaddr, nametable_x)    << 10) 
-                                     | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
-                                     | ( BIT(vramaddr, coarse_x)       >>  2));
+    void ReadBgAttr() {
+      background_.attr = mmu_->Read(0x23C0
+                                    | ( BIT(vramaddr, nametable_y)    << 11)
+                                    | ( BIT(vramaddr, nametable_x)    << 10) 
+                                    | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
+                                    | ( BIT(vramaddr, coarse_x)       >>  2));
       // Since we know we can access a tile directly from the 12 bit address, we
       // can analyse the bottom bits of the coarse coordinates to provide us with
       // the correct offset into the 8-bit word, to yield the 2 bits we are
@@ -366,23 +386,90 @@ class RP2C02 final : public PPU {
       // tiles. We know if "coarse y % 4" < 2 we are in the top half else bottom half.
       // Likewise if "coarse x % 4" < 2 we are in the left half else right half.
       // Ultimately we want the bottom two bits of our attribute word to be the
-      // palette selected. So shift as required...              
-      if (BIT(vramaddr, coarse_y) & 0x02) bg_next_tile_attr >>= 4;
-      if (BIT(vramaddr, coarse_x) & 0x02) bg_next_tile_attr >>= 2;
-      bg_next_tile_attr &= 0x03;
+      // palette selected. So shift as required.
+      if (BIT(vramaddr, coarse_y) & 0x02) background_.attr >>= 4;
+      if (BIT(vramaddr, coarse_x) & 0x02) background_.attr >>= 2;
+      background_.attr &= 0x03;
     }
 
-    void ReadBgTileLSB() {
-      bg_next_tile_lsb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-                                    + (static_cast<Address>(bg_next_tile_id) << 4)
-                                    + BIT(vramaddr, fine_y));
+    void ReadBgLSB() {
+      background_.lsb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                   + (background_.id << 4)
+                                   + BIT(vramaddr, fine_y));
     }
 
-    void ReadBgTileMSB() {
-      bg_next_tile_msb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-                                    + (static_cast<Address>(bg_next_tile_id) << 4)
-                                    + BIT(vramaddr, fine_y)
-                                    + 8);
+    void ReadBgMSB() {
+      background_.msb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                   + (background_.id << 4)
+                                   + BIT(vramaddr, fine_y)
+                                   + 8);
+    }
+
+    void GatherSpAt(std::int16_t scanline) {
+      // Clear sprites scanline with 0xFF, because 0xFF y coordinate is not visible.
+      std::memset(sprite_, 0xFF, kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
+      num_sprites_ = 0;
+      // Populate sprites to be rendered, that is, sprites which "collide" to the scanline.
+      std::size_t entry = 0;
+      while (entry < chips_->oam->Size() && num_sprites_ < kNumSprites + 1) {
+        Byte entry_addr = 4 * entry;
+        // To evaluate "collide", compare y coordinate.
+        std::int16_t diff = scanline - static_cast<std::int16_t>(chips_->oam->Read(entry_addr));
+        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < kNumSprites)
+          std::memcpy(&sprite_[num_sprites_++], &chips_->oam->Data()[entry_addr], sizeof(PPU::ObjectAttributeMap<>::Entry));
+        entry++;
+      }
+      BIT(ppustatus, sprite_overflow) = (num_sprites_ > kNumSprites);
+    }
+
+    void LoadSpriteAt(std::int16_t scanline) {
+      for (std::size_t entry = 0; entry < num_sprites_; entry++) {
+        Address addr;
+        if (Is8x8Mode())
+          addr = (BIT(ppuctrl, sprite_tile) << 12)
+            | (sprite_[entry].id << 4)
+            | (IsFlippedV(entry) ? (7 - (scanline - sprite_[entry].y)) : (scanline - sprite_[entry].y));
+        else
+          addr = ((sprite_[entry].id & 0x01) << 12)
+            | ((IsTopHalf(scanline, entry) ? (sprite_[entry].id & 0xFE) : ((sprite_[entry].id & 0xFE) + 1)) << 4)
+            | (IsFlippedV(entry) ? (7 - ((scanline - sprite_[entry].y) & 0x07)) : ((scanline - sprite_[entry].y) & 0x07));
+
+        Byte pttr_lo = mmu_->Read(addr + 0);
+        Byte pttr_hi = mmu_->Read(addr + 8);
+        if (IsFlippedH(entry)) {
+          // https://stackoverflow.com/a/2602885
+          auto flip = [](Byte byte) {
+            byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
+            byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
+            byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+            return byte;
+          };
+          pttr_lo = flip(pttr_lo);
+          pttr_hi = flip(pttr_hi);
+        }
+
+        shifters_->sprite_pttr_lo[entry].value = pttr_lo;
+        shifters_->sprite_pttr_hi[entry].value = pttr_hi;
+      }
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    bool Is8x8Mode() const noexcept {
+      return !BIT(ppuctrl, sprite_height);
+    }
+
+    bool IsTopHalf(std::int16_t scanline, std::size_t entry) const noexcept {
+      return scanline - sprite_[entry].y < 8;
+    }
+
+    bool IsFlippedV(std::size_t entry) const {
+      NESDEV_CORE_CASSERT(entry < kNumSprites + 1, "Invalid sprite entry specified");
+      return sprite_[entry].attr & 0x80;
+    }
+
+    bool IsFlippedH(std::size_t entry) const {
+      NESDEV_CORE_CASSERT(entry < kNumSprites + 1, "Invalid sprite entry specified");
+      return sprite_[entry].attr & 0x40;
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -392,13 +479,18 @@ class RP2C02 final : public PPU {
 
     MMU* const mmu_;
 
-    Byte bg_next_tile_id;
+    Chips* const chips_;
 
-    Byte bg_next_tile_attr;
+    struct Background {
+      Byte id;
+      Byte attr;
+      Byte lsb;
+      Byte msb;
+    } background_;
 
-    Byte bg_next_tile_lsb;
+    PPU::ObjectAttributeMap<>::Entry sprite_[kNumSprites];
 
-    Byte bg_next_tile_msb;
+    std::size_t num_sprites_ = {0};
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -413,15 +505,6 @@ class RP2C02 final : public PPU {
     case 0x0006: return MemoryMap::PPUADDR;
     case 0x0007: return MemoryMap::PPUDATA;
     default:     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Map", address));
-    }
-  }
-
-  [[nodiscard]]
-  RP2C02::SpriteSize SpriteSize() const {
-    switch (BIT(ppuctrl, sprite_height)) {
-    case 0:  return RP2C02::SpriteSize::PIXELS_8x8;
-    case 1:  return RP2C02::SpriteSize::PIXELS_8x16;
-    default: NESDEV_CORE_THROW(InvalidRegister::Occur("Invalid value specified to PPUCTRL/SPRITE_HEIGHT", REG(ppuctrl)));
     }
   }
 
@@ -523,28 +606,36 @@ class RP2C02 final : public PPU {
     latch_.WritePPUData(byte);
   }
 
-  void UpdateShifters() {
-    shift_.Update();
+  void UpdateShiftersAt(std::int16_t cycle) {
+    shift_.UpdateAt(cycle);
   }
 
-  void LoadBackground() {
-    shift_.LoadBackground();
+  void LoadBg() {
+    shift_.LoadBg();
   }
 
-  void ReadBgTileId() {
-    shift_.ReadBgTileId();
+  void ReadBgId() {
+    shift_.ReadBgId();
   }
 
-  void ReadBgTileAttr() {
-    shift_.ReadBgTileAttr();
+  void ReadBgAttr() {
+    shift_.ReadBgAttr();
   }
 
-  void ReadBgTileLSB() {
-    shift_.ReadBgTileLSB();
+  void ReadBgLSB() {
+    shift_.ReadBgLSB();
   }
 
-  void ReadBgTileMSB() {
-    shift_.ReadBgTileMSB();
+  void ReadBgMSB() {
+    shift_.ReadBgMSB();
+  }
+
+  void GatherSpAt(std::int16_t scanline) {
+    shift_.GatherSpAt(scanline);
+  }
+
+  void LoadSpriteAt(std::int16_t scanline) {
+    shift_.LoadSpriteAt(scanline);
   }
 
   RGBA Colour(Byte palette, Byte pixel) {
