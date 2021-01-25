@@ -405,24 +405,35 @@ class RP2C02 final : public PPU {
                                    + 8);
     }
 
-    void GatherSpAt(std::int16_t scanline) {
+    void ClearSp() {
+      for (std::size_t entry = 0; entry < kNumSprites; entry++) {
+ 	shifters_->sprite_pttr_lo[entry].value = 0x0000;
+	shifters_->sprite_pttr_hi[entry].value = 0x0000;
+      }
+    }
+
+    void EvaluateSpAt(std::int16_t scanline) {
       // Clear sprites scanline with 0xFF, because 0xFF y coordinate is not visible.
       std::memset(sprite_, 0xFF, kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
       num_sprites_ = 0;
+      ClearSp();
       // Populate sprites to be rendered, that is, sprites which "collide" to the scanline.
       std::size_t entry = 0;
+      sprite_zero_hit_ = true;
       while (entry < chips_->oam->Size() && num_sprites_ < kNumSprites + 1) {
         Byte entry_addr = 4 * entry;
         // To evaluate "collide", compare y coordinate.
         std::int16_t diff = scanline - static_cast<std::int16_t>(chips_->oam->Read(entry_addr));
-        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < kNumSprites)
+        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < kNumSprites) {
           std::memcpy(&sprite_[num_sprites_++], &chips_->oam->Data()[entry_addr], sizeof(PPU::ObjectAttributeMap<>::Entry));
+	  sprite_zero_hit_ = false;
+	}
         entry++;
       }
       BIT(ppustatus, sprite_overflow) = (num_sprites_ > kNumSprites);
     }
 
-    void LoadSpriteAt(std::int16_t scanline) {
+    void GatherSpAt(std::int16_t scanline) {
       for (std::size_t entry = 0; entry < num_sprites_; entry++) {
         Address addr;
         if (Is8x8Mode())
@@ -491,6 +502,8 @@ class RP2C02 final : public PPU {
     PPU::ObjectAttributeMap<>::Entry sprite_[kNumSprites];
 
     std::size_t num_sprites_ = {0};
+
+    bool sprite_zero_hit_ = true;
   };
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -606,7 +619,7 @@ class RP2C02 final : public PPU {
     latch_.WritePPUData(byte);
   }
 
-  void UpdateShiftersAt(std::int16_t cycle) {
+  void UpdateShiftAt(std::int16_t cycle) {
     shift_.UpdateAt(cycle);
   }
 
@@ -630,12 +643,16 @@ class RP2C02 final : public PPU {
     shift_.ReadBgMSB();
   }
 
-  void GatherSpAt(std::int16_t scanline) {
-    shift_.GatherSpAt(scanline);
+  void ClearSp() {
+    shift_.ClearSp();
   }
 
-  void LoadSpriteAt(std::int16_t scanline) {
-    shift_.LoadSpriteAt(scanline);
+  void EvaluateSpAt(std::int16_t scanline) {
+    shift_.EvaluateSpAt(scanline);
+  }
+
+  void GatherSpAt(std::int16_t scanline) {
+    shift_.GatherSpAt(scanline);
   }
 
   RGBA Colour(Byte palette, Byte pixel) {

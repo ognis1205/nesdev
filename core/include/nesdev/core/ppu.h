@@ -326,14 +326,20 @@ class PPU : public Clock {
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
+  bool IsEndOfVisibleCycle() const noexcept {
+    return context_.cycle == 256;
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
   bool IsPostRenderLine() const noexcept {
     return context_.scanline == 240;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsVerticalBlankingLine() const noexcept {
-    return context_.scanline >= 241 && context_.scanline < 261;
+  bool IsStartOfIdleCycle() const noexcept {
+    return context_.cycle == 257;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
@@ -344,8 +350,23 @@ class PPU : public Clock {
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsEndOfVisibleCycle() const noexcept {
-    return context_.cycle == 256;
+  bool IsStartOfVBlank() const noexcept {
+    return context_.scanline == 241 && context_.cycle == 1;
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsEndOfVBlank() const noexcept {
+    return context_.scanline == -1 && context_.cycle >= 280 && context_.cycle < 305;
+  }
+
+  /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
+  [[nodiscard]]
+  bool IsEndOfScanline(bool superflous) const noexcept {
+    if (superflous)
+      return context_.cycle == 338 || context_.cycle == 340;
+    else
+      return context_.cycle == 340;
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:

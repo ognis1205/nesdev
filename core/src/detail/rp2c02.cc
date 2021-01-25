@@ -71,18 +71,36 @@ void RP2C02::Write(Address address, Byte byte) {
  */
 void RP2C02::Tick() {
   if (IsPreRenderOrVisibleLine()) {
-    if (Scanline() == 0 && Cycle() == 0 && IsOddFrame() && IsRendering())
+    // Flag Operations.
+    if (Scanline() == 0 && Cycle() == 0 && IsOddFrame() && IsRendering()) {
       Cycle(1);
-
+    }
     if (Scanline() == -1 && Cycle() == 1) {
       REG(ppustatus) &= ~(MSK(vblank_start) | MSK(sprite_overflow) | MSK(sprite_zero_hit));
-      // Clear Shifters
-//      for (int i = 0; i < 8; i++) {
-//      sprite_shifter_pattern_lo[i] = 0;
-//      sprite_shifter_pattern_hi[i] = 0;
-//      }
+      ClearSp();
     }
-
+    // Background Rendering.
+    if (IsNotIdleCycle()) {
+      UpdateShiftAt(Cycle());
+      switch ((Cycle() - 1) % 8) {
+      case 0: LoadBg(); ReadBgId(); break;
+      case 2: ReadBgAttr();         break;
+      case 4: ReadBgLSB();          break;
+      case 6: ReadBgMSB();          break;
+      case 7: ScrollX();            break;
+      }
+    }
+    // Callbacks/Preparations.
+    if (IsEndOfVisibleCycle()) { ScrollY();             }
+    if (IsStartOfIdleCycle())  { LoadBg(); TransferX(); }
+    if (IsEndOfScanline(true)) { ReadBgId();            }
+    if (IsEndOfVBlank())       { TransferY();           }
+    // Foreground Rendering.
+    if (IsStartOfIdleCycle() && Scanline() >= 0) { EvaluateSpAt(Scanline()); }
+    if (IsEndOfScanline(false))                  { GatherSpAt(Scanline());   }
+    // Flag Operations.
+    if (IsPostRenderLine()) { /* Do nothing. */                                  }
+    if (IsStartOfVBlank())  { BIT(ppustatus, vblank_start) |= MSK(vblank_start); }
   }
 
   Ticked();
