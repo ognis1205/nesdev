@@ -50,7 +50,8 @@ class RP2A03 final : public CPU {
     static const Byte kHead      = {0xFD};
 
     Stack(CPU::Registers* const registers, MMU* const mmu)
-      : registers_{registers}, mmu_{mmu} {}
+      : registers_{registers},
+	mmu_{mmu} {}
 
     [[nodiscard]]
     Byte Pull() const {
@@ -80,7 +81,7 @@ class RP2A03 final : public CPU {
     };
 
     ALU(CPU::Registers* const registers)
-      : registers_{registers} {}
+      : registers_ {registers} {}
 
     [[nodiscard]]
     Byte ShiftL(Bus bus, bool rotate_carry) noexcept {

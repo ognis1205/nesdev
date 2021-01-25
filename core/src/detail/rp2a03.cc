@@ -27,7 +27,10 @@ using M = MemoryAccess;
 using S = Pipeline::Status;
 
 RP2A03::RP2A03(RP2A03::Registers* const registers, MMU* const mmu)
-  : registers_{registers}, mmu_{mmu}, stack_{registers, mmu}, alu_{registers} {}
+  : registers_{registers},
+    mmu_{mmu},
+    stack_{registers, mmu},
+    alu_{registers} {}
 
 RP2A03::~RP2A03() {}
 

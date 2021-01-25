@@ -18,7 +18,8 @@ namespace core {
 class PPUFactory {
  public:
   [[nodiscard]]
-  static std::unique_ptr<PPU> RP2C02(PPU::Registers* const registers,
+  static std::unique_ptr<PPU> RP2C02(PPU::Chips* const chips,
+				     PPU::Registers* const registers,
                                      PPU::Shifters* const shifters,
                                      MMU* const mmu);
 };

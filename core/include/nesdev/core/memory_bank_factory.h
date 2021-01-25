@@ -8,6 +8,7 @@
 #define _NESDEV_CORE_MEMORY_BANK_FACTORY_H_
 #include <memory>
 #include "nesdev/core/memory_bank.h"
+#include "nesdev/core/nes.h"
 #include "nesdev/core/ppu.h"
 #include "nesdev/core/rom.h"
 
@@ -17,7 +18,7 @@ namespace core {
 class MemoryBankFactory {
  public:
   [[nodiscard]]
-  static MemoryBanks CPUBus(ROM* const rom, PPU* const ppu);
+  static MemoryBanks CPUBus(ROM* const rom, PPU* const ppu, NES::DirectMemoryAccess* const dma);
 
   [[nodiscard]]
   static MemoryBanks PPUBus(ROM* const rom);

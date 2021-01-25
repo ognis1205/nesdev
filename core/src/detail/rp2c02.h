@@ -44,7 +44,7 @@ class RP2C02 final : public PPU {
   };
 
  public:
-  RP2C02(std::unique_ptr<PPU::Chips> chips,
+  RP2C02(PPU::Chips* const chips,
          PPU::Registers* const registers,
          PPU::Shifters* const shifters,
          MMU* const mmu,
@@ -644,7 +644,7 @@ class RP2C02 final : public PPU {
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  const std::unique_ptr<PPU::Chips> chips_;
+  PPU::Chips* const chips_;
 
   PPU::Registers* const registers_;
 

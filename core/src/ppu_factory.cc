@@ -14,11 +14,12 @@
 namespace nesdev {
 namespace core {
 
-std::unique_ptr<PPU> PPUFactory::RP2C02(PPU::Registers* const registers,
-					PPU::Shifters* const shifters,
-					MMU* const mmu) {
+std::unique_ptr<PPU> PPUFactory::RP2C02(PPU::Chips* const chips,
+					PPU::Registers* const registers,
+                                        PPU::Shifters* const shifters,
+                                        MMU* const mmu) {
   return std::make_unique<detail::RP2C02>(
-    std::make_unique<PPU::Chips>(std::make_unique<PPU::ObjectAttributeMap<64>>()),
+    chips,
     registers,
     shifters,
     mmu,

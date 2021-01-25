@@ -21,9 +21,9 @@ namespace detail {
 #define BIT(x, y) registers_->x.y
 #define MSK(x)    registers_->ppustatus.x.mask
 
-RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
+RP2C02::RP2C02(PPU::Chips* const chips,
                PPU::Registers* const registers,
-               RP2C02::Shifters* const shifters,
+               PPU::Shifters* const shifters,
                MMU* const mmu,
                const std::vector<Byte>& palette)
   : PPU{palette},
@@ -31,8 +31,8 @@ RP2C02::RP2C02(std::unique_ptr<RP2C02::Chips> chips,
     registers_{registers},
     shifters_{shifters},
     mmu_{mmu},
-    latch_{registers_, mmu_, chips_.get()},
-    shift_{&context_, &palette_, registers_, shifters, mmu_, chips_.get()} {}
+    latch_{registers_, mmu_, chips_},
+    shift_{&context_, &palette_, registers_, shifters, mmu_, chips_} {}
 
 RP2C02::~RP2C02() {}
 
