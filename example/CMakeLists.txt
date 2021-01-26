@@ -1,17 +1,22 @@
 project (nessdl2)
 
-set (NES_SDL2_LIBRARY ${PROJECT_NAME})
+add_executable (
+  ${PROJECT_NAME}
+  src/main.cc)
 
-set (NES_SDL2_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries (
+  ${PROJECT_NAME}
+  PRIVATE
+  Nesdev::core)
 
-set (NES_SDL2_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_features (
+  ${PROJECT_NAME}
+  PRIVATE
+  cxx_std_17)
 
-file (
-  GLOB_RECURSE
-  NES_SDL2_SOURCES
-  CONFIGURE_DEPENDS
-  ${NES_SDL2_SOURCE_DIR}/*.cc ${NES_SDL2_SOURCE_DIR}/*.h ${NES_SDL2_INCLUDE_PATH}/*.h)
-
-#add_subdirectory (src)
-
-#add_subdirectory (tests)
+set_target_properties (
+  ${PROJECT_NAME}
+  PROPERTIES
+  CXX_STANDARD          17
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS        NO)
