@@ -1,4 +1,3 @@
-
 /*
  * nes-emulator:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
@@ -8,7 +7,11 @@
 #include <iostream>
 #include <memory>
 #include "nesdev/core.h"
+#include "cli.h"
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main(int argc, char** argv) {
+  CLI cli(argc, argv);
+  std::cout << cli.Defined("-t") << std::endl;
+  std::cout << cli.Get("-f") << std::endl;
   std::cout << "Hello, Nesdev!" << std::endl;
 }

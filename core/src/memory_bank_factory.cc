@@ -1,5 +1,5 @@
 /*
- * nes-emulator:
+ * NesDev:
  * Emulator for the Nintendo Entertainment System (R) Archetecture.
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
@@ -109,23 +109,23 @@ MemoryBanks MemoryBankFactory::CPUBus(ROM* const rom,
 				      NES::Controller* const controller_1,
 				      NES::Controller* const controller_2) {
   MemoryBanks banks;
-  banks.push_back(std::make_unique<::CPUAdapter>(rom));                                                                               // ROM
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x0000, 0x1FFF>>(0x800));                                               // RAM
+  banks.push_back(std::make_unique<detail::memory_banks::Chip     <0x0000, 0x1FFF>>(0x800));                                          // RAM
   banks.push_back(std::make_unique<detail::memory_banks::Connector<0x2000, 0x3FFF>>(::Reader(ppu), ::Writer(ppu)));                   // PPU
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4000, 0x4013>>(0x14));                                                // IO
+  banks.push_back(std::make_unique<detail::memory_banks::Chip     <0x4000, 0x4013>>(0x14));                                           // IO
   banks.push_back(std::make_unique<detail::memory_banks::Connector<0x4014, 0x4014>>(::Reader(dma), ::Writer(dma)));                   // DMA
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4015, 0x4015>>(0x01));                                                // IO
+  banks.push_back(std::make_unique<detail::memory_banks::Chip     <0x4015, 0x4015>>(0x01));                                           // IO
   banks.push_back(std::make_unique<detail::memory_banks::Connector<0x4016, 0x4016>>(::Reader(controller_1), ::Writer(controller_1))); // CTRL
   banks.push_back(std::make_unique<detail::memory_banks::Connector<0x4017, 0x4017>>(::Reader(controller_2), ::Writer(controller_2))); // CTRL
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x4018, 0x401F>>(0x8));                                                 // IO
+  banks.push_back(std::make_unique<detail::memory_banks::Chip     <0x4018, 0x401F>>(0x8));                                            // IO
+  banks.push_back(std::make_unique<::CPUAdapter>(rom));                                                                               // ROM
   return banks;
 }
 
 MemoryBanks MemoryBankFactory::PPUBus(ROM* const rom) {
   MemoryBanks banks;
-  banks.push_back(std::make_unique<::PPUAdapter>(rom));                                // ROM
-  banks.push_back(std::make_unique<PPU::Nametables<0x2000, 0x3EFF>>(0x0400, rom));     // Nametables
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x3F00, 0x3FFF>>(0x20)); // Pallete
+  banks.push_back(std::make_unique<::PPUAdapter>(rom));                                       // ROM
+  banks.push_back(std::make_unique<PPU::Nametables           <0x2000, 0x3EFF>>(0x0400, rom)); // Nametables
+  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x3F00, 0x3FFF>>(0x20));        // Pallete
   return banks;
 }
 
