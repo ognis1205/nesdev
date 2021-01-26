@@ -18,30 +18,30 @@ class CPU : public nesdev::core::CPU {
  public:
   MOCK_METHOD0(Tick, void());
 
-  MOCK_METHOD0(Next, bool());
+  MOCK_METHOD0(Next, void());
 
   MOCK_METHOD0(MockFetch, Byte());
 
-  MOCK_METHOD0(MockRST, bool());
+  MOCK_METHOD0(MockReset, void());
 
-  MOCK_METHOD0(MockIRQ, bool());
+  MOCK_METHOD0(MockIRQ, void());
 
-  MOCK_METHOD0(MockNMI, bool());
+  MOCK_METHOD0(MockNMI, void());
 
   Byte Fetch() noexcept {
     return MockFetch();
   }
 
-  bool RST() noexcept {
-    return MockRST();
+  void Reset() noexcept {
+    MockReset();
   }
 
-  bool IRQ() noexcept {
-    return MockIRQ();
+  void IRQ() noexcept {
+    MockIRQ();
   }
 
-  bool NMI() noexcept {
-    return MockNMI();
+  void NMI() noexcept {
+    MockNMI();
   }
 };
 

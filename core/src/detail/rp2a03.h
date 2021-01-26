@@ -34,13 +34,13 @@ class RP2A03 final : public CPU {
 
   void Tick() override;
 
-  bool Next() override;
+  void Next() override;
 
-  bool RST() noexcept override;
+  void Reset() noexcept override;
 
-  bool IRQ() noexcept override;
+  void IRQ() noexcept override;
 
-  bool NMI() noexcept override;
+  void NMI() noexcept override;
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Stack {

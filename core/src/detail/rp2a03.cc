@@ -35,7 +35,7 @@ RP2A03::RP2A03(RP2A03::Registers* const registers, MMU* const mmu)
 RP2A03::~RP2A03() {}
 
 void RP2A03::Tick() {
-  if (ClearWhenCompleted()) RST() || IRQ() || NMI() || Next();
+  if (ClearWhenCompleted()) Next();
   else Execute();
   ++context_.cycle;
 }
@@ -52,7 +52,7 @@ void RP2A03::Tick() {
  *       {0x3C, {Instruction::BIT, AddressingMode::ABX, MemoryAccess::READ             }} // ***65C02-***
  *       {0x89, {Instruction::BIT, AddressingMode::IMM, MemoryAccess::READ             }} // ***65C02-***
  */
-bool RP2A03::Next() {
+void RP2A03::Next() {
   // Parse next instruction.
   Parse();
   // Stage the specified addressing mode.
@@ -359,39 +359,37 @@ bool RP2A03::Next() {
   default:
     NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Op()));
   }
-  // Return true, just for coding comfortability.
-  return true;
 }
 
-bool RP2A03::RST() noexcept {
-  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       }, IfRST());
-  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); }, IfRST());
-  Stage([this] { REG(a) = 0x00;                                           }, IfRST());
-  Stage([this] { REG(x) = 0x00;                                           }, IfRST());
-  Stage([this] { REG(y) = 0x00;                                           }, IfRST());
-  Stage([this] { REG(s) = Stack::kHead;                                   }, IfRST());
-  Stage([this] { REG(p) = 0x00 | MSK(unused);                             }, IfRST());
-  return IfRST() ? !(context_.is_rst_signaled = false) : false;
+void RP2A03::Reset() noexcept {
+  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       }, IfReset());
+  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); }, IfReset());
+  Stage([this] { REG(a) = 0x00;                                           }, IfReset());
+  Stage([this] { REG(x) = 0x00;                                           }, IfReset());
+  Stage([this] { REG(y) = 0x00;                                           }, IfReset());
+  Stage([this] { REG(s) = Stack::kHead;                                   }, IfReset());
+  Stage([this] { REG(p) = 0x00 | MSK(unused);                             }, IfReset());
+  if (IfReset()) context_.is_rst_signaled = false;
 }
 
-bool RP2A03::IRQ() noexcept {
+void RP2A03::IRQ() noexcept {
   Stage([this] { Push(REG_HI(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { Push(REG_LO(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { Push(REG(p));                                                          }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { AddrLo(Read(RP2A03::kBRKAddress));                                     }, IfIRQ() && IfNotIRQDisable());
   Stage([this] { AddrHi(Read(RP2A03::kBRKAddress + 1)); REG(pc) = Addr();               }, IfIRQ() && IfNotIRQDisable());
-  return IfIRQ() ? !(context_.is_irq_signaled = false) : false;
+  if (IfIRQ()) context_.is_irq_signaled = false;
 }
 
-bool RP2A03::NMI() noexcept {
+void RP2A03::NMI() noexcept {
   Stage([this] { Read(REG(pc));                                           }, IfNMI());
   Stage([this] { Push(REG_HI(pc));                                        }, IfNMI());
   Stage([this] { Push(REG_LO(pc));                                        }, IfNMI());
   Stage([this] { Push(REG(p));                                            }, IfNMI());
   Stage([this] { AddrLo(Read(RP2A03::kNMIAddress));                       }, IfNMI());
   Stage([this] { AddrHi(Read(RP2A03::kNMIAddress + 1)); REG(pc) = Addr(); }, IfNMI());
-  return IfNMI() ? !(context_.is_nmi_signaled = false) : false;
+  if (IfNMI()) context_.is_nmi_signaled = false;
 }
   
 }  // namespace detail

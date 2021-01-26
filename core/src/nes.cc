@@ -50,11 +50,11 @@ void NES::Tick() {
   }
   if (ppu_registers->ppuctrl.nmi_enable) {
     ppu_registers->ppuctrl.nmi_enable = false;
-//    cpu.nmi();
+    cpu->NMI();
   }
   if (rom->mapper->IRQ()) {
     rom->mapper->ClearIRQ();
-//    cpu.irq();		
+    cpu->IRQ();
   }
   cycle++;
 }

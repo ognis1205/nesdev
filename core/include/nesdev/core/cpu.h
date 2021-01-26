@@ -60,15 +60,15 @@ class CPU : public Clock {
 
   virtual void Tick() override = 0;
 
-  virtual bool Next() = 0;
+  virtual void Next() = 0;
 
   virtual Byte Fetch() noexcept = 0;
 
-  virtual bool RST() noexcept = 0;
+  virtual void Reset() noexcept = 0;
 
-  virtual bool IRQ() noexcept = 0;
+  virtual void IRQ() noexcept = 0;
 
-  virtual bool NMI() noexcept = 0;
+  virtual void NMI() noexcept = 0;
 
  public:
   [[nodiscard]]
@@ -245,7 +245,7 @@ class CPU : public Clock {
   }
 
   [[nodiscard]]
-  bool IfRST() const noexcept {
+  bool IfReset() const noexcept {
     return context_.is_rst_signaled;
   }
 
