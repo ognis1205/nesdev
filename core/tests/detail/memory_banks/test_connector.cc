@@ -9,7 +9,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include <nesdev/core.h>
-#include "detail/memory_banks/forward.h"
+#include "detail/memory_banks/connector.h"
 #include "utils.h"
 
 namespace nesdev {
@@ -17,7 +17,7 @@ namespace core {
 namespace detail {
 namespace memory_banks {
 
-class ForwardTest : public testing::Test {
+class ConnectorTest : public testing::Test {
  protected:
   void SetUp() override {
     Utility::Init();
@@ -42,10 +42,10 @@ class ForwardTest : public testing::Test {
     data_[address % 0x800] = byte;
   };
 
-  detail::memory_banks::Forward<0x0000, 0x1FFF> memory_bank_{reader_, writer_};
+  detail::memory_banks::Connector<0x0000, 0x1FFF> memory_bank_{reader_, writer_};
 };
 
-TEST_F(ForwardTest, HasValidAddress) {
+TEST_F(ConnectorTest, HasValidAddress) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     EXPECT_TRUE(memory_bank_.HasValidAddress(i));
   }
@@ -54,7 +54,7 @@ TEST_F(ForwardTest, HasValidAddress) {
   }
 }
 
-TEST_F(ForwardTest, Read) {
+TEST_F(ConnectorTest, Read) {
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     EXPECT_EQ(0x00, memory_bank_.Read(i));
   }
@@ -63,7 +63,7 @@ TEST_F(ForwardTest, Read) {
   }
 }
 
-TEST_F(ForwardTest, Write) {
+TEST_F(ConnectorTest, Write) {
   auto byte = Utility::RandomByte<0x00, 0xFF>();
   for (auto i = 0x0000u; i <= 0x1FFFu; i++) {
     memory_bank_.Write(i, byte);

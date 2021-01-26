@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_NES_H_
 #define _NESDEV_CORE_NES_H_
+#include <cstddef>
 #include <memory.h>
 #include "nesdev/core/clock.h"
 #include "nesdev/core/cpu.h"
@@ -21,7 +22,7 @@ class NES final : public Clock {
  public:
   class DirectMemoryAccess {
    public:
-    virtual Byte Read([[maybe_unused]] Address address) {
+    Byte Read([[maybe_unused]] Address address) {
       return address_.page;
     }
 
@@ -31,22 +32,47 @@ class NES final : public Clock {
       transfer_       = true;
     }
 
-    void Load(MMU* const cpu_bus) {
-      data_ = cpu_bus->Read(address_.value);
+    bool IsTransfering() {
+      return transfer_;
     }
 
-    void Transfer(PPU::Chips* const ppu_chips) {
-      ppu_chips->oam->Write(address_.offset++, data_);
+    void TransactAt(std::size_t cycle, MMU* const bus, PPU::Chips* const chips) {
+      if (IsWaiting()) {
+        if (cycle % 2 == 1) Ready();
+      } else {
+        if (cycle % 2 == 0) Load(bus);
+        else Transfer(chips);
+      }
+    }
+
+    void Reset() {
+      address_.value       = {0x0000};
+      data_                = {0x00};
+      transfer_            = false;
+      wait_for_even_cycle_ = true;
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    bool IsWaiting() {
+      return wait_for_even_cycle_;
+    }
+
+    void Ready() {
+      wait_for_even_cycle_ = false;
+    }
+
+    void Load(MMU* const bus) {
+      data_ = bus->Read(address_.value);
+    }
+
+    void Transfer(PPU::Chips* const chips) {
+      chips->oam->Write(address_.offset++, data_);
       if (address_.offset == 0x00) {
 	transfer_            = false;
 	wait_for_even_cycle_ = true;
       }
     }
-
-    bool IsTransfering() {
-      return transfer_;
-    }
-
+    
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     union {
       Address value;
@@ -61,6 +87,70 @@ class NES final : public Clock {
     bool wait_for_even_cycle_ = true;
   };
 
+  class Controller {
+   public:
+    explicit Controller() {};
+
+    virtual ~Controller() = default;
+
+    Byte Read([[maybe_unused]] Address address) {
+      Byte data = (piso_ & 0x80) > 0;
+      piso_ <<= 1;
+      return data;
+    }
+
+    void Write([[maybe_unused]] Address address, [[maybe_unused]] Byte byte) {
+      piso_ = state_.value;
+    }
+
+    void Right() {
+      state_.right = true;
+    }
+
+    void Left() {
+      state_.left = true;
+    }
+
+    void Down() {
+      state_.down = true;
+    }
+
+    void Up() {
+      state_.up = true;
+    }
+
+    void Start() {
+      state_.start = true;
+    }
+
+    void Select() {
+      state_.select = true;
+    }
+
+    void B() {
+      state_.b = true;
+    }
+
+    void A() {
+      state_.b = true;
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    union {
+      Byte value;
+      Bitfield<0, 1, Byte> right;
+      Bitfield<1, 1, Byte> left;
+      Bitfield<2, 1, Byte> down;
+      Bitfield<3, 1, Byte> up;
+      Bitfield<4, 1, Byte> start;
+      Bitfield<5, 1, Byte> select;
+      Bitfield<6, 1, Byte> b;
+      Bitfield<7, 1, Byte> a;
+    } state_ = {0x00};
+
+    Byte piso_ = {0x00};
+  };
+
  public:
   NES(std::unique_ptr<ROM> rom);
 
@@ -69,9 +159,15 @@ class NES final : public Clock {
   virtual void Tick() override;
 
  public:
+  std::size_t cycle = {0};
+  
   const std::unique_ptr<ROM> rom;
 
   const std::unique_ptr<DirectMemoryAccess> dma;
+
+  const std::unique_ptr<Controller> controller_1;
+
+  const std::unique_ptr<Controller> controller_2;
 
   const std::unique_ptr<PPU::Registers> ppu_registers;
 

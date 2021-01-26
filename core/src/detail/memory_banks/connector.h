@@ -4,8 +4,8 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_FORWARD_H_
-#define _NESDEV_CORE_DETAIL_MEMORY_BANKS_FORWARD_H_
+#ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_CONNECTOR_H_
+#define _NESDEV_CORE_DETAIL_MEMORY_BANKS_CONNECTOR_H_
 #include <cstddef>
 #include <functional>
 #include "nesdev/core/exceptions.h"
@@ -19,7 +19,7 @@ namespace detail {
 namespace memory_banks {
 
 template <Address From, Address To>
-class Forward final : public MemoryBank {
+class Connector final : public MemoryBank {
  public:
   using Reader = std::function<Byte(Address)>;
 
@@ -31,7 +31,7 @@ class Forward final : public MemoryBank {
     "Start address must be greater than end address");
 
  public:
-  Forward(Reader reader, Writer writer)
+  Connector(Reader reader, Writer writer)
     : reader_{std::move(reader)},
       writer_{std::move(writer)} {}
 
@@ -52,15 +52,15 @@ class Forward final : public MemoryBank {
   }
 
   std::size_t Size() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to memory forwarding"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to bus connector"));
   }
 
   Byte* Data() override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to memory forwarding"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to bus connector"));
   }
 
   const Byte* Data() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to memory forwarding"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to bus connector"));
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -73,4 +73,4 @@ class Forward final : public MemoryBank {
 }  // namespace detail
 }  // namespace core
 }  // namespace nesdev
-#endif  // ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_FORWARD_H_
+#endif  // ifndef _NESDEV_CORE_DETAIL_MEMORY_BANKS_CONNECTOR_H_

@@ -10,7 +10,6 @@
 #include "core/macros.h"
 #include "core/apu.h"
 #include "core/clock.h"
-#include "core/controller.h"
 #include "core/cpu.h"
 #include "core/cpu_factory.h"
 #include "core/exceptions.h"

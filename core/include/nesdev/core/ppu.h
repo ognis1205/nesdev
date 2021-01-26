@@ -314,12 +314,6 @@ class PPU : public Clock {
     Entry data_[Entries];
   };
 
-  class PISO : public MemoryBank {
-   public:
-    class Test {
-    };
-  };
-
  public:
   explicit PPU(const std::vector<Byte>& palette)
     : palette_{palette} {};
