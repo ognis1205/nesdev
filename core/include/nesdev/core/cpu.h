@@ -110,8 +110,6 @@ class CPU : public Clock {
       opcode_byte       = {0x00};
       is_page_crossed   = false;
       is_rst_signaled   = false;
-      is_irq_signaled   = false;
-      is_nmi_signaled   = false;
       address.effective = {0x0000};
       pointer.effective = {0x0000};
     }
@@ -128,10 +126,6 @@ class CPU : public Clock {
 
     bool is_rst_signaled = false;
 
-    bool is_irq_signaled = false;
-
-    bool is_nmi_signaled = false;
-    
     union {
       Address effective;
       Bitfield<0, 8, Address> lo;
@@ -247,16 +241,6 @@ class CPU : public Clock {
   [[nodiscard]]
   bool IfReset() const noexcept {
     return context_.is_rst_signaled;
-  }
-
-  [[nodiscard]]
-  bool IfIRQ() const noexcept {
-    return context_.is_irq_signaled;
-  }
-
-  [[nodiscard]]
-  bool IfNMI() const noexcept {
-    return context_.is_nmi_signaled;
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:

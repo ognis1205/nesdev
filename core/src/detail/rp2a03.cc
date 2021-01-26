@@ -373,23 +373,21 @@ void RP2A03::Reset() noexcept {
 }
 
 void RP2A03::IRQ() noexcept {
-  Stage([this] { Push(REG_HI(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { Push(REG_LO(pc));                                                      }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { Push(REG(p));                                                          }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { AddrLo(Read(RP2A03::kBRKAddress));                                     }, IfIRQ() && IfNotIRQDisable());
-  Stage([this] { AddrHi(Read(RP2A03::kBRKAddress + 1)); REG(pc) = Addr();               }, IfIRQ() && IfNotIRQDisable());
-  if (IfIRQ()) context_.is_irq_signaled = false;
+  Stage([this] { Push(REG_HI(pc));                                                      }, IfNotIRQDisable());
+  Stage([this] { Push(REG_LO(pc));                                                      }, IfNotIRQDisable());
+  Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); }, IfNotIRQDisable());
+  Stage([this] { Push(REG(p));                                                          }, IfNotIRQDisable());
+  Stage([this] { AddrLo(Read(RP2A03::kBRKAddress));                                     }, IfNotIRQDisable());
+  Stage([this] { AddrHi(Read(RP2A03::kBRKAddress + 1)); REG(pc) = Addr();               }, IfNotIRQDisable());
 }
 
 void RP2A03::NMI() noexcept {
-  Stage([this] { Read(REG(pc));                                           }, IfNMI());
-  Stage([this] { Push(REG_HI(pc));                                        }, IfNMI());
-  Stage([this] { Push(REG_LO(pc));                                        }, IfNMI());
-  Stage([this] { Push(REG(p));                                            }, IfNMI());
-  Stage([this] { AddrLo(Read(RP2A03::kNMIAddress));                       }, IfNMI());
-  Stage([this] { AddrHi(Read(RP2A03::kNMIAddress + 1)); REG(pc) = Addr(); }, IfNMI());
-  if (IfNMI()) context_.is_nmi_signaled = false;
+  Stage([this] { Read(REG(pc));                                           });
+  Stage([this] { Push(REG_HI(pc));                                        });
+  Stage([this] { Push(REG_LO(pc));                                        });
+  Stage([this] { Push(REG(p));                                            });
+  Stage([this] { AddrLo(Read(RP2A03::kNMIAddress));                       });
+  Stage([this] { AddrHi(Read(RP2A03::kNMIAddress + 1)); REG(pc) = Addr(); });
 }
   
 }  // namespace detail

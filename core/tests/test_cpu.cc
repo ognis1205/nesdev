@@ -41,8 +41,6 @@ TEST_F(CPUTest, Context) {
   EXPECT_EQ(0x0000, cpu_.Ptr());
   EXPECT_FALSE(cpu_.CrossPage());
   EXPECT_FALSE(cpu_.IfReset());
-  EXPECT_FALSE(cpu_.IfReset());
-  EXPECT_FALSE(cpu_.IfNMI());
 }
 
 TEST_F(CPUTest, Addr) {
