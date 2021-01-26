@@ -49,3 +49,5 @@ endif ()
 #add_compile_options (-fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fstack-protector)
 
 add_subdirectory (core)
+
+add_subdirectory (example)

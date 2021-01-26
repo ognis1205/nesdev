@@ -1,0 +1,17 @@
+project (nessdl2)
+
+set (NES_SDL2_LIBRARY ${PROJECT_NAME})
+
+set (NES_SDL2_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+set (NES_SDL2_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+file (
+  GLOB_RECURSE
+  NES_SDL2_SOURCES
+  CONFIGURE_DEPENDS
+  ${NES_SDL2_SOURCE_DIR}/*.cc ${NES_SDL2_SOURCE_DIR}/*.h ${NES_SDL2_INCLUDE_PATH}/*.h)
+
+#add_subdirectory (src)
+
+#add_subdirectory (tests)
