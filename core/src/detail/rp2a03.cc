@@ -137,7 +137,9 @@ void RP2A03::Next() {
     Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
     break;
   default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Op()));
+// TODO: Check if this fallthrough is valid.    
+//    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Op()));
+    break;
   }
   // Stage the specified instruction.
   switch (Inst()) {
@@ -357,7 +359,9 @@ void RP2A03::Next() {
     Stage([this] { REG(a) = PassThrough(REG(y)); });
     break;
   default:
-    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Op()));
+// TODO: Check if this fallthrough is valid.    
+//    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Op()));
+    break;
   }
 }
 

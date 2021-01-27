@@ -376,8 +376,15 @@ class RP2C02 final : public PPU {
         pix = fg_pix + bg_pix;
         pal = fg_pix ? fg_pal : bg_pal;
       }
-      context_->framebuffer[cycle - 1][scanline] =
-        palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
+      if (0 <= cycle - 1 && cycle -1 < PPU::kFrameW && 0 <= scanline && scanline < PPU::kFrameH)
+	context_->pixel_writer(
+	  cycle - 1,
+	  scanline,
+	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F));
+//	context_->framebuffer[scanline * PPU::kFrameW + (cycle - 1)] =
+//	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
+//      	context_->framebuffer[cycle - 1][scanline] =
+//	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -471,11 +478,11 @@ class RP2C02 final : public PPU {
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   void Ticked() noexcept {
-    ++Cycle();
+    NextCycle();
     if (IsRendering() && (Cycle() == 260 && Scanline() < 240))
       rom_->mapper->OnVisibleCycleEnds();
     if (Cycle() >= 341) {
-      Cycle(0); ++Scanline();
+      Cycle(0); NextScanline();
       if (Scanline() >= 261) {
         Scanline(-1); TransitFrame();
       }

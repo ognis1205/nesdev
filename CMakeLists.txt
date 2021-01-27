@@ -32,6 +32,10 @@ set (NESDEV_COMPILE_DEFINITIONS "-D_FORTIFY_SOURCE=2")
 
 enable_testing ()
 
+option (
+  WITH_EXAMPLE
+  "When -DWITH_EXAMPLE directive specified to cmake command, NES/SDL2 implementation sub-project will be maked along with the library")
+
 include (cmake/googletest.cmake)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
@@ -50,4 +54,6 @@ endif ()
 
 add_subdirectory (core)
 
-add_subdirectory (example)
+if (WITH_EXAMPLE)
+  add_subdirectory (example)
+endif (WITH_EXAMPLE)

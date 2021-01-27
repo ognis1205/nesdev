@@ -1,3 +1,11 @@
+find_package (
+  SDL2
+  REQUIRED)
+
+#find_package (
+#  SDL2_image
+#  REQUIRED)
+
 file (
   GLOB_RECURSE
   NES_SOURCES
@@ -13,10 +21,19 @@ add_executable (
   ${NES}
   ${NES_SOURCES})
 
+target_include_directories (
+  ${NES}
+  PRIVATE
+  ${NESDEV_CORE_INCLUDE_PATH}
+  ${SDL2_INCLUDE_DIRS})
+#  ${SDL2_IMAGE_INCLUDE_DIRS})
+
 target_link_libraries (
   ${NES}
   PRIVATE
-  Nesdev::core)
+  Nesdev::core
+  ${SDL2_LIBRARIES})
+#  ${SDL2_IMAGE_LIBRARIES})
 
 target_compile_features (
   ${NES}

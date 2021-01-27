@@ -13,8 +13,10 @@ in the PPU cycle along with the background rendering. This may limit compatibili
 
 ### TODO
 
+- [ ] Implement logger
 - [ ] Implement testsuites for all opcodes
 - [ ] Implement APU/RP2C02 unit
+- [ ] Fix Cmake naming conventions, e.g., INCLUDE_DIRS variable.
 
 ### Archetecture
 

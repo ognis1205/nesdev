@@ -121,7 +121,7 @@ MemoryBanks MemoryBankFactory::CPUBus(ROM* const rom,
   return banks;
 }
 
-MemoryBanks MemoryBankFactory::PPUBus(ROM* const rom) {
+  MemoryBanks MemoryBankFactory::PPUBus(ROM* const rom) {
   MemoryBanks banks;
   banks.push_back(std::make_unique<::PPUAdapter>(rom));                                       // ROM
   banks.push_back(std::make_unique<PPU::Nametables           <0x2000, 0x3EFF>>(0x0400, rom)); // Nametables

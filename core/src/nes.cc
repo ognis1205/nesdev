@@ -4,7 +4,7 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#include <istream>
+//#include <iostream>
 #include <memory.h>
 #include "nesdev/core/clock.h"
 #include "nesdev/core/cpu.h"
@@ -32,21 +32,19 @@ NES::NES(std::unique_ptr<ROM> rom)
       ppu_registers{std::make_unique<PPU::Registers>()},
       ppu_shifters{std::make_unique<PPU::Shifters>()},
       ppu_chips{std::make_unique<PPU::Chips>(std::make_unique<PPU::ObjectAttributeMap<64>>())},
-      ppu_bus{MMUFactory::Create(MemoryBankFactory::PPUBus(rom.get()))},
+      ppu_bus{MMUFactory::Create(MemoryBankFactory::PPUBus(this->rom.get()))},
       ppu{PPUFactory::RP2C02(ppu_chips.get(), ppu_registers.get(), ppu_shifters.get(), ppu_bus.get())},
       cpu_registers{std::make_unique<CPU::Registers>()},
-      cpu_bus{MMUFactory::Create(MemoryBankFactory::CPUBus(rom.get(), ppu.get(), dma.get(), controller_1.get(), controller_2.get()))},
+      cpu_bus{MMUFactory::Create(MemoryBankFactory::CPUBus(this->rom.get(), ppu.get(), dma.get(), controller_1.get(), controller_2.get()))},
       cpu{CPUFactory::RP2A03(cpu_registers.get(), cpu_bus.get())} {
-  ppu->Connect(rom.get());
+  ppu->Connect(this->rom.get());
 }
 
 void NES::Tick() {
   ppu->Tick();
   if (cycle % 3 == 0) {
-    if (dma->IsTransfering())
-      dma->TransactAt(cycle, cpu_bus.get(), ppu_chips.get());
-    else
-      cpu->Tick();
+    if (dma->IsTransfering()) dma->TransactAt(cycle, cpu_bus.get(), ppu_chips.get());
+    else cpu->Tick();
   }
   if (ppu_registers->ppuctrl.nmi_enable) {
     ppu_registers->ppuctrl.nmi_enable = false;

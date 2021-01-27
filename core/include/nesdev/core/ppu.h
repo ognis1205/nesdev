@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <vector>
 #include "nesdev/core/clock.h"
 #include "nesdev/core/exceptions.h"
@@ -25,8 +26,14 @@ class PPU : public Clock {
  public:
   static const std::size_t kNumSprites = 8;
 
+  static const int kFrameW = 256;
+
+  static const int kFrameH = 240;
+
  public:
-  using Framebuffer = RGBA[256][240];
+//  using Framebuffer = RGBA[kFrameH][kFrameW];
+//  using Framebuffer = RGBA[kFrameW * kFrameH];
+  using PixelWriter = std::function<void(std::int16_t, std::int16_t, RGBA)>;
 
   /*
    * The following registers are defined according to the folloing Loopy's archetecture.
@@ -195,9 +202,10 @@ class PPU : public Clock {
     Nametables(std::size_t size, ROM* const rom)
       : rom_{rom},
 	size_{size} {
-      NESDEV_CORE_CASSERT(
-	((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
-	"Size does not match address range");
+// TODO: Check if this assertion is unneccessary.      
+//      NESDEV_CORE_CASSERT(
+//	((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
+//	"Size does not match address range");
       data_[0].resize(size_);
       data_[1].resize(size_);
     }
@@ -328,12 +336,22 @@ class PPU : public Clock {
 
  public:
   void Connect(ROM* const rom) {
-    NESDEV_CORE_CASSERT(rom != nullptr, "Invalid ROM specified to Connect");
+    NESDEV_CORE_CASSERT(rom, "Invalid ROM specified to Connect");
     rom_ = rom;
   }
 
-  Framebuffer& Buffer() {
-    return context_.framebuffer;
+  void Framebuffer(PixelWriter pixel_writer) {
+    context_.pixel_writer = pixel_writer;
+  }
+
+  [[nodiscard]]
+  std::int16_t Cycle() noexcept {
+    return context_.cycle;
+  }
+
+  [[nodiscard]]
+  std::int16_t Scanline() noexcept {
+    return context_.scanline;
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
@@ -342,7 +360,8 @@ class PPU : public Clock {
       cycle     = {0};
       scanline  = {0};
       odd_frame = false;
-      std::fill(&framebuffer[0][0], &framebuffer[0][0] + sizeof(framebuffer), 0);
+//      std::fill(&framebuffer[0][0], &framebuffer[0][0] + sizeof(framebuffer), 0);
+//      std::fill(framebuffer, framebuffer + sizeof(framebuffer), 0);
     }
 
     std::int16_t cycle = {0};
@@ -351,7 +370,8 @@ class PPU : public Clock {
 
     bool odd_frame = false;
 
-    Framebuffer framebuffer = {};
+//    Framebuffer framebuffer = {};
+    PixelWriter pixel_writer;
   };
 
   /*
@@ -415,18 +435,16 @@ class PPU : public Clock {
   };
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  [[nodiscard]]
-  std::int16_t& Cycle() noexcept {
-    return context_.cycle;
+  void NextCycle() noexcept {
+    context_.cycle++;
   }
 
-  void Cycle(int cycle) noexcept {
+ void Cycle(int cycle) noexcept {
     context_.cycle = cycle;
   }
 
-  [[nodiscard]]
-  std::int16_t& Scanline() noexcept {
-    return context_.scanline;
+  void NextScanline() noexcept {
+    context_.scanline++;
   }
 
   void Scanline(int scanline) noexcept {

@@ -8,7 +8,7 @@ set (NESDEV_CORE_TEST_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set (NESDEV_CORE_TEST_EXECUTER_NAME "RunAllUnitTests")
 
-set (NESDEV_CORE_TEST_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/data/*.nes)
+set (NESDEV_CORE_TEST_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
 # GoogleTest includes source codes which violates 'comparison between signed and unsigned integer expressions'
 # warning. To ignore these warning, add -Wno-sign-compare option.
@@ -65,4 +65,4 @@ add_custom_command (
   ${NESDEV_CORE_TEST_EXECUTER_NAME}
   POST_BUILD
   COMMAND
-  ${CMAKE_COMMAND} -E copy ${NESDEV_CORE_TEST_RESOURCES} $<TARGET_FILE_DIR:${NESDEV_CORE_TEST_EXECUTER_NAME}>/data)
+  ${CMAKE_COMMAND} -E copy_directory ${NESDEV_CORE_TEST_RESOURCES} $<TARGET_FILE_DIR:${NESDEV_CORE_TEST_EXECUTER_NAME}>/data)

@@ -2,11 +2,13 @@ find_package (Threads REQUIRED)
 
 include (ExternalProject)
 
+set (GTEST_VER 1.10.0)
+
 set_directory_properties (PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/external)
 
 externalproject_add (
   googletest
-  URL https://github.com/google/googletest/archive/release-1.10.0.zip
+  URL https://github.com/google/googletest/archive/release-${GTEST_VER}.zip
   UPDATE_COMMAND  ""
   INSTALL_COMMAND "")
 
