@@ -19,7 +19,7 @@ class Backend {
   static constexpr int kDelay = 100.0f / kFPS;
 
  public:
-  Backend();
+  Backend(nc::NES::Controller* const player_one, nc::NES::Controller* const player_two);
 
   ~Backend();
 
@@ -29,9 +29,15 @@ class Backend {
 
   void HandleEvents();
 
+  void Stop();
+
  public:
   void Pixel(std::int16_t x, std::int16_t y, nc::RGBA colour) {
     b_buffer_[nc::PPU::kFrameW * y + x] = colour;
+  }
+
+  bool IsRunning() {
+    return running_;
   }
 
  private:
@@ -51,11 +57,15 @@ class Backend {
 
   SDL_cond* frame_condition_;
 
+  bool running_ = false;
+
   bool ready_to_draw_ = false;
 
   bool frame_available_ = false;
 
   bool pending_thread_exit_ = false;
+
+  nc::NES::Controller* players_[2];
 };
 
 #endif  // ifndef _BACKEND_H_

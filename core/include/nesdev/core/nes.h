@@ -103,36 +103,36 @@ class NES final : public Clock {
       piso_ = state_.value;
     }
 
-    void Right() {
-      state_.right = true;
+    void Right(bool pressed) {
+      state_.right = pressed;
     }
 
-    void Left() {
-      state_.left = true;
+    void Left(bool pressed) {
+      state_.left = pressed;
     }
 
-    void Down() {
-      state_.down = true;
+    void Down(bool pressed) {
+      state_.down = pressed;
     }
 
-    void Up() {
-      state_.up = true;
+    void Up(bool pressed) {
+      state_.up = pressed;
     }
 
-    void Start() {
-      state_.start = true;
+    void Start(bool pressed) {
+      state_.start = pressed;
     }
 
-    void Select() {
-      state_.select = true;
+    void Select(bool pressed) {
+      state_.select = pressed;
     }
 
-    void B() {
-      state_.b = true;
+    void B(bool pressed) {
+      state_.b = pressed;
     }
 
-    void A() {
-      state_.b = true;
+    void A(bool pressed) {
+      state_.b = pressed;
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:

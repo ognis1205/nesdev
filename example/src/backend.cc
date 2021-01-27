@@ -13,7 +13,10 @@
 
 namespace nc = nesdev::core;
 
-Backend::Backend() {
+Backend::Backend(nc::NES::Controller* const player_one,
+                 nc::NES::Controller* const player_two) {
+  players_[0] = player_one;
+  players_[1] = player_two;
   if (SDL_Init(SDL_INIT_VIDEO
 	       | SDL_INIT_AUDIO
 	       | SDL_INIT_JOYSTICK
@@ -94,8 +97,8 @@ void Backend::Draw() {
     std::swap(b_buffer_, f_buffer_);
     SDL_CondSignal(frame_condition_);
   }
-
   SDL_UnlockMutex(frame_mutex_);
+
   std::uint32_t delay = SDL_GetTicks() - start;
   if (delay < Backend::kDelay) {
     SDL_Delay((int)(Backend::kDelay - delay));
@@ -133,4 +136,50 @@ void Backend::Run() {
 }
 
 void Backend::HandleEvents() {
+  SDL_Event event;
+  SDL_LockMutex(event_mutex_);
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+    case SDL_QUIT:
+      pending_thread_exit_ = true;
+      running_ = false;
+      break;
+    case SDL_KEYDOWN:
+      switch (event.key.keysym.sym) {
+      case SDLK_RETURN:    players_[0]->Start(true);  break;
+      case SDLK_BACKSPACE: players_[0]->Select(true); break;
+      case SDLK_UP:        players_[0]->Up(true);     break;
+      case SDLK_DOWN:      players_[0]->Down(true);   break;
+      case SDLK_LEFT:      players_[0]->Left(true);   break;
+      case SDLK_RIGHT:     players_[0]->Right(true);  break;
+      case SDLK_z:         players_[0]->B(true);      break;
+      case SDLK_x:         players_[0]->A(true);      break;
+      default: break;
+      }
+      break;
+    case SDL_KEYUP:
+      switch (event.key.keysym.sym) {
+      case SDLK_RETURN:    players_[0]->Start(false);  break;
+      case SDLK_BACKSPACE: players_[0]->Select(false); break;
+      case SDLK_UP:        players_[0]->Up(false);     break;
+      case SDLK_DOWN:      players_[0]->Down(false);   break;
+      case SDLK_LEFT:      players_[0]->Left(false);   break;
+      case SDLK_RIGHT:     players_[0]->Right(false);  break;
+      case SDLK_z:         players_[0]->B(false);      break;
+      case SDLK_x:         players_[0]->A(false);      break;
+      default: break;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  SDL_UnlockMutex(event_mutex_);
+}
+
+void Backend::Stop() {
+  SDL_LockMutex(frame_mutex_);
+  pending_thread_exit_ = true;
+  SDL_CondSignal(frame_condition_);
+  SDL_UnlockMutex(frame_mutex_);
 }
