@@ -15,60 +15,67 @@
 #include <nesdev/core.h>
 #include "backend.h"
 #include "cli.h"
+#include "timing.h"
+#include "utility.h"
 
-namespace fs = std::filesystem;
 namespace nc = nesdev::core;
 
 nc::NES* nes;
 Backend* sdl;
+Timing*  clk;
 
-int Emulation(void*) {
-  for (;;) nes->Tick();
+int Emulate(void*) {
+  while (sdl->IsRunning()) {
+    clk->SleepPPU(); nes->Tick();
+//  s  std::cout << unsigned(nes->cpu_registers->a.value) << std::endl;
+//    std::cout << unsigned(nes->ppu_registers->vramaddr.value) << std::endl;
+    if (nes->ppu->IsPostRenderLine()) sdl->Draw();
+  }
   return 0;
 }
 
-void Render() {
-  SDL_Thread* emulator;
-//  SDL_Thread* m_thread;
-
-//  exitFlag = false;
-//  running_state = true;
-  if (!(emulator = SDL_CreateThread(Emulation, "emulation", 0)))
+void Start() {
+  SDL_Thread* emulation;
+  if (!(emulation = SDL_CreateThread(Emulate, "NesDev game engine", 0)))
     exit(1);
 
-  while (true) {
+  while (sdl->IsRunning()) {
     sdl->Run();
-    SDL_WaitThread(emulator, 0);
-//    if (exitFlag) {
-//      exitFlag = false;
-//      return;
-//    }
+    SDL_WaitThread(emulation, 0);
   }
 }
 
 int main(int argc, char** argv) {
+  Utility::Init();
   CLI cli(argc, argv);
 
   std::string rom;
-  if ((rom = fs::absolute(cli.Get("-f"))).empty())
-    throw std::runtime_error("iNES file must be specified");
-
-  std::ifstream ifs(rom, std::ifstream::binary);
-  nes = new nc::NES(nc::ROMFactory::NROM(ifs));
-  sdl = new Backend(nes->controller_1.get(), nes->controller_2.get());
-  ifs.close();
-
-  nes->ppu->Framebuffer([](std::int16_t x, std::int16_t y, nc::RGBA rgba) {
-    sdl->Pixel(x, y, rgba);
-  });
-
-  while (sdl->IsRunning()) {
-    SDL_ShowCursor(SDL_DISABLE);
-    Render();
+  if ((rom = std::filesystem::absolute(cli.Get("-f"))).empty()) {
+    std::cerr << "iNES file must be specified" << std::endl;
+    exit(1);
   }
 
-  delete nes;
-  delete sdl;
+  try {
+    std::ifstream ifs(rom, std::ifstream::binary);
+    nes = new nc::NES(nc::ROMFactory::NROM(ifs));
+    sdl = new Backend(nes->controller_1.get(), nes->controller_2.get());
+    clk = new Timing(*nes->rom->header.get());
+    ifs.close();
+
+    nes->ppu->Framebuffer([](std::int16_t x, std::int16_t y, [[maybe_unused]]nc::RGBA rgba) {
+//      sdl->Pixel(x, y, rgba);
+      sdl->Pixel(x, y, Utility::Noise<0x00000000, 0x00FFFFFF>());
+    });
+
+    SDL_ShowCursor(SDL_DISABLE);
+    Start();
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+  }
+
+  if (nes) delete nes;
+  if (sdl) delete sdl;
+  if (clk) delete clk;
 
   return EXIT_SUCCESS;
 }

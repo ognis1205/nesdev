@@ -23,260 +23,365 @@ using namespace nesdev::core;
 const std::map<Byte, Opcode> lookup = {
   {0x00, {Instruction::BRK, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x01, {Instruction::ORA, AddressingMode::IZX,  MemoryAccess::READ             }},
-  {0x02, {Instruction::COP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816***
-  {0x03, {Instruction::ORA, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816***
-  {0x04, {Instruction::TSB, AddressingMode::DP,   MemoryAccess::READ             }}, // ***65C816***
+//  {0x02, {Instruction::COP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816***
+  {0x02, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x03, {Instruction::ORA, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816***
+  {0x03, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x04, {Instruction::TSB, AddressingMode::DP,   MemoryAccess::READ             }}, // ***65C816***
+  {0x04, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x05, {Instruction::ORA, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0x06, {Instruction::ASL, AddressingMode::ZP0,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x07, {Instruction::ORA, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816***
+//  {0x07, {Instruction::ORA, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816***
+  {0x07, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x08, {Instruction::PHP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x09, {Instruction::ORA, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0x0A, {Instruction::ASL, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x0B, {Instruction::PHD, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816***
-  {0x0C, {Instruction::TSB, AddressingMode::ABS,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x0B, {Instruction::PHD, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816***
+  {0x0B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x0C, {Instruction::TSB, AddressingMode::ABS,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x0C, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x0D, {Instruction::ORA, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x0E, {Instruction::ASL, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x0F, {Instruction::ORA, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816***
+//  {0x0F, {Instruction::ORA, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816***
+  {0x0F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x10, {Instruction::BPL, AddressingMode::REL,  MemoryAccess::READ             }},
   {0x11, {Instruction::ORA, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0x12, {Instruction::ORA, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0x13, {Instruction::ORA, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816***
-  {0x14, {Instruction::TRB, AddressingMode::DP,   MemoryAccess::READ             }}, // ***65C02-***
+//  {0x12, {Instruction::ORA, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x12, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x13, {Instruction::ORA, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816***
+  {0x13, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x14, {Instruction::TRB, AddressingMode::DP,   MemoryAccess::READ             }}, // ***65C02-***
+  {0x14, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x15, {Instruction::ORA, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0x16, {Instruction::ASL, AddressingMode::ZPX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x17, {Instruction::ORA, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816***
+//  {0x17, {Instruction::ORA, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816***
+  {0x17, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x18, {Instruction::CLC, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x19, {Instruction::ORA, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0x1A, {Instruction::INC, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}}, // ***65C02-***
-  {0x1B, {Instruction::TCS, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816***
-  {0x1C, {Instruction::TRB, AddressingMode::ABS,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x1A, {Instruction::INC, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}}, // ***65C02-***
+  {0x1A, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x1B, {Instruction::TCS, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816***
+  {0x1B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x1C, {Instruction::TRB, AddressingMode::ABS,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x1C, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x1D, {Instruction::ORA, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0x1E, {Instruction::ASL, AddressingMode::ABX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x1F, {Instruction::ORA, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816***
+//  {0x1F, {Instruction::ORA, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816***
+  {0x1F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x20, {Instruction::JSR, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x21, {Instruction::AND, AddressingMode::IZX,  MemoryAccess::READ             }},
-  {0x22, {Instruction::JSR, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816***
-  {0x23, {Instruction::AND, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+//  {0x22, {Instruction::JSR, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816***
+  {0x22, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x23, {Instruction::AND, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+  {0x23, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x24, {Instruction::BIT, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0x25, {Instruction::AND, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0x26, {Instruction::ROL, AddressingMode::ZP0,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x27, {Instruction::AND, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x27, {Instruction::AND, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x27, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x28, {Instruction::PLP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x29, {Instruction::AND, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0x2A, {Instruction::ROL, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x2B, {Instruction::PLD, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x2B, {Instruction::PLD, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x2B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x2C, {Instruction::BIT, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x2D, {Instruction::AND, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x2E, {Instruction::ROL, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x2F, {Instruction::AND, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x2F, {Instruction::AND, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x2F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x30, {Instruction::BMI, AddressingMode::REL,  MemoryAccess::READ             }},
   {0x31, {Instruction::AND, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0x32, {Instruction::AND, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0x33, {Instruction::AND, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
-  {0x34, {Instruction::BIT, AddressingMode::DPX,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x32, {Instruction::AND, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x32, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x33, {Instruction::AND, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+  {0x33, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x34, {Instruction::BIT, AddressingMode::DPX,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x34, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x35, {Instruction::AND, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0x36, {Instruction::ROL, AddressingMode::ZPX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x37, {Instruction::AND, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+//  {0x37, {Instruction::AND, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+  {0x37, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x38, {Instruction::SEC, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x39, {Instruction::AND, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0x3A, {Instruction::DEC, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}}, // ***65C02-***
-  {0x3B, {Instruction::TSC, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0x3C, {Instruction::BIT, AddressingMode::ABX,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x3A, {Instruction::DEC, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}}, // ***65C02-***
+  {0x3A, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x3B, {Instruction::TSC, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x3B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x3C, {Instruction::BIT, AddressingMode::ABX,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x3C, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x3D, {Instruction::AND, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0x3E, {Instruction::ROL, AddressingMode::ABX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x3F, {Instruction::AND, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x3F, {Instruction::AND, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+  {0x3F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x40, {Instruction::RTI, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x41, {Instruction::EOR, AddressingMode::IZX,  MemoryAccess::READ             }},
-  {0x42, {Instruction::WDM, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0x43, {Instruction::EOR, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
-  {0x44, {Instruction::MVP, AddressingMode::BM,   MemoryAccess::READ             }}, // ***65C02-***
+//  {0x42, {Instruction::WDM, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x42, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x43, {Instruction::EOR, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+  {0x43, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x44, {Instruction::MVP, AddressingMode::BM,   MemoryAccess::READ             }}, // ***65C02-***
+  {0x44, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x45, {Instruction::EOR, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0x46, {Instruction::LSR, AddressingMode::ZP0,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x47, {Instruction::EOR, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x47, {Instruction::EOR, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x47, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x48, {Instruction::PHA, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x49, {Instruction::EOR, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0x4A, {Instruction::LSR, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x4B, {Instruction::PHK, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x4B, {Instruction::PHK, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x4B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x4C, {Instruction::JMP, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x4D, {Instruction::EOR, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x4E, {Instruction::LSR, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x4F, {Instruction::EOR, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x4F, {Instruction::EOR, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x4F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x50, {Instruction::BVC, AddressingMode::REL,  MemoryAccess::READ             }},
   {0x51, {Instruction::EOR, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0x52, {Instruction::EOR, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0x53, {Instruction::EOR, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
-  {0x54, {Instruction::MVN, AddressingMode::BM,   MemoryAccess::READ             }}, // ***65C816**
+//  {0x52, {Instruction::EOR, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x52, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x53, {Instruction::EOR, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+  {0x53, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x54, {Instruction::MVN, AddressingMode::BM,   MemoryAccess::READ             }}, // ***65C816**
+  {0x54, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x55, {Instruction::EOR, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0x56, {Instruction::LSR, AddressingMode::ZPX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x57, {Instruction::EOR, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+//  {0x57, {Instruction::EOR, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+  {0x57, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x58, {Instruction::CLI, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x59, {Instruction::EOR, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0x5A, {Instruction::PHY, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0x5B, {Instruction::TCD, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0x5C, {Instruction::JMP, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x5A, {Instruction::PHY, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x5A, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x5B, {Instruction::TCD, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x5B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x5C, {Instruction::JMP, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x5C, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x5D, {Instruction::EOR, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0x5E, {Instruction::LSR, AddressingMode::ABX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x5F, {Instruction::EOR, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x5F, {Instruction::EOR, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+  {0x5F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x60, {Instruction::RTS, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x61, {Instruction::ADC, AddressingMode::IZX,  MemoryAccess::READ             }},
-  {0x62, {Instruction::PER, AddressingMode::RELL, MemoryAccess::READ             }}, // ***65C816**
-  {0x63, {Instruction::ADC, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
-  {0x64, {Instruction::STZ, AddressingMode::DP,   MemoryAccess::WRITE            }}, // ***65C02-***
+//  {0x62, {Instruction::PER, AddressingMode::RELL, MemoryAccess::READ             }}, // ***65C816**
+  {0x62, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x63, {Instruction::ADC, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+  {0x63, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x64, {Instruction::STZ, AddressingMode::DP,   MemoryAccess::WRITE            }}, // ***65C02-***
+  {0x64, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x65, {Instruction::ADC, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0x66, {Instruction::ROR, AddressingMode::ZP0,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x67, {Instruction::ADC, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x67, {Instruction::ADC, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x67, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x68, {Instruction::PLA, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x69, {Instruction::ADC, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0x6A, {Instruction::ROR, AddressingMode::ACC,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x6B, {Instruction::RTL, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x6B, {Instruction::RTL, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x6B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x6C, {Instruction::JMP, AddressingMode::IND,  MemoryAccess::READ             }},
   {0x6D, {Instruction::ADC, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0x6E, {Instruction::ROR, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x6F, {Instruction::ADC, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x6F, {Instruction::ADC, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0x6F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x70, {Instruction::BVS, AddressingMode::REL,  MemoryAccess::READ             }},
   {0x71, {Instruction::ADC, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0x72, {Instruction::ADC, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0x73, {Instruction::ADC, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
-  {0x74, {Instruction::STZ, AddressingMode::DPX,  MemoryAccess::WRITE            }}, // ***65C02-***
+//  {0x72, {Instruction::ADC, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x72, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x73, {Instruction::ADC, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+  {0x73, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x74, {Instruction::STZ, AddressingMode::DPX,  MemoryAccess::WRITE            }}, // ***65C02-***
+  {0x74, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x75, {Instruction::ADC, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0x76, {Instruction::ROR, AddressingMode::ZPX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x77, {Instruction::ADC, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+//  {0x77, {Instruction::ADC, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+  {0x77, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x78, {Instruction::SEI, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x79, {Instruction::ADC, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0x7A, {Instruction::PLY, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0x7B, {Instruction::TDC, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0x7C, {Instruction::JMP, AddressingMode::IAL,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x7A, {Instruction::PLY, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x7A, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x7B, {Instruction::TDC, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x7B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x7C, {Instruction::JMP, AddressingMode::IAL,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x7C, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x7D, {Instruction::ADC, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0x7E, {Instruction::ROR, AddressingMode::ABX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x7F, {Instruction::ADC, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
-  {0x80, {Instruction::BRA, AddressingMode::REL,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x7F, {Instruction::ADC, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+  {0x7F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x80, {Instruction::BRA, AddressingMode::REL,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x80, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x81, {Instruction::STA, AddressingMode::IZX,  MemoryAccess::WRITE            }},
-  {0x82, {Instruction::BRL, AddressingMode::RELL, MemoryAccess::READ             }}, // ***65C816**
-  {0x83, {Instruction::STA, AddressingMode::SR,   MemoryAccess::WRITE            }}, // ***65C816**
+//  {0x82, {Instruction::BRL, AddressingMode::RELL, MemoryAccess::READ             }}, // ***65C816**
+  {0x82, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x83, {Instruction::STA, AddressingMode::SR,   MemoryAccess::WRITE            }}, // ***65C816**
+  {0x83, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x84, {Instruction::STY, AddressingMode::ZP0,  MemoryAccess::WRITE            }},
   {0x85, {Instruction::STA, AddressingMode::ZP0,  MemoryAccess::WRITE            }},
   {0x86, {Instruction::STX, AddressingMode::ZP0,  MemoryAccess::WRITE            }},
-  {0x87, {Instruction::STA, AddressingMode::IDL,  MemoryAccess::WRITE            }}, // ***65C816**
+//  {0x87, {Instruction::STA, AddressingMode::IDL,  MemoryAccess::WRITE            }}, // ***65C816**
+  {0x87, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x88, {Instruction::DEY, AddressingMode::IMP,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0x89, {Instruction::BIT, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C02-***
+//  {0x89, {Instruction::BIT, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C02-***
+  {0x89, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x8A, {Instruction::TXA, AddressingMode::IMP,  MemoryAccess::READ             }},
-  {0x8B, {Instruction::PHB, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0x8B, {Instruction::PHB, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x8B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x8C, {Instruction::STY, AddressingMode::ABS,  MemoryAccess::WRITE            }},
   {0x8D, {Instruction::STA, AddressingMode::ABS,  MemoryAccess::WRITE            }},
   {0x8E, {Instruction::STX, AddressingMode::ABS,  MemoryAccess::WRITE            }},
-  {0x8F, {Instruction::STA, AddressingMode::ABL,  MemoryAccess::WRITE            }}, // ***65C816**
+//  {0x8F, {Instruction::STA, AddressingMode::ABL,  MemoryAccess::WRITE            }}, // ***65C816**
+  {0x8F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x90, {Instruction::BCC, AddressingMode::REL,  MemoryAccess::READ             }},
   {0x91, {Instruction::STA, AddressingMode::IZY,  MemoryAccess::WRITE            }},
-  {0x92, {Instruction::STA, AddressingMode::IDP,  MemoryAccess::WRITE            }}, // ***65C02-***
-  {0x93, {Instruction::STA, AddressingMode::ISY,  MemoryAccess::WRITE            }}, // ***65C816**
+//  {0x92, {Instruction::STA, AddressingMode::IDP,  MemoryAccess::WRITE            }}, // ***65C02-***
+  {0x92, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x93, {Instruction::STA, AddressingMode::ISY,  MemoryAccess::WRITE            }}, // ***65C816**
+  {0x93, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x94, {Instruction::STY, AddressingMode::ZPX,  MemoryAccess::WRITE            }},
   {0x95, {Instruction::STA, AddressingMode::ZPX,  MemoryAccess::WRITE            }},
   {0x96, {Instruction::STX, AddressingMode::ZPY,  MemoryAccess::WRITE            }},
-  {0x97, {Instruction::STA, AddressingMode::IDLY, MemoryAccess::WRITE            }}, // ***65C816**
+//  {0x97, {Instruction::STA, AddressingMode::IDLY, MemoryAccess::WRITE            }}, // ***65C816**
+  {0x97, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x98, {Instruction::TYA, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x99, {Instruction::STA, AddressingMode::ABY,  MemoryAccess::WRITE            }},
   {0x9A, {Instruction::TXS, AddressingMode::IMP,  MemoryAccess::READ             }},
-  {0x9B, {Instruction::TXY, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0x9C, {Instruction::STZ, AddressingMode::ABS,  MemoryAccess::WRITE            }}, // ***65C02-***
+//  {0x9B, {Instruction::TXY, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0x9B, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x9C, {Instruction::STZ, AddressingMode::ABS,  MemoryAccess::WRITE            }}, // ***65C02-***
+  {0x9C, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0x9D, {Instruction::STA, AddressingMode::ABX,  MemoryAccess::WRITE            }},
-  {0x9E, {Instruction::STZ, AddressingMode::ABX,  MemoryAccess::WRITE            }}, // ***65C02-***
-  {0x9F, {Instruction::STA, AddressingMode::ALX,  MemoryAccess::WRITE            }}, // ***65C816**
+//  {0x9E, {Instruction::STZ, AddressingMode::ABX,  MemoryAccess::WRITE            }}, // ***65C02-***
+  {0x9E, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0x9F, {Instruction::STA, AddressingMode::ALX,  MemoryAccess::WRITE            }}, // ***65C816**
+  {0x9F, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xA0, {Instruction::LDY, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xA1, {Instruction::LDA, AddressingMode::IZX,  MemoryAccess::READ             }},
   {0xA2, {Instruction::LDX, AddressingMode::IMM,  MemoryAccess::READ             }},
-  {0xA3, {Instruction::LDA, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+//  {0xA3, {Instruction::LDA, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+  {0xA3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xA4, {Instruction::LDY, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0xA5, {Instruction::LDA, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0xA6, {Instruction::LDX, AddressingMode::ZP0,  MemoryAccess::READ             }},
-  {0xA7, {Instruction::LDA, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xA7, {Instruction::LDA, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+  {0xA7, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xA8, {Instruction::TAY, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xA9, {Instruction::LDA, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xAA, {Instruction::TAX, AddressingMode::IMP,  MemoryAccess::READ             }},
-  {0xAB, {Instruction::PLB, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xAB, {Instruction::PLB, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xAB, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xAC, {Instruction::LDY, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0xAD, {Instruction::LDA, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0xAE, {Instruction::LDX, AddressingMode::ABS,  MemoryAccess::READ             }},
-  {0xAF, {Instruction::LDA, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xAF, {Instruction::LDA, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0xAF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xB0, {Instruction::BCS, AddressingMode::REL,  MemoryAccess::READ             }},
   {0xB1, {Instruction::LDA, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0xB2, {Instruction::LDA, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0xB3, {Instruction::LDA, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xB2, {Instruction::LDA, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0xB2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xB3, {Instruction::LDA, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+  {0xB3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xB4, {Instruction::LDY, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0xB5, {Instruction::LDA, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0xB6, {Instruction::LDX, AddressingMode::ZPY,  MemoryAccess::READ             }},
-  {0xB7, {Instruction::LDA, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+//  {0xB7, {Instruction::LDA, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+  {0xB7, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xB8, {Instruction::CLV, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xB9, {Instruction::LDA, AddressingMode::ABY,  MemoryAccess::READ             }},
   {0xBA, {Instruction::TSX, AddressingMode::IMP,  MemoryAccess::READ             }},
-  {0xBB, {Instruction::TYX, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xBB, {Instruction::TYX, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xBB, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xBC, {Instruction::LDY, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0xBD, {Instruction::LDA, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0xBE, {Instruction::LDX, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0xBF, {Instruction::LDA, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xBF, {Instruction::LDA, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+  {0xBF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xC0, {Instruction::CPY, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xC1, {Instruction::CMP, AddressingMode::IZX,  MemoryAccess::READ             }},
-  {0xC2, {Instruction::REP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816**
-  {0xC3, {Instruction::CMP, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+//  {0xC2, {Instruction::REP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816**
+  {0xB2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xC3, {Instruction::CMP, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+  {0xC3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xC4, {Instruction::CPY, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0xC5, {Instruction::CMP, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0xC6, {Instruction::DEC, AddressingMode::ZP0,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xC7, {Instruction::CMP, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xC7, {Instruction::CMP, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+  {0xC7, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xC8, {Instruction::INY, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xC9, {Instruction::CMP, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xCA, {Instruction::DEX, AddressingMode::IMP,  MemoryAccess::READ             }},
-  {0xCB, {Instruction::WAI, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xCB, {Instruction::WAI, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xCB, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xCC, {Instruction::CPY, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0xCD, {Instruction::CMP, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0xCE, {Instruction::DEC, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xCF, {Instruction::CMP, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xCF, {Instruction::CMP, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0xCF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xD0, {Instruction::BNE, AddressingMode::REL,  MemoryAccess::READ             }},
   {0xD1, {Instruction::CMP, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0xD2, {Instruction::CMP, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0xD3, {Instruction::CMP, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xD2, {Instruction::CMP, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0xD2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xD3, {Instruction::CMP, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+  {0xD3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xD4, {Instruction::PEI, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xD4, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xD5, {Instruction::CMP, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0xD6, {Instruction::DEC, AddressingMode::ZPX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xD7, {Instruction::CMP, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+//  {0xD7, {Instruction::CMP, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+  {0xD7, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xD8, {Instruction::CLD, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xD9, {Instruction::CMP, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0xDA, {Instruction::PHX, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0xDB, {Instruction::STP, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0xDC, {Instruction::JML, AddressingMode::IAX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xDA, {Instruction::PHX, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0xDA, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xDB, {Instruction::STP, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xDB, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xDC, {Instruction::JML, AddressingMode::IAX,  MemoryAccess::READ             }}, // ***65C816**
+  {0xDC, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xDD, {Instruction::CMP, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0xDE, {Instruction::DEC, AddressingMode::ABX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xDF, {Instruction::CMP, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xDF, {Instruction::CMP, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+  {0xDF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xE0, {Instruction::CPX, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xE1, {Instruction::SBC, AddressingMode::IZX,  MemoryAccess::READ             }},
-  {0xE2, {Instruction::SEP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816**
-  {0xE3, {Instruction::SBC, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+//  {0xE2, {Instruction::SEP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816**
+  {0xE2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xE3, {Instruction::SBC, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
+  {0xE3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xE4, {Instruction::CPX, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0xE5, {Instruction::SBC, AddressingMode::ZP0,  MemoryAccess::READ             }},
   {0xE6, {Instruction::INC, AddressingMode::ZP0,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xE7, {Instruction::SBC, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xE7, {Instruction::SBC, AddressingMode::IDL,  MemoryAccess::READ             }}, // ***65C816**
+  {0xE7, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xE8, {Instruction::INX, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xE9, {Instruction::SBC, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xEA, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
-  {0xEB, {Instruction::XBA, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xEB, {Instruction::XBA, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xEB, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xEC, {Instruction::CPX, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0xED, {Instruction::SBC, AddressingMode::ABS,  MemoryAccess::READ             }},
   {0xEE, {Instruction::INC, AddressingMode::ABS,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xEF, {Instruction::SBC, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xEF, {Instruction::SBC, AddressingMode::ABL,  MemoryAccess::READ             }}, // ***65C816**
+  {0xEF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xF0, {Instruction::BEQ, AddressingMode::REL,  MemoryAccess::READ             }},
   {0xF1, {Instruction::SBC, AddressingMode::IZY,  MemoryAccess::READ             }},
-  {0xF2, {Instruction::SBC, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0xF3, {Instruction::SBC, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
-  {0xF4, {Instruction::PEA, AddressingMode::ABS,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xF2, {Instruction::SBC, AddressingMode::IDP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0xF2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xF3, {Instruction::SBC, AddressingMode::ISY,  MemoryAccess::READ             }}, // ***65C816**
+  {0xF3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xF4, {Instruction::PEA, AddressingMode::ABS,  MemoryAccess::READ             }}, // ***65C816**
+  {0xF4, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xF5, {Instruction::SBC, AddressingMode::ZPX,  MemoryAccess::READ             }},
   {0xF6, {Instruction::INC, AddressingMode::ZPX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xF7, {Instruction::SBC, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+//  {0xF7, {Instruction::SBC, AddressingMode::IDLY, MemoryAccess::READ             }}, // ***65C816**
+  {0xF7, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xF8, {Instruction::SED, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xF9, {Instruction::SBC, AddressingMode::ABY,  MemoryAccess::READ             }},
-  {0xFA, {Instruction::PLX, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
-  {0xFB, {Instruction::XCE, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
-  {0xFC, {Instruction::JSR, AddressingMode::IAX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xFA, {Instruction::PLX, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C02-***
+  {0xFA, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xFB, {Instruction::XCE, AddressingMode::IMP,  MemoryAccess::READ             }}, // ***65C816**
+  {0xFB, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+//  {0xFC, {Instruction::JSR, AddressingMode::IAX,  MemoryAccess::READ             }}, // ***65C816**
+  {0xFC, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xFD, {Instruction::SBC, AddressingMode::ABX,  MemoryAccess::READ             }},
   {0xFE, {Instruction::INC, AddressingMode::ABX,  MemoryAccess::READ_MODIFY_WRITE}},
-  {0xFF, {Instruction::SBC, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+//  {0xFF, {Instruction::SBC, AddressingMode::ALX,  MemoryAccess::READ             }}, // ***65C816**
+  {0xFF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
 };
 
 std::string ToString(Instruction instruction) noexcept {

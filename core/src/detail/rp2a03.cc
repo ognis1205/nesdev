@@ -4,6 +4,7 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
+#include <iostream>
 #include "nesdev/core/cpu.h"
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
@@ -55,6 +56,16 @@ void RP2A03::Tick() {
 void RP2A03::Next() {
   // Parse next instruction.
   Parse();
+//  std::cout << "OP: ";
+//  std::cout << std::hex << unsigned(Op()) << " ";
+//  std::cout << Opcodes::ToString(Op()) << std::endl;
+//  std::cout << "pc: ";
+//  std::cout << std::hex << unsigned(REG(pc)) << std::endl;
+//  std::cout << "s : ";
+//  std::cout << std::hex << unsigned(REG(s)) << std::endl;
+//  std::cout << std::endl;
+//  std::string test;
+//  std::cin >> test;
   // Stage the specified addressing mode.
   switch (AddrMode()) {
   case A::ACC:

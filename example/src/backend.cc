@@ -4,6 +4,7 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
+#include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <stdexcept>
@@ -30,7 +31,7 @@ Backend::Backend(nc::NES::Controller* const player_one,
 				   SDL_WINDOWPOS_CENTERED,
 				   nc::PPU::kFrameW,
 				   nc::PPU::kFrameH,
-				   SDL_WINDOW_FULLSCREEN))) {
+				   SDL_WINDOW_RESIZABLE))) {
     std::stringstream ss("failed to create window: "); ss << SDL_GetError();
     throw std::runtime_error(ss.str());
   }
@@ -76,14 +77,13 @@ Backend::Backend(nc::NES::Controller* const player_one,
     std::stringstream ss("failed to create frame condition variable: "); ss << SDL_GetError();
     throw std::runtime_error(ss.str());
   }
-//  GUI::init(screen, renderer);
 }
 
 Backend::~Backend() {
-  if (renderer_) SDL_DestroyRenderer(renderer_);
-  if (window_) SDL_DestroyWindow(window_);
-  if (event_mutex_) SDL_DestroyMutex(event_mutex_);
-  if (frame_mutex_) SDL_DestroyMutex(frame_mutex_);
+  if (renderer_)        SDL_DestroyRenderer(renderer_);
+  if (window_)          SDL_DestroyWindow(window_);
+  if (event_mutex_)     SDL_DestroyMutex(event_mutex_);
+  if (frame_mutex_)     SDL_DestroyMutex(frame_mutex_);
   if (frame_condition_) SDL_DestroyCond(frame_condition_);
   SDL_QuitSubSystem( SDL_INIT_GAMECONTROLLER );
   SDL_Quit();
@@ -107,7 +107,9 @@ void Backend::Draw() {
 
 void Backend::Run() {
   SDL_UnlockMutex(frame_mutex_);
-  for(;;) {
+  for (;;) {
+    SDL_RenderClear(renderer_);
+
     ready_to_draw_ = true;
 
     while (!frame_available_ && !pending_thread_exit_)
@@ -146,14 +148,14 @@ void Backend::HandleEvents() {
       break;
     case SDL_KEYDOWN:
       switch (event.key.keysym.sym) {
-      case SDLK_RETURN:    players_[0]->Start(true);  break;
-      case SDLK_BACKSPACE: players_[0]->Select(true); break;
-      case SDLK_UP:        players_[0]->Up(true);     break;
-      case SDLK_DOWN:      players_[0]->Down(true);   break;
-      case SDLK_LEFT:      players_[0]->Left(true);   break;
-      case SDLK_RIGHT:     players_[0]->Right(true);  break;
-      case SDLK_z:         players_[0]->B(true);      break;
-      case SDLK_x:         players_[0]->A(true);      break;
+      case SDLK_RETURN:    std::cout << "RET" << std::endl; players_[0]->Start(true);  break;
+      case SDLK_BACKSPACE: std::cout << "BAK" << std::endl; players_[0]->Select(true); break;
+      case SDLK_UP:        std::cout << "↑" << std::endl; players_[0]->Up(true);     break;
+      case SDLK_DOWN:      std::cout << "↓" << std::endl; players_[0]->Down(true);   break;
+      case SDLK_LEFT:      std::cout << "←" << std::endl; players_[0]->Left(true);   break;
+      case SDLK_RIGHT:     std::cout << "→" << std::endl; players_[0]->Right(true);  break;
+      case SDLK_z:         std::cout << "B" << std::endl; players_[0]->B(true);      break;
+      case SDLK_x:         std::cout << "A" << std::endl; players_[0]->A(true);      break;
       default: break;
       }
       break;

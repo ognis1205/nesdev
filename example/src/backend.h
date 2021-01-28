@@ -57,7 +57,7 @@ class Backend {
 
   SDL_cond* frame_condition_;
 
-  bool running_ = false;
+  bool running_ = true;
 
   bool ready_to_draw_ = false;
 
