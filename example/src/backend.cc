@@ -91,24 +91,29 @@ Backend::~Backend() {
 
 void Backend::Draw() {
   SDL_LockMutex(frame_mutex_);
+
   std::uint32_t start = SDL_GetTicks();
+
   if (ready_to_draw_) {
     frame_available_ = true;
     std::swap(b_buffer_, f_buffer_);
     SDL_CondSignal(frame_condition_);
   }
-  SDL_UnlockMutex(frame_mutex_);
 
   std::uint32_t delay = SDL_GetTicks() - start;
+
+  SDL_UnlockMutex(frame_mutex_);
+
   if (delay < Backend::kDelay) {
-    SDL_Delay((int)(Backend::kDelay - delay));
+    SDL_Delay(static_cast<Uint32>(Backend::kDelay - delay));
   }
 }
 
 void Backend::Run() {
   SDL_UnlockMutex(frame_mutex_);
+
   for (;;) {
-    SDL_RenderClear(renderer_);
+//    SDL_RenderClear(renderer_);
 
     ready_to_draw_ = true;
 
@@ -129,17 +134,20 @@ void Backend::Run() {
       throw std::runtime_error(ss.str());
     }
 
-    if(SDL_RenderCopy(renderer_, texture_, 0, 0)) {
+    if (SDL_RenderCopy(renderer_, texture_, 0, 0)) {
       std::stringstream ss("failed to copy rendered frame to render target: "); ss << SDL_GetError();
       throw std::runtime_error(ss.str());
     }
+
     SDL_RenderPresent(renderer_);
   }
 }
 
 void Backend::HandleEvents() {
   SDL_Event event;
+
   SDL_LockMutex(event_mutex_);
+
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
     case SDL_QUIT:
@@ -176,6 +184,7 @@ void Backend::HandleEvents() {
       break;
     }
   }
+
   SDL_UnlockMutex(event_mutex_);
 }
 

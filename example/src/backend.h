@@ -16,7 +16,7 @@ class Backend {
  public:
   static const int kFPS = 60;
 
-  static constexpr int kDelay = 100.0f / kFPS;
+  static constexpr int kDelay = 1000.0f / kFPS;
 
  public:
   Backend(nc::NES::Controller* const player_one, nc::NES::Controller* const player_two);

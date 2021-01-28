@@ -15,21 +15,20 @@
 #include <nesdev/core.h>
 #include "backend.h"
 #include "cli.h"
-#include "timing.h"
 #include "utility.h"
 
 namespace nc = nesdev::core;
 
 nc::NES* nes;
 Backend* sdl;
-Timing*  clk;
 
 int Emulate(void*) {
   while (sdl->IsRunning()) {
-    clk->SleepPPU(); nes->Tick();
-//  s  std::cout << unsigned(nes->cpu_registers->a.value) << std::endl;
+    nes->Tick();
+//    std::cout << unsigned(nes->cpu_registers->a.value) << std::endl;
 //    std::cout << unsigned(nes->ppu_registers->vramaddr.value) << std::endl;
-    if (nes->ppu->IsPostRenderLine()) sdl->Draw();
+    if (nes->ppu->IsPostRenderLine() && !nes->ppu->Cycle())
+      sdl->Draw();
   }
   return 0;
 }
@@ -59,7 +58,6 @@ int main(int argc, char** argv) {
     std::ifstream ifs(rom, std::ifstream::binary);
     nes = new nc::NES(nc::ROMFactory::NROM(ifs));
     sdl = new Backend(nes->controller_1.get(), nes->controller_2.get());
-    clk = new Timing(*nes->rom->header.get());
     ifs.close();
 
     nes->ppu->Framebuffer([](std::int16_t x, std::int16_t y, [[maybe_unused]]nc::RGBA rgba) {
@@ -75,7 +73,6 @@ int main(int argc, char** argv) {
 
   if (nes) delete nes;
   if (sdl) delete sdl;
-  if (clk) delete clk;
 
   return EXIT_SUCCESS;
 }

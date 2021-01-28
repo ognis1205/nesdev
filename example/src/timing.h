@@ -36,18 +36,18 @@ class Timing {
 
  public:
   void SleepPPU() {
-    std::this_thread::sleep_for(std::chrono::nanoseconds(unsigned(1e6 / ppu_clock_rate_)));
+    std::this_thread::sleep_for(std::chrono::milliseconds(unsigned(1e6 / ppu_clock_rate_)));
   }
 
   void SleepCPU() {
-    std::this_thread::sleep_for(std::chrono::nanoseconds(unsigned(1e6 / cpu_clock_rate_)));
+    std::this_thread::sleep_for(std::chrono::milliseconds(unsigned(1e6 / cpu_clock_rate_)));
   }
 
   double FPS() const noexcept {
     return fps_;
   }
 
- private:
+ public:
   double cpu_clock_rate_;
 
   double ppu_clock_rate_;
