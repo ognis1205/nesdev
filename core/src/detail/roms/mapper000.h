@@ -55,12 +55,20 @@ class Mapper000 final : public ROM::Mapper {
   void Write(ROM::Mapper::Space space, Address address, Byte byte) const override {
     switch (space) {
     case ROM::Mapper::Space::CPU:
+//      if (chips_->prg_rom->HasValidAddress(address)) {//
+//	chips_->prg_rom->Write(address, byte);        //
+//	return;                                       //
+//      }                                               //
       if (chips_->prg_ram->HasValidAddress(address)) {
 	chips_->prg_ram->Write(address, byte);
 	return;
       }
       [[fallthrough]];
     case ROM::Mapper::Space::PPU:
+//      if (chips_->chr_rom->HasValidAddress(address)) {//
+//	chips_->chr_rom->Write(address, byte);        //
+//	return;                                       //
+//      }                                               //
       if (chips_->chr_ram->HasValidAddress(address)) {
 	chips_->chr_ram->Write(address, byte);
 	return;

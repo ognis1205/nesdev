@@ -39,9 +39,10 @@ NES::NES(std::unique_ptr<ROM> rom)
       cpu{CPUFactory::RP2A03(cpu_registers.get(), cpu_bus.get())} {
   // https://wiki.nesdev.com/w/index.php/CPU_power_up_state
   ppu->Connect(this->rom.get());
-  cpu_registers->p.value = 0x34;
-  cpu_registers->a.value = cpu_registers->x.value = cpu_registers->y.value = 0x00;
-  cpu_registers->s.value = 0xFD;
+  cpu->Reset();
+  cpu_registers->p.value = {0x34};
+//  cpu_registers->a.value = cpu_registers->x.value = cpu_registers->y.value = 0x00;
+//  cpu_registers->s.value = {0xFD};
 }
 
 void NES::Tick() {

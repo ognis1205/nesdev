@@ -159,6 +159,43 @@ class NES final : public Clock {
   virtual void Tick() override;
 
  public:
+  Byte Opcode() const noexcept {
+    return cpu->Op();
+  }
+
+  Byte ProgramCounter() const noexcept {
+    return cpu_registers->pc.value;
+  }
+
+  Byte Accumulator() const noexcept {
+    return cpu_registers->a.value;
+  }
+
+  Byte XRegister() const noexcept {
+    return cpu_registers->x.value;
+  }
+
+  Byte YRegister() const noexcept {
+    return cpu_registers->y.value;
+  }
+
+  Byte StackPointer() const noexcept {
+    return cpu_registers->s.value;
+  }
+
+  Byte StatusRegister() const noexcept {
+    return cpu_registers->p.value;
+  }
+
+  Address EffectiveAddress() const {
+    return cpu->Addr();
+  }
+
+  Byte PPUControlRegister() const noexcept {
+    return ppu_registers->ppuctrl.value;
+  }
+
+ public:
   std::size_t cycle = {0};
   
   const std::unique_ptr<ROM> rom;

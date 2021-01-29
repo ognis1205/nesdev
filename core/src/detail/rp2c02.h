@@ -381,10 +381,6 @@ class RP2C02 final : public PPU {
 	  cycle - 1,
 	  scanline,
 	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F));
-//	context_->framebuffer[scanline * PPU::kFrameW + (cycle - 1)] =
-//	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
-//      	context_->framebuffer[cycle - 1][scanline] =
-//	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F);
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:

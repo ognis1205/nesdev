@@ -12,37 +12,13 @@
 #include <stdexcept>
 #include <string>
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <nesdev/core.h>
 #include "backend.h"
 #include "cli.h"
 #include "utility.h"
 
 namespace nc = nesdev::core;
-
-nc::NES* nes;
-Backend* sdl;
-
-int Emulate(void*) {
-  while (sdl->IsRunning()) {
-    nes->Tick();
-//    std::cout << unsigned(nes->cpu_registers->a.value) << std::endl;
-//    std::cout << unsigned(nes->ppu_registers->vramaddr.value) << std::endl;
-    if (nes->ppu->IsPostRenderLine() && !nes->ppu->Cycle())
-      sdl->Draw();
-  }
-  return 0;
-}
-
-void Start() {
-  SDL_Thread* emulation;
-  if (!(emulation = SDL_CreateThread(Emulate, "NesDev game engine", 0)))
-    exit(1);
-
-  while (sdl->IsRunning()) {
-    sdl->Run();
-    SDL_WaitThread(emulation, 0);
-  }
-}
 
 int main(int argc, char** argv) {
   Utility::Init();
@@ -56,23 +32,32 @@ int main(int argc, char** argv) {
 
   try {
     std::ifstream ifs(rom, std::ifstream::binary);
-    nes = new nc::NES(nc::ROMFactory::NROM(ifs));
-    sdl = new Backend(nes->controller_1.get(), nes->controller_2.get());
+    nc::NES nes(nc::ROMFactory::NROM(ifs));
+    Backend sdl(nes.controller_1.get(), nes.controller_2.get());
     ifs.close();
 
-    nes->ppu->Framebuffer([](std::int16_t x, std::int16_t y, [[maybe_unused]]nc::RGBA rgba) {
-//      sdl->Pixel(x, y, rgba);
-      sdl->Pixel(x, y, Utility::Noise<0x00000000, 0x00FFFFFF>());
+    nes.ppu->Framebuffer([&sdl](std::int16_t x, std::int16_t y, [[maybe_unused]]nc::RGBA rgba) {
+      sdl.Pixel(x, y, rgba);
     });
 
-    SDL_ShowCursor(SDL_DISABLE);
-    Start();
+    //nes->apu->Sampling([]() {
+    //  /* This is a placeholder for APU API. */
+    //});
+
+    while (sdl.IsRunning()) {
+      nes.Tick();
+      if (nes.cpu->Idle() && (nes.cycle % 3 == 0)) {
+	Utility::Debug(nes);
+	int test;
+	std::cin >> test;
+      }
+      if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0) {
+	sdl.Update();
+      }
+    }
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
   }
-
-  if (nes) delete nes;
-  if (sdl) delete sdl;
 
   return EXIT_SUCCESS;
 }

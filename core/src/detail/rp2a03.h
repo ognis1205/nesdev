@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_RP2A03_H_
 #define _NESDEV_CORE_DETAIL_RP2A03_H_
+#include <iostream>
 #include <cstdint>
 #include <functional>
 #include "nesdev/core/cpu.h"
@@ -35,6 +36,8 @@ class RP2A03 final : public CPU {
   void Tick() override;
 
   void Next() override;
+
+  bool Idle() noexcept override;
 
   void Reset() noexcept override;
 

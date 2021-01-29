@@ -23,13 +23,7 @@ class Backend {
 
   ~Backend();
 
-  void Draw();
-
-  void Run();
-
-  void HandleEvents();
-
-  void Stop();
+  void Update();
 
  public:
   void Pixel(std::int16_t x, std::int16_t y, nc::RGBA colour) {
@@ -39,6 +33,9 @@ class Backend {
   bool IsRunning() {
     return running_;
   }
+
+ private:
+  void HandleEvents();
 
  private:
   SDL_Window* window_;
@@ -51,21 +48,11 @@ class Backend {
 
   Uint32* f_buffer_;
 
-  SDL_mutex* frame_mutex_;
-
-  SDL_mutex* event_mutex_;
-
-  SDL_cond* frame_condition_;
+  nc::NES::Controller* players_[2];
 
   bool running_ = true;
 
-  bool ready_to_draw_ = false;
-
-  bool frame_available_ = false;
-
-  bool pending_thread_exit_ = false;
-
-  nc::NES::Controller* players_[2];
+  std::uint32_t updated_time_ = {0};
 };
 
 #endif  // ifndef _BACKEND_H_

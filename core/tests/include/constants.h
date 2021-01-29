@@ -49,7 +49,8 @@ static const std::vector<Op> kOpcodes = {
   {"???", "IMP", 0},
   {"CLC", "IMP", 2},
   {"ORA", "ABY", 4},
-  {"INC", "ACC", 2}, // ***65C02-***
+  //  {"INC", "ACC", 2}, // ***65C02-***
+  {"???", "IMP", 0},
   {"???", "IMP", 0},
   {"???", "IMP", 0},
   {"ORA", "ABX", 4},
@@ -83,9 +84,11 @@ static const std::vector<Op> kOpcodes = {
   {"???", "IMP", 0},
   {"SEC", "IMP", 2},
   {"AND", "ABY", 4},
-  {"DEC", "ACC", 2}, // ***65C02-***
+//    {"DEC", "ACC", 2},  // ***65C02-***
+  {"???", "IMP", 0},    
   {"???", "IMP", 0},
-  {"BIT", "ABX", 5}, // ***65C02-***
+//  {"BIT", "ABX", 5}, // ***65C02-***
+  {"???", "IMP", 0},    
   {"AND", "ABX", 4},
   {"ROL", "ABX", 7},
   {"???", "IMP", 0},
@@ -167,7 +170,8 @@ static const std::vector<Op> kOpcodes = {
   {"STX", "ZP0", 3},
   {"???", "IMP", 0},
   {"DEY", "IMP", 2},
-  {"BIT", "IMM", 2}, // ***65C02-***
+//  {"BIT", "IMM", 2}, // ***65C02-***
+  {"???", "IMP", 0},    
   {"TXA", "IMP", 2},
   {"???", "IMP", 0},
   {"STY", "ABS", 4},

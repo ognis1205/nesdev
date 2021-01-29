@@ -295,7 +295,7 @@ const std::map<Byte, Opcode> lookup = {
   {0xC0, {Instruction::CPY, AddressingMode::IMM,  MemoryAccess::READ             }},
   {0xC1, {Instruction::CMP, AddressingMode::IZX,  MemoryAccess::READ             }},
 //  {0xC2, {Instruction::REP, AddressingMode::IMM,  MemoryAccess::READ             }}, // ***65C816**
-  {0xB2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
+  {0xC2, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
 //  {0xC3, {Instruction::CMP, AddressingMode::SR,   MemoryAccess::READ             }}, // ***65C816**
   {0xC3, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
   {0xC4, {Instruction::CPY, AddressingMode::ZP0,  MemoryAccess::READ             }},

@@ -36,8 +36,47 @@ RP2A03::RP2A03(RP2A03::Registers* const registers, MMU* const mmu)
 RP2A03::~RP2A03() {}
 
 void RP2A03::Tick() {
-  if (ClearWhenCompleted()) Next();
-  else Execute();
+  if (ClearWhenCompleted()) {
+//    std::cout << "[[[OPCODE]]]" << std::endl;
+//    std::cout << std::hex << unsigned(Op()) << " ";
+//    std::cout << Opcodes::ToString(Op()) << std::endl;
+//    std::cout << "  pc: ";
+//    std::cout << std::hex << unsigned(registers_->pc.value) << std::endl;
+//    std::cout << " acc: ";
+//    std::cout << std::hex << unsigned(registers_->a.value) << std::endl;
+//    std::cout << "   x: ";
+//    std::cout << std::hex << unsigned(registers_->x.value) << std::endl;
+//    std::cout << "   y: ";
+//    std::cout << std::hex << unsigned(registers_->y.value) << std::endl;
+//    std::cout << "stkp: ";
+//    std::cout << std::hex << unsigned(registers_->s.value) << std::endl;
+//    std::cout << std::endl;
+//    std::cout << " carry: ";
+//    std::cout << std::hex << unsigned(registers_->p.carry) << std::endl;
+//    std::cout << "  zero: ";
+//    std::cout << std::hex << unsigned(registers_->p.zero) << std::endl;
+//    std::cout << " d-irq: ";
+//    std::cout << std::hex << unsigned(registers_->p.irq_disable) << std::endl;
+//    std::cout << " dec-m: ";
+//    std::cout << std::hex << unsigned(registers_->p.decimal_mode) << std::endl;
+//    std::cout << "   brk: ";
+//    std::cout << std::hex << unsigned(registers_->p.brk_command) << std::endl;
+//    std::cout << " unuse: ";
+//    std::cout << std::hex << unsigned(registers_->p.unused) << std::endl;
+//    std::cout << " oflow: ";
+//    std::cout << std::hex << unsigned(registers_->p.overflow) << std::endl;
+//    std::cout << "   neg: ";
+//    std::cout << std::hex << unsigned(registers_->p.negative) << std::endl;
+//    std::cout << std::endl;
+//    std::cout << "addr: ";
+//    std::cout << std::hex << unsigned(context_.address.effective) << std::endl;
+//    std::cout << std::endl;
+//    int test;
+//    std::cin >> test;
+    Next();
+  } else {
+    Execute();
+  }
   ++context_.cycle;
 }
 
@@ -56,16 +95,6 @@ void RP2A03::Tick() {
 void RP2A03::Next() {
   // Parse next instruction.
   Parse();
-//  std::cout << "OP: ";
-//  std::cout << std::hex << unsigned(Op()) << " ";
-//  std::cout << Opcodes::ToString(Op()) << std::endl;
-//  std::cout << "pc: ";
-//  std::cout << std::hex << unsigned(REG(pc)) << std::endl;
-//  std::cout << "s : ";
-//  std::cout << std::hex << unsigned(REG(s)) << std::endl;
-//  std::cout << std::endl;
-//  std::string test;
-//  std::cin >> test;
   // Stage the specified addressing mode.
   switch (AddrMode()) {
   case A::ACC:
@@ -167,49 +196,57 @@ void RP2A03::Next() {
   case I::BCC:
     Stage([this] { REG(pc)++;                                                                              }, IfCarry()   );
     Stage([    ] { /* Check if carry is clear, done in staging phase here. */                              }, IfNotCarry());
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotCarry());
     break;
   case I::BCS:
     Stage([this] { REG(pc)++;                                                                              }, IfNotCarry());
     Stage([    ] { /* Check if carry is set, done in staging phase here. */                                }, IfCarry()   );
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry()   );
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry()   );
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry());
     Stage([    ] { /* Do nothing. */                                                                       }, IfCarry()   );
     break;
   case I::BEQ:
     Stage([this] { REG(pc)++;                                                                              }, IfNotZero());
     Stage([    ] { /* Check if zero is set, done in staging phase here. */                                 }, IfZero()   );
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero()   );
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero()   );
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero());
     Stage([    ] { /* Do nothing. */                                                                       }, IfZero()   );
     break;
   case I::BNE:
     Stage([this] { REG(pc)++;                                                                              }, IfZero()   );
     Stage([    ] { /* Check if zero is clear, done in staging phase here. */                               }, IfNotZero());
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotZero());
     break;
   case I::BMI:
     Stage([this] { REG(pc)++;                                                                              }, IfNotNegative());
     Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfNegative()   );
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative()   );
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative()   )
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfNegative()   );
     break;
   case I::BPL:
     Stage([this] { REG(pc)++;                                                                              }, IfNegative()   );
     Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotNegative());
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotNegative());
     break;
   case I::BVC:
     Stage([this] { REG(pc)++;                                                                              }, IfOverflow()   );
     Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotOverflow());
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotOverflow());
     break;
   case I::BVS:
     Stage([this] { REG(pc)++;                                                                              }, IfNotOverflow());
     Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfOverflow()   );
-    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow()   );
+//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow()   );
+    Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfOverflow()   );
     break;
   case I::BIT:
@@ -376,15 +413,19 @@ void RP2A03::Next() {
   }
 }
 
+bool RP2A03::Idle() noexcept {
+  return pipeline_.Done();
+}
+
 void RP2A03::Reset() noexcept {
-  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       }, IfReset());
-  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); }, IfReset());
-  Stage([this] { REG(a) = 0x00;                                           }, IfReset());
-  Stage([this] { REG(x) = 0x00;                                           }, IfReset());
-  Stage([this] { REG(y) = 0x00;                                           }, IfReset());
-  Stage([this] { REG(s) = Stack::kHead;                                   }, IfReset());
-  Stage([this] { REG(p) = 0x00 | MSK(unused);                             }, IfReset());
-  if (IfReset()) context_.is_rst_signaled = false;
+  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       }/*, IfReset()*/);
+  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); }/*, IfReset()*/);
+  Stage([this] { REG(a) = 0x00;                                           }/*, IfReset()*/);
+  Stage([this] { REG(x) = 0x00;                                           }/*, IfReset()*/);
+  Stage([this] { REG(y) = 0x00;                                           }/*, IfReset()*/);
+  Stage([this] { REG(s) = Stack::kHead;                                   }/*, IfReset()*/);
+  Stage([this] { REG(p) = 0x00 | MSK(unused);                             }/*, IfReset()*/);
+//  if (IfReset()) context_.is_rst_signaled = false;
 }
 
 void RP2A03::IRQ() noexcept {

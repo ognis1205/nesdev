@@ -64,6 +64,8 @@ class CPU : public Clock {
 
   virtual Byte Fetch() noexcept = 0;
 
+  virtual bool Idle() noexcept = 0;
+
   virtual void Reset() noexcept = 0;
 
   virtual void IRQ() noexcept = 0;
@@ -101,45 +103,6 @@ class CPU : public Clock {
     return context_.opcode->memory_access;
   }
 
- NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  struct Context {
-    void Clear() {
-      opcode.reset();
-      cycle             = {0};
-      fetched           = {0x00};
-      opcode_byte       = {0x00};
-      is_page_crossed   = false;
-      is_rst_signaled   = false;
-      address.effective = {0x0000};
-      pointer.effective = {0x0000};
-    }
-
-    std::size_t cycle = {0};
-
-    Byte fetched = {0x00};
-
-    Byte opcode_byte = {0x00};
-
-    std::optional<Opcode> opcode;
-
-    bool is_page_crossed = false;
-
-    bool is_rst_signaled = false;
-
-    union {
-      Address effective;
-      Bitfield<0, 8, Address> lo;
-      Bitfield<8, 8, Address> hi;
-    } address = {0x0000};
-
-    union {
-      Address effective;
-      Bitfield<0, 8, Address> lo;
-      Bitfield<8, 8, Address> hi;
-    } pointer = {0x0000};
-  };
-
- NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   [[nodiscard]]
   Address Addr() const noexcept {
     return context_.address.effective;
@@ -170,6 +133,46 @@ class CPU : public Clock {
     return context_.pointer.hi;
   }
 
+  bool CrossPage() noexcept {
+    return context_.is_page_crossed;
+  }
+
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
+  struct Context {
+    void Clear() {
+      opcode.reset();
+      cycle             = {0};
+      fetched           = {0x00};
+      opcode_byte       = {0x00};
+      is_page_crossed   = false;
+      address.effective = {0x0000};
+      pointer.effective = {0x0000};
+    }
+
+    std::size_t cycle = {0};
+
+    Byte fetched = {0x00};
+
+    Byte opcode_byte = {0x00};
+
+    std::optional<Opcode> opcode;
+
+    bool is_page_crossed = false;
+
+    union {
+      Address effective;
+      Bitfield<0, 8, Address> lo;
+      Bitfield<8, 8, Address> hi;
+    } address = {0x0000};
+
+    union {
+      Address effective;
+      Bitfield<0, 8, Address> lo;
+      Bitfield<8, 8, Address> hi;
+    } pointer = {0x0000};
+  };
+
+ NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   void Addr(Address address) noexcept {
     context_.address.effective = address;
   }
@@ -204,10 +207,6 @@ class CPU : public Clock {
     context_.pointer.hi = hi;
   }
 
-  bool CrossPage() noexcept {
-    return context_.is_page_crossed;
-  }
-
   [[nodiscard]]
   bool If(Instruction instruction) const noexcept {
     return instruction == Inst();
@@ -236,11 +235,6 @@ class CPU : public Clock {
   [[nodiscard]]
   bool IfNot(MemoryAccess memory_access) const noexcept {
     return !If(memory_access);
-  }
-
-  [[nodiscard]]
-  bool IfReset() const noexcept {
-    return context_.is_rst_signaled;
   }
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
