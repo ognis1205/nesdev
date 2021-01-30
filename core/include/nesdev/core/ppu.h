@@ -354,6 +354,11 @@ class PPU : public Clock {
     return context_.scanline;
   }
 
+  [[nodiscard]]
+  RGBA Colour(Byte intensity, Byte colour) {
+    return palette_.Colour(intensity, colour);
+  }
+
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
   bool IsPreRenderOrVisibleLine() const noexcept {

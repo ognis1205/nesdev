@@ -100,22 +100,25 @@ class Utility {
 	    std::int16_t x = h * PTTR_DISP_W + (i % TILE_BYTE_COUNT) * TILE_PIXEL_W + k;
 	    std::int16_t y = (i / TILE_BYTE_COUNT) * TILE_PIXEL_H + j;
 
-            nes.ppu->Write(0x2006, (h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0xFF00);
-	    nes.ppu->Write(0x2006, (h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0x00FF);
-	    nes.ppu->Read(0x2007);
+            nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0xFF00) >> 8);
+	    nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0x00FF) >> 0);
+	    nes.ppu->Read(0x2007); // Data deffered
 	    nc::Byte lo = nes.ppu->Read(0x2007);
 
-            nes.ppu->Write(0x2006, (h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0xFF00);
-	    nes.ppu->Write(0x2006, (h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0x00FF);
-	    nes.ppu->Read(0x2007);
+            nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0xFF00) >> 8);
+	    nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0x00FF) >> 0);
+	    nes.ppu->Read(0x2007); // Data deffered
 	    nc::Byte hi = nes.ppu->Read(0x2007);
 
-            std::uint16_t index = (TILE_INDEX(hi, k) << 1) | TILE_INDEX(lo, k);
-	    nc::Byte r = palette[index + 0];
-	    nc::Byte g = palette[index + 1];
-	    nc::Byte b = palette[index + 2];
+//	    nes.ppu_registers->ppumask.emphasize_red   = true;
+//	    nes.ppu_registers->ppumask.emphasize_green = true;
+//	    nes.ppu_registers->ppumask.emphasize_blue  = true;
+	    nc::RGBA rgba = nes.ppu->Colour(
+	      nes.ppu_registers->ppumask.intensity,
+	      (TILE_INDEX(hi, k) << 5) | TILE_INDEX(lo, k));
+//	      (TILE_INDEX(hi, k) << 1) | TILE_INDEX(lo, k));
 
-            sdl.Pixel(x, y, (r << 16) | (g << 8) | b);
+	    sdl.Pixel(x, y, rgba);
 	  }
 	}
       }

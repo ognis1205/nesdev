@@ -48,6 +48,8 @@ int main(int argc, char** argv) {
     //nes->apu->Sampling([&sdl]() {
     //  /* This is a placeholder for APU API. */
     //});
+
+    Utility::ShowHeaderInfo(nes);
  
     while (sdl.IsRunning() && cli.Defined("--run")) {
       nes.Tick();
