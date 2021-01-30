@@ -191,8 +191,20 @@ class NES final : public Clock {
     return cpu->Addr();
   }
 
-  Byte PPUControlRegister() const noexcept {
+  Byte PPUControl() const noexcept {
     return ppu_registers->ppuctrl.value;
+  }
+
+  Byte PPUMask() const noexcept {
+    return ppu_registers->ppumask.value;
+  }
+
+  Address VRAMAddress() const {
+    return ppu_registers->vramaddr.value;
+  }
+
+  Address TRAMAddress() const {
+    return ppu_registers->vramaddr.value;
   }
 
  public:

@@ -20,12 +20,17 @@
 
 namespace nc = nesdev::core;
 
+void Debug(const nc::NES& nes) {
+  Utility::Debug(nes);
+  std::cin.ignore();
+}
+
 int main(int argc, char** argv) {
   Utility::Init();
   CLI cli(argc, argv);
 
   std::string rom;
-  if ((rom = std::filesystem::absolute(cli.Get("-f"))).empty()) {
+  if ((rom = std::filesystem::absolute(cli.Get("--rom"))).empty()) {
     std::cerr << "iNES file must be specified" << std::endl;
     exit(1);
   }
@@ -36,24 +41,25 @@ int main(int argc, char** argv) {
     Backend sdl(nes.controller_1.get(), nes.controller_2.get());
     ifs.close();
 
-    nes.ppu->Framebuffer([&sdl](std::int16_t x, std::int16_t y, [[maybe_unused]]nc::RGBA rgba) {
+    nes.ppu->Framebuffer([&sdl](std::int16_t x, std::int16_t y, nc::RGBA rgba) {
       sdl.Pixel(x, y, rgba);
     });
 
-    //nes->apu->Sampling([]() {
+    //nes->apu->Sampling([&sdl]() {
     //  /* This is a placeholder for APU API. */
     //});
-
-    while (sdl.IsRunning()) {
+ 
+    while (sdl.IsRunning() && cli.Defined("--run")) {
       nes.Tick();
-      if (nes.cpu->Idle() && (nes.cycle % 3 == 0)) {
-	Utility::Debug(nes);
-	int test;
-	std::cin >> test;
-      }
-      if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0) {
+      if (nes.cpu->Idle() && (nes.cycle % 3 == 0) && cli.Defined("--debug"))
+	Debug(nes);
+      if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0)
 	sdl.Update();
-      }
+    }
+
+    while (sdl.IsRunning() && !cli.Defined("--run")) {
+      Utility::RenderCHRRom(nes, sdl);
+      sdl.Update();
     }
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
