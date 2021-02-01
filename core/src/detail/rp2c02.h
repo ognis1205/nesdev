@@ -6,6 +6,8 @@
  */
 #ifndef _NESDEV_CORE_DETAIL_RP2C02_H_
 #define _NESDEV_CORE_DETAIL_RP2C02_H_
+#include <iostream>
+#include <iomanip>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -57,6 +59,10 @@ class RP2C02 final : public PPU {
   Byte Read(Address address) override;
 
   void Write(Address address, Byte byte) override;
+
+  bool IsRendering() const noexcept override {
+    return BIT(ppumask, background_enable) || BIT(ppumask, sprite_enable);
+  }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Latch {
@@ -132,8 +138,8 @@ class RP2C02 final : public PPU {
 
     void WritePPUCtrl(Byte byte) {
       REG(ppuctrl)               = Latched(byte);
-      BIT(tramaddr, nametable_x) = BIT(ppuctrl, nametable_x);
-      BIT(tramaddr, nametable_y) = BIT(ppuctrl, nametable_y);
+      BIT(tramaddr, nametable_x) = unsigned(BIT(ppuctrl, nametable_x));
+      BIT(tramaddr, nametable_y) = unsigned(BIT(ppuctrl, nametable_y));
     }
 
     void WritePPUMask(Byte byte) {
@@ -229,9 +235,9 @@ class RP2C02 final : public PPU {
         SHIFT_BACK(attr_hi, 1u);
       }
       if (BIT(ppumask, sprite_enable) && cycle >= 1 && cycle < 258) {
-        for (std::size_t i = 0; i < num_sprites_; i++) {
-          if (sprite_[i].x > 0) {
-            sprite_[i].x--;
+        for (std::size_t i = 0; i < context_->num_sprites; i++) {
+          if (context_->sprite[i].x > 0) {
+            context_->sprite[i].x--;
           } else {
             SHIFT_SPRT(pttr_lo, i, 1u);
             SHIFT_SPRT(pttr_hi, i, 1u);
@@ -241,22 +247,22 @@ class RP2C02 final : public PPU {
     }
 
     void LoadBg() {
-      PUSH_BACK(pttr_lo, static_cast<Byte>(background_.lsb));
-      PUSH_BACK(pttr_hi, static_cast<Byte>(background_.msb));
-      PUSH_BACK(attr_lo, static_cast<Byte>((background_.attr & 0x01) ? 0xFF : 0x00));
-      PUSH_BACK(attr_hi, static_cast<Byte>((background_.attr & 0x02) ? 0xFF : 0x00));
+      PUSH_BACK(pttr_lo, static_cast<Byte>(context_->background.lsb));
+      PUSH_BACK(pttr_hi, static_cast<Byte>(context_->background.msb));
+      PUSH_BACK(attr_lo, static_cast<Byte>((context_->background.attr & 0x01) ? 0xFF : 0x00));
+      PUSH_BACK(attr_hi, static_cast<Byte>((context_->background.attr & 0x02) ? 0xFF : 0x00));
     }
 
     void ReadBgId() {
-      background_.id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
+      context_->background.id = mmu_->Read(0x2000 | BIT(vramaddr, tile_id));
     }
 
     void ReadBgAttr() {
-      background_.attr = mmu_->Read(0x23C0
-                                    | ( BIT(vramaddr, nametable_y)    << 11)
-                                    | ( BIT(vramaddr, nametable_x)    << 10) 
-                                    | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
-                                    | ( BIT(vramaddr, coarse_x)       >>  2));
+      context_->background.attr = mmu_->Read(0x23C0
+					     | ( BIT(vramaddr, nametable_y)    << 11)
+					     | ( BIT(vramaddr, nametable_x)    << 10) 
+					     | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
+					     | ( BIT(vramaddr, coarse_x)       >>  2));
       // Since we know we can access a tile directly from the 12 bit address, we
       // can analyse the bottom bits of the coarse coordinates to provide us with
       // the correct offset into the 8-bit word, to yield the 2 bits we are
@@ -265,22 +271,22 @@ class RP2C02 final : public PPU {
       // Likewise if "coarse x % 4" < 2 we are in the left half else right half.
       // Ultimately we want the bottom two bits of our attribute word to be the
       // palette selected. So shift as required.
-      if (BIT(vramaddr, coarse_y) & 0x02) background_.attr >>= 4;
-      if (BIT(vramaddr, coarse_x) & 0x02) background_.attr >>= 2;
-      background_.attr &= 0x03;
+      if (BIT(vramaddr, coarse_y) & 0x02) context_->background.attr >>= 4;
+      if (BIT(vramaddr, coarse_x) & 0x02) context_->background.attr >>= 2;
+      context_->background.attr &= 0x03;
     }
 
     void ReadBgLSB() {
-      background_.lsb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-                                   + (background_.id << 4)
+      context_->background.lsb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+                                   + (context_->background.id << 4)
                                    + BIT(vramaddr, fine_y));
     }
 
     void ReadBgMSB() {
-      background_.msb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-                                   + (background_.id << 4)
-                                   + BIT(vramaddr, fine_y)
-                                   + 8);
+      context_->background.msb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
+					    + (context_->background.id << 4)
+					    + BIT(vramaddr, fine_y)
+					    + 8);
     }
 
     void ClearSp() {
@@ -292,36 +298,40 @@ class RP2C02 final : public PPU {
 
     void EvaluateSpAt(std::int16_t scanline) {
       // Clear sprites scanline with 0xFF, because 0xFF y coordinate is not visible.
-      std::memset(sprite_, 0xFF, PPU::kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
-      num_sprites_ = 0;
+      std::memset(context_->sprite,
+		  0xFF,
+		  PPU::kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
+      context_->num_sprites = 0;
       ClearSp();
       // Populate sprites to be rendered, that is, sprites which "collide" to the scanline.
       std::size_t entry = 0;
       may_sprite_zero_hit_ = false;
-      while (entry < chips_->oam->Size() && num_sprites_ < PPU::kNumSprites + 1) {
+      while (entry < chips_->oam->Size() && context_->num_sprites < PPU::kNumSprites + 1) {
         Byte entry_addr = 4 * entry;
         // To evaluate "collide", compare y coordinate.
         std::int16_t diff = scanline - static_cast<std::int16_t>(chips_->oam->Read(entry_addr));
-        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && num_sprites_ < PPU::kNumSprites) {
-          std::memcpy(&sprite_[num_sprites_++], &chips_->oam->Data()[entry_addr], sizeof(PPU::ObjectAttributeMap<>::Entry));
+        if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && context_->num_sprites < PPU::kNumSprites) {
+          std::memcpy(&context_->sprite[context_->num_sprites++],
+		      &chips_->oam->Data()[entry_addr],
+		      sizeof(PPU::ObjectAttributeMap<>::Entry));
           if (entry == 0) may_sprite_zero_hit_ = true;
         }
         entry++;
       }
-      BIT(ppustatus, sprite_overflow) = (num_sprites_ > PPU::kNumSprites);
+      BIT(ppustatus, sprite_overflow) = (context_->num_sprites > PPU::kNumSprites);
     }
 
     void GatherSpAt(std::int16_t scanline) {
-      for (std::size_t entry = 0; entry < num_sprites_; entry++) {
+      for (std::size_t entry = 0; entry < context_->num_sprites; entry++) {
         Address addr;
         if (Is8x8Mode())
           addr = (BIT(ppuctrl, sprite_tile) << 12)
-            | (sprite_[entry].id << 4)
-            | (IsFlippedV(entry) ? (7 - (scanline - sprite_[entry].y)) : (scanline - sprite_[entry].y));
+            | (context_->sprite[entry].id << 4)
+            | (IsFlippedV(entry) ? (7 - (scanline - context_->sprite[entry].y)) : (scanline - context_->sprite[entry].y));
         else
-          addr = ((sprite_[entry].id & 0x01) << 12)
-            | ((IsTopHalf(scanline, entry) ? (sprite_[entry].id & 0xFE) : ((sprite_[entry].id & 0xFE) + 1)) << 4)
-            | (IsFlippedV(entry) ? (7 - ((scanline - sprite_[entry].y) & 0x07)) : ((scanline - sprite_[entry].y) & 0x07));
+          addr = ((context_->sprite[entry].id & 0x01) << 12)
+            | ((IsTopHalf(scanline, entry) ? (context_->sprite[entry].id & 0xFE) : ((context_->sprite[entry].id & 0xFE) + 1)) << 4)
+            | (IsFlippedV(entry) ? (7 - ((scanline - context_->sprite[entry].y) & 0x07)) : ((scanline - context_->sprite[entry].y) & 0x07));
 
         Byte pttr_lo = mmu_->Read(addr + 0);
         Byte pttr_hi = mmu_->Read(addr + 8);
@@ -354,11 +364,11 @@ class RP2C02 final : public PPU {
       Byte fg_pri = 0x00;
       if (BIT(ppumask, sprite_enable) && (BIT(ppumask, sprite_leftmost_enable) || (cycle >= 9))) {
         sprite_zero_rendered_ = false;
-        for (std::size_t entry = 0; entry < num_sprites_; entry++) {
-          if (sprite_[entry].x == 0) {
+        for (std::size_t entry = 0; entry < context_->num_sprites; entry++) {
+          if (context_->sprite[entry].x == 0) {
             fg_pix = (static_cast<Byte>((SPRT(pttr_hi, entry) & 0x80) > 0) << 1) | static_cast<Byte>((SPRT(pttr_lo, entry) & 0x80) > 0);
-            fg_pal = (sprite_[entry].attr & 0x03) + 0x04;
-            fg_pri = (sprite_[entry].attr & 0x20) == 0;
+            fg_pal = (context_->sprite[entry].attr & 0x03) + 0x04;
+            fg_pri = (context_->sprite[entry].attr & 0x20) == 0;
             if (fg_pix != 0) {
               if (entry == 0) sprite_zero_rendered_ = true;
               break;
@@ -389,17 +399,17 @@ class RP2C02 final : public PPU {
     }
 
     bool IsTopHalf(std::int16_t scanline, std::size_t entry) const noexcept {
-      return scanline - sprite_[entry].y < 8;
+      return scanline - context_->sprite[entry].y < 8;
     }
 
     bool IsFlippedV(std::size_t entry) const {
       NESDEV_CORE_CASSERT(entry < PPU::kNumSprites + 1, "Invalid sprite entry specified");
-      return sprite_[entry].attr & 0x80;
+      return context_->sprite[entry].attr & 0x80;
     }
 
     bool IsFlippedH(std::size_t entry) const {
       NESDEV_CORE_CASSERT(entry < PPU::kNumSprites + 1, "Invalid sprite entry specified");
-      return sprite_[entry].attr & 0x40;
+      return context_->sprite[entry].attr & 0x40;
     }
 
     bool SpriteZeroHitOccur() {
@@ -429,17 +439,6 @@ class RP2C02 final : public PPU {
     MMU* const mmu_;
 
     PPU::Chips* const chips_;
-
-    struct Background {
-      Byte id;
-      Byte attr;
-      Byte lsb;
-      Byte msb;
-    } background_;
-
-    PPU::ObjectAttributeMap<>::Entry sprite_[PPU::kNumSprites];
-
-    std::size_t num_sprites_   = {0};
 
     bool may_sprite_zero_hit_  = false;
 
@@ -483,11 +482,6 @@ class RP2C02 final : public PPU {
         Scanline(-1); TransitFrame();
       }
     }
-  }
-
-  [[nodiscard]]
-  bool IsRendering() const noexcept {
-    return BIT(ppumask, background_enable) || BIT(ppumask, sprite_enable);
   }
 
   [[nodiscard]]
@@ -633,16 +627,16 @@ class RP2C02 final : public PPU {
 
   void TransferX() noexcept {
     if (IsRendering()) {
-      BIT(vramaddr, nametable_x) = BIT(tramaddr, nametable_x);
-      BIT(vramaddr, coarse_x)    = BIT(tramaddr, coarse_x);
+      BIT(vramaddr, nametable_x) = unsigned(BIT(tramaddr, nametable_x));
+      BIT(vramaddr, coarse_x)    = unsigned(BIT(tramaddr, coarse_x));
     }
   }
 
   void TransferY() noexcept {
     if (IsRendering()) {
-      BIT(vramaddr, fine_y)      = BIT(tramaddr, fine_y);
-      BIT(vramaddr, nametable_y) = BIT(tramaddr, nametable_y);
-      BIT(vramaddr, coarse_y)    = BIT(tramaddr, coarse_y);
+      BIT(vramaddr, fine_y)      = unsigned(BIT(tramaddr, fine_y));
+      BIT(vramaddr, nametable_y) = unsigned(BIT(tramaddr, nametable_y));
+      BIT(vramaddr, coarse_y)    = unsigned(BIT(tramaddr, coarse_y));
     }
   }
 

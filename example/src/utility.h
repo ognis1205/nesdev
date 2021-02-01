@@ -24,8 +24,8 @@ class Utility {
     srand(time(nullptr));
   }
 
-  template<nc::RGBA From, nc::RGBA To>
-  static nc::RGBA Noise() noexcept {
+  template<nc::ARGB From, nc::ARGB To>
+  static nc::ARGB Noise() noexcept {
     return From + rand() % (To - From + 1);
   }
 
@@ -63,10 +63,37 @@ class Utility {
     std::cerr << p << std::endl;
     std::cerr << std::endl;
     std::cerr << "[PPU]" << std::endl;
-    std::cerr << "vram: ";
+    std::cerr << "   vram: ";
     std::cerr << std::hex << unsigned(nes.VRAMAddress()) << std::endl;
-    std::cerr << "tram: ";
+    std::cerr << "u  f  fnn    c    c" << std::endl;
+    std::cerr << "s  |  |||    |    |" << std::endl;
+    std::cerr << "e  y  xyx    y    x" << std::endl;
+    std::bitset<4>  vram_m((nes.VRAMAddress() & 0b1111000000000000) >> 12);
+    std::bitset<12> vram_l((nes.VRAMAddress() & 0b0000111111111111) >>  0);
+    std::bitset<3>  finex ((nes.FineX()       & 0b00000111)         >>  0);
+    std::cerr << vram_m << finex << vram_l << std::endl;
+    std::cerr << "   tram: ";
     std::cerr << std::hex << unsigned(nes.TRAMAddress()) << std::endl;
+    std::cerr << "u  f  fnn    c    c" << std::endl;
+    std::cerr << "s  |  |||    |    |" << std::endl;
+    std::cerr << "e  y  xyx    y    x" << std::endl;
+    std::bitset<4>  tram_m(nes.TRAMAddress() & 0b1111000000000000);
+    std::bitset<12> tram_l(nes.TRAMAddress() & 0b0000111111111111);    
+    std::cerr << tram_m << finex << tram_l << std::endl;
+    std::cerr << "  bg_id: ";
+    std::cerr << std::hex << unsigned(nes.ppu->BgId()) << std::endl;
+    std::cerr << "bg_attr: ";
+    std::cerr << std::hex << unsigned(nes.ppu->BgAttr()) << std::endl;
+    std::cerr << " bg_lsb: ";
+    std::cerr << std::hex << unsigned(nes.ppu->BgLSB()) << std::endl;
+    std::cerr << " bg_msb: ";
+    std::cerr << std::hex << unsigned(nes.ppu->BgMSB()) << std::endl;
+    std::cerr << " bg_pttr_lo: " << std::endl;;
+    std::bitset<16> bg_pttr_lo(nes.BgPttrLo());
+    std::cerr << bg_pttr_lo << std::endl;
+    std::cerr << " bg_pttr_hi: " << std::endl;
+    std::bitset<16> bg_pttr_hi(nes.BgPttrHi());
+    std::cerr << bg_pttr_hi << std::endl;
     std::cerr << std::endl;
     std::cerr << "nnisbsmn" << std::endl;
     std::cerr << "xyntth|m" << std::endl;
@@ -91,34 +118,33 @@ class Utility {
 # define PTTR_BYTE_COUNT (TILE_BYTE_COUNT * PTTR_TILE_COUNT)
 # define PTTR_DISP_W 128
 
+# define R(x) ((x) & 0x00FF0000)
+# define G(x) ((x) & 0x0000FF00)
+# define B(x) ((x) & 0x000000FF)
+
   static void RenderCHRRom(const nc::NES& nes, Backend& sdl) noexcept {
-    auto palette = nc::Palettes::RP2C02();
     for (auto h = 0; h < NUM_PTTR_TABLES; h++) {
       for (auto i = 0; i < PTTR_TILE_COUNT; i++) {
         for (auto j = 0; j < TILE_PIXEL_H; j++) {
-          for (auto k = 0; k < TILE_PIXEL_W; k++) {
+	  nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0xFF00) >> 8);
+	  nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0x00FF) >> 0);
+	  nes.ppu->Read(0x2007); // Data deffered
+	  nc::Byte lsb = nes.ppu->Read(0x2007);
+
+	  nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0xFF00) >> 8);
+	  nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0x00FF) >> 0);
+	  nes.ppu->Read(0x2007); // Data deffered
+	  nc::Byte msb = nes.ppu->Read(0x2007);
+
+	  for (auto k = 0; k < TILE_PIXEL_W; k++) {
 	    std::int16_t x = h * PTTR_DISP_W + (i % TILE_BYTE_COUNT) * TILE_PIXEL_W + k;
 	    std::int16_t y = (i / TILE_BYTE_COUNT) * TILE_PIXEL_H + j;
 
-            nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0xFF00) >> 8);
-	    nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j) & 0x00FF) >> 0);
-	    nes.ppu->Read(0x2007); // Data deffered
-	    nc::Byte lo = nes.ppu->Read(0x2007);
-
-            nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0xFF00) >> 8);
-	    nes.ppu->Write(0x2006, ((h * PTTR_BYTE_COUNT + i * TILE_BYTE_COUNT + j + TILE_BYTE_COUNT / 2) & 0x00FF) >> 0);
-	    nes.ppu->Read(0x2007); // Data deffered
-	    nc::Byte hi = nes.ppu->Read(0x2007);
-
-//	    nes.ppu_registers->ppumask.emphasize_red   = true;
-//	    nes.ppu_registers->ppumask.emphasize_green = true;
-//	    nes.ppu_registers->ppumask.emphasize_blue  = true;
-	    nc::RGBA rgba = nes.ppu->Colour(
+            nc::ARGB argb = nes.ppu->Colour(
 	      nes.ppu_registers->ppumask.intensity,
-	      (TILE_INDEX(hi, k) << 5) | TILE_INDEX(lo, k));
-//	      (TILE_INDEX(hi, k) << 1) | TILE_INDEX(lo, k));
-
-	    sdl.Pixel(x, y, rgba);
+	      ((1 & 0x3) << 2) | (TILE_INDEX(msb, k) << 1) | TILE_INDEX(lsb, k));
+	    nc::Byte grey = 0.2126f * R(argb) + 0.7152f * G(argb) + 0.0722f * B(argb);
+	    sdl.Pixel(x, y, grey << 16 | grey << 8 | grey);
 	  }
 	}
       }
@@ -128,5 +154,19 @@ class Utility {
  private:
   Utility();
 };
+
+# undef TILE_BYTE_COUNT
+# undef TILE_PIXEL_H
+# undef TILE_PIXEL_W
+# undef TILE_INDEX
+
+# undef NUM_PTTR_TABLES
+# undef PTTR_TILE_COUNT
+# undef PTTR_BYTE_COUNT
+# undef PTTR_DISP_W
+
+# undef R
+# undef G
+# undef B
 
 #endif  // ifndef _UTILITY_H_

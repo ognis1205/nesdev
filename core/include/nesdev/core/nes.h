@@ -203,8 +203,36 @@ class NES final : public Clock {
     return ppu_registers->vramaddr.value;
   }
 
+  Address VRAMTileId() const {
+    return ppu_registers->vramaddr.tile_id;
+  }
+
   Address TRAMAddress() const {
-    return ppu_registers->vramaddr.value;
+    return ppu_registers->tramaddr.value;
+  }
+
+  Byte FineX() const {
+    return ppu_registers->fine_x.value;
+  }
+
+  Address TRAMTileId() const {
+    return ppu_registers->tramaddr.tile_id;
+  }
+
+  Address BgPttrLo() const {
+    return ppu_shifters->background_pttr_lo.value;
+  }
+
+  Address BgPttrHi() const {
+    return ppu_shifters->background_pttr_hi.value;
+  }
+
+  Address BgAttrLo() const {
+    return ppu_shifters->background_attr_lo.value;
+  }
+
+  Address BgAttrHi() const {
+    return ppu_shifters->background_attr_hi.value;
   }
 
  public:

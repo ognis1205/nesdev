@@ -20,7 +20,7 @@ class CPU : public nesdev::core::CPU {
 
   MOCK_METHOD0(Next, void());
 
-  MOCK_METHOD0(MockIdle, bool());
+  MOCK_CONST_METHOD0(MockIsIdle, bool());
 
   MOCK_METHOD0(MockFetch, Byte());
 
@@ -30,8 +30,8 @@ class CPU : public nesdev::core::CPU {
 
   MOCK_METHOD0(MockNMI, void());
 
-  bool Idle() noexcept {
-    return MockIdle();
+  bool IsIdle() const noexcept {
+    return MockIsIdle();
   }
 
   Byte Fetch() noexcept {

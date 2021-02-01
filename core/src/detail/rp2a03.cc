@@ -4,7 +4,6 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-#include <iostream>
 #include "nesdev/core/cpu.h"
 #include "nesdev/core/exceptions.h"
 #include "nesdev/core/macros.h"
@@ -37,42 +36,6 @@ RP2A03::~RP2A03() {}
 
 void RP2A03::Tick() {
   if (ClearWhenCompleted()) {
-//    std::cout << "[[[OPCODE]]]" << std::endl;
-//    std::cout << std::hex << unsigned(Op()) << " ";
-//    std::cout << Opcodes::ToString(Op()) << std::endl;
-//    std::cout << "  pc: ";
-//    std::cout << std::hex << unsigned(registers_->pc.value) << std::endl;
-//    std::cout << " acc: ";
-//    std::cout << std::hex << unsigned(registers_->a.value) << std::endl;
-//    std::cout << "   x: ";
-//    std::cout << std::hex << unsigned(registers_->x.value) << std::endl;
-//    std::cout << "   y: ";
-//    std::cout << std::hex << unsigned(registers_->y.value) << std::endl;
-//    std::cout << "stkp: ";
-//    std::cout << std::hex << unsigned(registers_->s.value) << std::endl;
-//    std::cout << std::endl;
-//    std::cout << " carry: ";
-//    std::cout << std::hex << unsigned(registers_->p.carry) << std::endl;
-//    std::cout << "  zero: ";
-//    std::cout << std::hex << unsigned(registers_->p.zero) << std::endl;
-//    std::cout << " d-irq: ";
-//    std::cout << std::hex << unsigned(registers_->p.irq_disable) << std::endl;
-//    std::cout << " dec-m: ";
-//    std::cout << std::hex << unsigned(registers_->p.decimal_mode) << std::endl;
-//    std::cout << "   brk: ";
-//    std::cout << std::hex << unsigned(registers_->p.brk_command) << std::endl;
-//    std::cout << " unuse: ";
-//    std::cout << std::hex << unsigned(registers_->p.unused) << std::endl;
-//    std::cout << " oflow: ";
-//    std::cout << std::hex << unsigned(registers_->p.overflow) << std::endl;
-//    std::cout << "   neg: ";
-//    std::cout << std::hex << unsigned(registers_->p.negative) << std::endl;
-//    std::cout << std::endl;
-//    std::cout << "addr: ";
-//    std::cout << std::hex << unsigned(context_.address.effective) << std::endl;
-//    std::cout << std::endl;
-//    int test;
-//    std::cin >> test;
     Next();
   } else {
     Execute();
@@ -413,19 +376,18 @@ void RP2A03::Next() {
   }
 }
 
-bool RP2A03::Idle() noexcept {
+bool RP2A03::IsIdle() const noexcept {
   return pipeline_.Done();
 }
 
 void RP2A03::Reset() noexcept {
-  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       }/*, IfReset()*/);
-  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); }/*, IfReset()*/);
-  Stage([this] { REG(a) = 0x00;                                           }/*, IfReset()*/);
-  Stage([this] { REG(x) = 0x00;                                           }/*, IfReset()*/);
-  Stage([this] { REG(y) = 0x00;                                           }/*, IfReset()*/);
-  Stage([this] { REG(s) = Stack::kHead;                                   }/*, IfReset()*/);
-  Stage([this] { REG(p) = 0x00 | MSK(unused);                             }/*, IfReset()*/);
-//  if (IfReset()) context_.is_rst_signaled = false;
+  Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       });
+  Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); });
+  Stage([this] { REG(a) = 0x00;                                           });
+  Stage([this] { REG(x) = 0x00;                                           });
+  Stage([this] { REG(y) = 0x00;                                           });
+  Stage([this] { REG(s) = Stack::kHead;                                   });
+  Stage([this] { REG(p) = 0x00 | MSK(unused);                             });
 }
 
 void RP2A03::IRQ() noexcept {

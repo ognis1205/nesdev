@@ -20,7 +20,7 @@ using Word    = std::uint16_t;
 
 using Address = std::uint16_t;
 
-using RGBA    = std::uint32_t;
+using ARGB    = std::uint32_t;
 
 static constexpr std::size_t k8KByte  =  8 * 1024;
 
@@ -34,28 +34,39 @@ class Bitfield {
  public:
   template <typename U>
   Bitfield& operator=(U that) {
-    value_ = (value_ & ~mask) | ((Width > 1 ? that & (mask >> BitNo) : !!that) << BitNo);
+    value_ = (value_ & ~mask) |
+             ((Width > 1 ? unsigned(that) & (mask >> BitNo) : !!unsigned(that))
+              << BitNo);
     return *this;
   }
 
   template <typename U>
   Bitfield& operator|=(U that) {
     unsigned value = *this;
-    value_ = (value_ & ~mask) | ((Width > 1 ? (value | (that & (mask >> BitNo))) : (value | !!that)) << BitNo);
+    value_ = (value_ & ~mask) |
+             ((Width > 1 ? (value | (unsigned(that) & (mask >> BitNo)))
+                         : (value | !!unsigned(that)))
+              << BitNo);
     return *this;
   }
 
   template <typename U>
   Bitfield& operator&=(U that) {
     unsigned value = *this;
-    value_ = (value_ & ~mask) | ((Width > 1 ? (value & (that & (mask >> BitNo))) : (value & !!that)) << BitNo);
+    value_ = (value_ & ~mask) |
+             ((Width > 1 ? (value & (unsigned(that) & (mask >> BitNo)))
+                         : (value & !!unsigned(that)))
+              << BitNo);
     return *this;
   }
 
   template <typename U>
   Bitfield& operator^=(U that) {
     unsigned value = *this;
-    value_ = (value_ & ~mask) | ((Width > 1 ? (value ^ (that & (mask >> BitNo))) : (value ^ !!that)) << BitNo);
+    value_ = (value_ & ~mask) |
+             ((Width > 1 ? (value ^ (unsigned(that) & (mask >> BitNo)))
+                         : (value ^ !!unsigned(that)))
+              << BitNo);
     return *this;
   }
 

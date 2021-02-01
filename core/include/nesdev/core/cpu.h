@@ -64,7 +64,7 @@ class CPU : public Clock {
 
   virtual Byte Fetch() noexcept = 0;
 
-  virtual bool Idle() noexcept = 0;
+  virtual bool IsIdle() const noexcept = 0;
 
   virtual void Reset() noexcept = 0;
 

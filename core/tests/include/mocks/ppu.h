@@ -24,6 +24,12 @@ class PPU : public nesdev::core::PPU {
   MOCK_METHOD1(Read, Byte(Address));
 
   MOCK_METHOD2(Write, void(Address, Byte));
+
+  MOCK_CONST_METHOD0(MockIsRendering, bool());
+
+  bool IsRendering() const noexcept {
+    return MockIsRendering();
+  }
 };
 
 }  // namespace mocks

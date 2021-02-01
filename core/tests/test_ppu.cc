@@ -127,13 +127,15 @@ TEST_F(PPUTest, ShifterAssignment) {
   auto x = Utility::RandomByte<0x00, 0xFF>();
   shifter_.shift(x);
   EXPECT_EQ(x, shifter_.lo);
+  Address p = shifter_.hi;
 
   auto y = Utility::RandomByte<0x00, 0xFF>();
   shifter_.shift(y);
   EXPECT_EQ(y, shifter_.lo);
-  EXPECT_EQ(x, shifter_.hi);
+  EXPECT_EQ(p, shifter_.hi);
 
   auto z = Utility::RandomByte<0x00, 0xFF>();
+  shifter_.shift <<= 8u;
   shifter_.shift(z);
   EXPECT_EQ(z, shifter_.lo);
   EXPECT_EQ(y, shifter_.hi);
@@ -143,11 +145,12 @@ TEST_F(PPUTest, ShifterShift) {
   auto x = Utility::RandomByte<0x00, 0xFF>();
   shifter_.shift(x);
   EXPECT_EQ(x, shifter_.lo);
+  Address p = shifter_.hi;
 
   auto y = Utility::RandomByte<0x00, 0xFF>();
   shifter_.shift(y);
   EXPECT_EQ(y, shifter_.lo);
-  EXPECT_EQ(x, shifter_.hi);
+  EXPECT_EQ(p, shifter_.hi);
 
   auto s = Utility::RandomByte<0x00, 0x0F>();
   Address e = shifter_.value << s;

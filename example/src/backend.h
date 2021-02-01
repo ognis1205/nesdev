@@ -26,7 +26,7 @@ class Backend {
   void Update();
 
  public:
-  void Pixel(std::int16_t x, std::int16_t y, nc::RGBA colour) {
+  void Pixel(std::int16_t x, std::int16_t y, nc::ARGB colour) {
     b_buffer_[nc::PPU::kFrameW * y + x] = colour;
   }
 

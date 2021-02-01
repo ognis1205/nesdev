@@ -37,7 +37,7 @@ class RP2A03 final : public CPU {
 
   void Next() override;
 
-  bool Idle() noexcept override;
+  bool IsIdle() const noexcept override;
 
   void Reset() noexcept override;
 

@@ -31,9 +31,7 @@ class PPU : public Clock {
   static const int kFrameH = 240;
 
  public:
-//  using Framebuffer = RGBA[kFrameH][kFrameW];
-//  using Framebuffer = RGBA[kFrameW * kFrameH];
-  using PixelWriter = std::function<void(std::int16_t, std::int16_t, RGBA)>;
+  using PixelWriter = std::function<void(std::int16_t, std::int16_t, ARGB)>;
 
   /*
    * The following registers are defined according to the folloing Loopy's archetecture.
@@ -139,7 +137,8 @@ class PPU : public Clock {
       NESDEV_CORE_CASSERT(
 	CHAR_BIT * sizeof(T) > CHAR_BIT * sizeof(U),
 	"Right operand is greater than or equal to the number of bits in the left operand");
-      value_ = (value_ << CHAR_BIT * sizeof(U)) | operand;
+      value_ &= ~((1u << CHAR_BIT * sizeof(U)) - 1u);
+      value_ |= operand;
       return *this;
     }
 
@@ -334,6 +333,8 @@ class PPU : public Clock {
 
   virtual void Write(Address address, Byte byte) = 0;
 
+  virtual bool IsRendering() const noexcept = 0;
+
  public:
   void Connect(ROM* const rom) {
     NESDEV_CORE_CASSERT(rom, "Invalid ROM specified to Connect");
@@ -354,8 +355,24 @@ class PPU : public Clock {
     return context_.scanline;
   }
 
+  Byte BgId() const noexcept {
+    return context_.background.id;
+  }
+
+  Byte BgAttr() const noexcept {
+    return context_.background.attr;
+  }
+
+  Byte BgLSB() const noexcept {
+    return context_.background.lsb;
+  }
+
+  Byte BgMSB() const noexcept {
+    return context_.background.msb;
+  }
+
   [[nodiscard]]
-  RGBA Colour(Byte intensity, Byte colour) {
+  ARGB Colour(Byte intensity, Byte colour) {
     return palette_.Colour(intensity, colour);
   }
 
@@ -413,11 +430,20 @@ class PPU : public Clock {
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   struct Context {
     void Clear() {
-      cycle     = {0};
-      scanline  = {0};
-      odd_frame = false;
-//      std::fill(&framebuffer[0][0], &framebuffer[0][0] + sizeof(framebuffer), 0);
-//      std::fill(framebuffer, framebuffer + sizeof(framebuffer), 0);
+      cycle           = {0};
+      scanline        = {0};
+      num_sprites     = {0};
+      odd_frame       = false;
+      background.id   = {0x00};
+      background.attr = {0x00};
+      background.lsb  = {0x00};
+      background.msb  = {0x00};
+      for (std::size_t entry = 0; entry < kNumSprites; entry++) {
+	sprite[entry].y    = {0x00};
+	sprite[entry].id   = {0x00};
+	sprite[entry].attr = {0x00};
+	sprite[entry].x    = {0x00};
+      }
     }
 
     std::int16_t cycle = {0};
@@ -426,12 +452,22 @@ class PPU : public Clock {
 
     bool odd_frame = false;
 
-//    Framebuffer framebuffer = {};
+    struct Background {
+      Byte id   = {0x00};
+      Byte attr = {0x00};
+      Byte lsb  = {0x00};
+      Byte msb  = {0x00};
+    } background;
+
+    ObjectAttributeMap<>::Entry sprite[kNumSprites];
+
+    std::size_t num_sprites = {0};
+
     PixelWriter pixel_writer;
   };
 
   /*
-   * Predefined pallete stored in VGA Pallete format.
+   * Predefined palette stored in VGA Palette format.
    * [SEE] https://wiki.nesdev.com/w/index.php/.pal
    */
   class Palette {
@@ -482,12 +518,12 @@ class PPU : public Clock {
 
     ~Palette() = default;
 
-    RGBA Colour(Byte intensity, Byte colour) {
+    ARGB Colour(Byte intensity, Byte colour) {
       return data_.at(intensity).at(colour);
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    std::array<std::array<RGBA, 0x40>, 0x08> data_;
+    std::array<std::array<ARGB, 0x40>, 0x08> data_;
   };
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
