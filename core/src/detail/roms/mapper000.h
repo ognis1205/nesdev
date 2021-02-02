@@ -29,7 +29,7 @@ class Mapper000 final : public ROM::Mapper {
     case ROM::Mapper::Space::PPU:
       return chips_->chr_ram->HasValidAddress(address) || chips_->chr_rom->HasValidAddress(address);
     default:
-      NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address space specified", address));
+      NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address space specified to nesdev::core::detail::roms::Mapper000::HasValidAddress", address));
     }
   }
 
@@ -48,34 +48,40 @@ class Mapper000 final : public ROM::Mapper {
 	return chips_->chr_rom->Read(address);
       [[fallthrough]];
     default:
-      NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+      if (space == ROM::Mapper::Space::CPU)
+	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::roms::Mapper000::Read from CPU", address));
+      else
+	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::roms::Mapper000::Read from PPU", address));
     }
   }
 
   void Write(ROM::Mapper::Space space, Address address, Byte byte) const override {
     switch (space) {
     case ROM::Mapper::Space::CPU:
-//      if (chips_->prg_rom->HasValidAddress(address)) {//
-//	chips_->prg_rom->Write(address, byte);        //
-//	return;                                       //
-//      }                                               //
+      if (chips_->prg_rom->HasValidAddress(address)) {//
+	chips_->prg_rom->Write(address, byte);        //
+	return;                                       //
+      }                                               //
       if (chips_->prg_ram->HasValidAddress(address)) {
 	chips_->prg_ram->Write(address, byte);
 	return;
       }
       [[fallthrough]];
     case ROM::Mapper::Space::PPU:
-//      if (chips_->chr_rom->HasValidAddress(address)) {//
-//	chips_->chr_rom->Write(address, byte);        //
-//	return;                                       //
-//      }                                               //
+      if (chips_->chr_rom->HasValidAddress(address)) {//
+	chips_->chr_rom->Write(address, byte);        //
+	return;                                       //
+      }                                               //
       if (chips_->chr_ram->HasValidAddress(address)) {
 	chips_->chr_ram->Write(address, byte);
 	return;
       }
       [[fallthrough]];
     default:
-      NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+      if (space == ROM::Mapper::Space::CPU)
+	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::roms::Mapper000::Write from CPU", address));
+      else
+	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::roms::Mapper000::Write from PPU", address));
     }
   }
 

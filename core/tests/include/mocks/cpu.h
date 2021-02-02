@@ -30,6 +30,18 @@ class CPU : public nesdev::core::CPU {
 
   MOCK_METHOD0(MockNMI, void());
 
+  MOCK_CONST_METHOD0(MockPCRegister, Byte());
+
+  MOCK_CONST_METHOD0(MockARegister, Byte());
+
+  MOCK_CONST_METHOD0(MockXRegister, Byte());
+
+  MOCK_CONST_METHOD0(MockYRegister, Byte());
+
+  MOCK_CONST_METHOD0(MockSRegister, Byte());
+
+  MOCK_CONST_METHOD0(MockPRegister, Byte());
+
   bool IsIdle() const noexcept {
     return MockIsIdle();
   }
@@ -48,6 +60,30 @@ class CPU : public nesdev::core::CPU {
 
   void NMI() noexcept {
     MockNMI();
+  }
+
+  Byte PCRegister() const noexcept {
+    return MockPCRegister();
+  }
+
+  Byte ARegister() const noexcept {
+    return MockARegister();
+  }
+
+  Byte XRegister() const noexcept {
+    return MockXRegister();
+  }
+
+  Byte YRegister() const noexcept {
+    return MockYRegister();
+  }
+
+  Byte SRegister() const noexcept {
+    return MockSRegister();
+  }
+
+  Byte PRegister() const noexcept {
+    return MockPRegister();
   }
 };
 

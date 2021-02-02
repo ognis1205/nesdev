@@ -45,6 +45,30 @@ class RP2A03 final : public CPU {
 
   void NMI() noexcept override;
 
+  Byte PCRegister() const noexcept override {
+    return registers_->pc.value;
+  }
+
+  Byte ARegister() const noexcept override {
+    return registers_->a.value;
+  }
+
+  Byte XRegister() const noexcept override {
+    return registers_->x.value;
+  }
+
+  Byte YRegister() const noexcept override {
+    return registers_->y.value;
+  }
+
+  Byte SRegister() const noexcept override {
+    return registers_->s.value;
+  }
+
+  Byte PRegister() const noexcept override {
+    return registers_->p.value;
+  }
+
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Stack {
    public:

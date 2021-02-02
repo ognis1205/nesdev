@@ -39,12 +39,12 @@ class Chip final : public MemoryBank {
 
   Byte Read(Address address) const override {
     if (HasValidAddress(address)) return *PtrTo(address);
-    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Chip::Read", address));
   }
 
   void Write(Address address, Byte byte) override {
     if (HasValidAddress(address)) *PtrTo(address) = byte;
-    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Chip::Write", address));
   }
 
   std::size_t Size() const noexcept override {

@@ -20,10 +20,10 @@
 
 namespace nc = nesdev::core;
 
-void Debug(const nc::NES& nes) {
-  Utility::Debug(nes);
-  std::cin.ignore();
-}
+//void Debug(const nc::NES& nes) {
+//  Utility::Debug(nes);
+//  std::cin.ignore();
+//}
 
 int main(int argc, char** argv) {
   Utility::Init();
@@ -39,9 +39,9 @@ int main(int argc, char** argv) {
     std::ifstream ifs(rom, std::ifstream::binary);
     nc::NES nes(nc::ROMFactory::NROM(ifs));
     ifs.close();
-    Utility::ShowHeaderInfo(nes);
+    Utility::ShowHeader(nes);
 
-    Backend sdl(nes.controller_1.get(), nes.controller_2.get());
+    Backend sdl(nes, nes.controller_1.get(), nes.controller_2.get());
     nes.ppu->Framebuffer([&sdl](std::int16_t x, std::int16_t y, nc::ARGB rgba) {
       sdl.Pixel(x, y, rgba);
     });
@@ -49,23 +49,25 @@ int main(int argc, char** argv) {
     //  /* This is a placeholder for APU API. */
     //});
 
-    if (cli.Defined("--run")) {
-      while (sdl.IsRunning()) {
-	nes.Tick();
-//	if (nes.cpu->IsIdle() && (nes.cycle % 3 == 0) && cli.Defined("--debug"))
-//	  Debug(nes);
- 	if (nes.ppu->IsRendering() && cli.Defined("--debug"))
-	  Debug(nes);
-	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0)
-	  sdl.Update();
-      }
-    } else {
+    if (cli.Defined("--chr_rom")) {
       while (sdl.IsRunning()) {
 	Utility::RenderCHRRom(nes, sdl);
 	sdl.Update();
       }
+    } else {
+      while (sdl.IsRunning()) {
+	nes.Tick();
+//	if (/*nes.cpu->IsIdle() &&*/ (nes.cycle % 3 == 0))
+//	  Utility::Trace(nes);
+// 	if (nes.ppu->IsRendering() && (nes.cycle % 3 == 0))
+//	  Debug(nes);
+	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0) {
+	  sdl.Update();
+	}
+      }
     }
   } catch (const std::exception& e) {
+    Utility::ShowStackTrace();
     std::cerr << e.what() << std::endl;
   }
 

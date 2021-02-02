@@ -335,6 +335,22 @@ class PPU : public Clock {
 
   virtual bool IsRendering() const noexcept = 0;
 
+  virtual Byte CtrlRegister() const noexcept = 0;
+
+  virtual Byte MaskRegister() const noexcept = 0;
+
+  virtual Address VRAMAddr() const = 0;
+
+  virtual Address TRAMAddr() const = 0;
+
+  virtual Address BgPttrLo() const = 0;
+
+  virtual Address BgPttrHi() const = 0;
+
+  virtual Address BgAttrLo() const = 0;
+
+  virtual Address BgAttrHi() const = 0;
+
  public:
   void Connect(ROM* const rom) {
     NESDEV_CORE_CASSERT(rom, "Invalid ROM specified to Connect");

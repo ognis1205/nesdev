@@ -13,10 +13,30 @@
 #include <bitset>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <queue>
+#include <deque>
+#include <string>
 #include <nesdev/core.h>
 #include "backend.h"
 
 namespace nc = nesdev::core;
+
+namespace {
+
+template <typename T, std::size_t Size, typename Container=std::deque<T>>
+class FixedQueue : public std::queue<T, Container> {
+ public:
+  void push(const T& value) {
+    if (this->size() == Size)
+      this->c.pop_front();
+    std::queue<T, Container>::push(value);
+  }
+};
+
+FixedQueue<std::string, 100> stack_trace;
+
+}
 
 class Utility {
  public:
@@ -29,7 +49,7 @@ class Utility {
     return From + rand() % (To - From + 1);
   }
 
-  static void ShowHeaderInfo(const nc::NES& nes) noexcept {
+  static void ShowHeader(const nc::NES& nes) noexcept {
     std::cerr << "================" << std::endl;
     std::cerr << "[HEADER]" << std::endl;
     std::cerr << "prg rom:" << nes.rom->header->SizeOfPRGRom() << std::endl;
@@ -38,74 +58,107 @@ class Utility {
     std::cerr << "chr ram:" << nes.rom->header->SizeOfCHRRam() << std::endl;
   }
 
-  static void Debug(const nc::NES& nes) noexcept {
-    std::cerr << "================" << std::endl;
-    std::cerr << "[CPU]" << std::endl;
-    std::cerr << std::hex << unsigned(nes.Opcode()) << " ";
-    std::cerr << nc::Opcodes::ToString(nes.Opcode()) << std::endl;
-    std::cerr << "  pc: ";
-    std::cerr << std::hex << unsigned(nes.ProgramCounter()) << std::endl;
-    std::cerr << " acc: ";
-    std::cerr << std::hex << unsigned(nes.Accumulator()) << std::endl;
-    std::cerr << "   x: ";
-    std::cerr << std::hex << unsigned(nes.XRegister()) << std::endl;
-    std::cerr << "   y: ";
-    std::cerr << std::hex << unsigned(nes.YRegister()) << std::endl;
-    std::cerr << "stkp: ";
-    std::cerr << std::hex << unsigned(nes.StackPointer()) << std::endl;
-    std::cerr << "addr: ";
-    std::cerr << std::hex << unsigned(nes.EffectiveAddress()) << std::endl;
-    std::cerr << std::endl;
-    std::cerr << "czidbuon" << std::endl;
-    std::cerr << "aerernfe" << std::endl;
-    std::cerr << "rrqckulg" << std::endl;
-    std::bitset<8> p(nes.StatusRegister());
-    std::cerr << p << std::endl;
-    std::cerr << std::endl;
-    std::cerr << "[PPU]" << std::endl;
-    std::cerr << "   vram: ";
-    std::cerr << std::hex << unsigned(nes.VRAMAddress()) << std::endl;
-    std::cerr << "u  f  fnn    c    c" << std::endl;
-    std::cerr << "s  |  |||    |    |" << std::endl;
-    std::cerr << "e  y  xyx    y    x" << std::endl;
-    std::bitset<4>  vram_m((nes.VRAMAddress() & 0b1111000000000000) >> 12);
-    std::bitset<12> vram_l((nes.VRAMAddress() & 0b0000111111111111) >>  0);
-    std::bitset<3>  finex ((nes.FineX()       & 0b00000111)         >>  0);
-    std::cerr << vram_m << finex << vram_l << std::endl;
-    std::cerr << "   tram: ";
-    std::cerr << std::hex << unsigned(nes.TRAMAddress()) << std::endl;
-    std::cerr << "u  f  fnn    c    c" << std::endl;
-    std::cerr << "s  |  |||    |    |" << std::endl;
-    std::cerr << "e  y  xyx    y    x" << std::endl;
-    std::bitset<4>  tram_m(nes.TRAMAddress() & 0b1111000000000000);
-    std::bitset<12> tram_l(nes.TRAMAddress() & 0b0000111111111111);    
-    std::cerr << tram_m << finex << tram_l << std::endl;
-    std::cerr << "  bg_id: ";
-    std::cerr << std::hex << unsigned(nes.ppu->BgId()) << std::endl;
-    std::cerr << "bg_attr: ";
-    std::cerr << std::hex << unsigned(nes.ppu->BgAttr()) << std::endl;
-    std::cerr << " bg_lsb: ";
-    std::cerr << std::hex << unsigned(nes.ppu->BgLSB()) << std::endl;
-    std::cerr << " bg_msb: ";
-    std::cerr << std::hex << unsigned(nes.ppu->BgMSB()) << std::endl;
-    std::cerr << " bg_pttr_lo: " << std::endl;;
-    std::bitset<16> bg_pttr_lo(nes.BgPttrLo());
-    std::cerr << bg_pttr_lo << std::endl;
-    std::cerr << " bg_pttr_hi: " << std::endl;
-    std::bitset<16> bg_pttr_hi(nes.BgPttrHi());
-    std::cerr << bg_pttr_hi << std::endl;
-    std::cerr << std::endl;
-    std::cerr << "nnisbsmn" << std::endl;
-    std::cerr << "xyntth|m" << std::endl;
-    std::cerr << "  ciiesi" << std::endl;
-    std::bitset<8> ppuctrl(nes.PPUControl());
-    std::cerr << ppuctrl << std::endl;
-    std::cerr << std::endl;
-    std::cerr << "gbsbsrgb" << std::endl;
-    std::cerr << "rlleeerl" << std::endl;
-    std::cerr << "yffnndeu" << std::endl;
-    std::bitset<8> ppumask(nes.PPUMask());
-    std::cerr << ppumask << std::endl;
+  static std::string Info(const nc::NES& nes) noexcept {
+    std::stringstream ss;
+
+    ss << "================" << std::endl;
+    ss << "[CPU]" << std::endl;
+
+    ss << std::hex << unsigned(nes.cpu->Op()) << " ";
+    ss << nc::Opcodes::ToString(nes.cpu->Op()) << std::endl;
+
+    ss << "      pc: ";
+    ss << std::hex << unsigned(nes.cpu->PCRegister()) << std::endl;
+
+    ss << "     acc: ";
+    ss << std::hex << unsigned(nes.cpu->ARegister()) << std::endl;
+
+    ss << "       x: ";
+    ss << std::hex << unsigned(nes.cpu->XRegister()) << std::endl;
+
+    ss << "       y: ";
+    ss << std::hex << unsigned(nes.cpu->YRegister()) << std::endl;
+
+    ss << "    stkp: ";
+    ss << std::hex << unsigned(nes.cpu->SRegister()) << std::endl;
+
+    ss << "    addr: ";
+    ss << std::hex << unsigned(nes.cpu->Addr()) << std::endl;
+    ss << std::endl;
+
+    std::bitset<8> p(nes.cpu->PRegister());
+    ss << "czidbuon" << std::endl;
+    ss << "aerernfe" << std::endl;
+    ss << "rrqckulg" << std::endl;
+    ss << p << std::endl;
+    ss << std::endl;
+
+    ss << "[PPU]" << std::endl;
+
+    ss << "    vram: ";
+    ss << std::hex << unsigned(nes.ppu->VRAMAddr()) << std::endl;
+
+    std::bitset<16> vram(nes.ppu->VRAMAddr());
+    ss << "u  fnn    c    c" << std::endl;
+    ss << "s  |||    |    |" << std::endl;
+    ss << "e  yyx    y    x" << std::endl;
+    ss << vram << std::endl;
+
+    ss << "    tram: ";
+    ss << std::hex << unsigned(nes.ppu->TRAMAddr()) << std::endl;
+
+    std::bitset<16> tram(nes.ppu->TRAMAddr());
+    ss << "u  fnn    c    c" << std::endl;
+    ss << "s  |||    |    |" << std::endl;
+    ss << "e  yyx    y    x" << std::endl;
+    ss << tram << std::endl;
+
+    ss << "   bg_id: ";
+    ss << std::hex << unsigned(nes.ppu->BgId()) << std::endl;
+
+    ss << "   bg_at: ";
+    ss << std::hex << unsigned(nes.ppu->BgAttr()) << std::endl;
+
+    ss << "   bg_ls: ";
+    ss << std::hex << unsigned(nes.ppu->BgLSB()) << std::endl;
+
+    ss << "   bg_ms: ";
+    ss << std::hex << unsigned(nes.ppu->BgMSB()) << std::endl;
+
+    std::bitset<16> bg_pttr_lo(nes.ppu->BgPttrLo());
+    ss << "bg_pt_lo: " << std::endl;;
+    ss << bg_pttr_lo << std::endl;
+
+    std::bitset<16> bg_pttr_hi(nes.ppu->BgPttrHi());
+    ss << "bg_pt_hi: " << std::endl;
+    ss << bg_pttr_hi << std::endl;
+    ss << std::endl;
+
+    std::bitset<8> ppuctrl(nes.ppu->CtrlRegister());
+    ss << "nnisbsmn" << std::endl;
+    ss << "xyntth|m" << std::endl;
+    ss << "  ciiesi" << std::endl;
+    ss << ppuctrl << std::endl;
+    ss << std::endl;
+
+    std::bitset<8> ppumask(nes.ppu->MaskRegister());
+    ss << "gbsbsrgb" << std::endl;
+    ss << "rlleeerl" << std::endl;
+    ss << "yffnndeu" << std::endl;
+    ss << ppumask << std::endl;
+
+    return ss.str();
+  }
+
+  static void Trace(const nc::NES& nes) {
+    ::stack_trace.push(Info(nes));
+  }
+
+  static void ShowStackTrace() {
+    while (!::stack_trace.empty()) {
+      std::cerr << ::stack_trace.front();
+      ::stack_trace.pop();
+    }
   }
 
 # define TILE_BYTE_COUNT 16

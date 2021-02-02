@@ -19,7 +19,9 @@ class Backend {
   static constexpr int kDelay = 1000.0f / kFPS;
 
  public:
-  Backend(nc::NES::Controller* const player_one, nc::NES::Controller* const player_two);
+  Backend(const nc::NES& nes,
+	  nc::NES::Controller* const player_one,
+	  nc::NES::Controller* const player_two);
 
   ~Backend();
 
@@ -47,6 +49,8 @@ class Backend {
   Uint32* b_buffer_;
 
   Uint32* f_buffer_;
+
+  const nc::NES& nes_;
 
   nc::NES::Controller* players_[2];
 

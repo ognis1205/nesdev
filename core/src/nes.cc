@@ -4,7 +4,7 @@
  * Written by and Copyright (C) 2020 Shingo OKAWA shingo.okawa.g.h.c@gmail.com
  * Trademarks are owned by their respect owners.
  */
-//#include <iostream>
+#include <iostream>
 #include <memory.h>
 #include "nesdev/core/clock.h"
 #include "nesdev/core/cpu.h"
@@ -46,7 +46,10 @@ NES::NES(std::unique_ptr<ROM> rom)
 void NES::Tick() {
   ppu->Tick();
   if (cycle % 3 == 0) {
-    if (dma->IsTransfering()) dma->TransactAt(cycle, cpu_bus.get(), ppu_chips.get());
+    if (dma->IsTransfering()) {
+//      std::cout << "OAM" << std::endl;
+      dma->TransactAt(cycle, cpu_bus.get(), ppu_chips.get());
+    }
     else cpu->Tick();
   }
   if (ppu_registers->ppuctrl.nmi_enable) {

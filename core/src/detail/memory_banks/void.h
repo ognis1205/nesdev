@@ -27,11 +27,11 @@ class Void final : public MemoryBank {
   }
 
   Byte Read(Address address) const override {
-    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Void::Read", address));
   }
 
   void Write(Address address, [[maybe_unused]] Byte byte) override {
-    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+    NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Void::Write", address));
   }
 
   std::size_t Size() const override {
@@ -39,11 +39,11 @@ class Void final : public MemoryBank {
   }
 
   Byte* Data() override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to void memory"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to nesdev::core::detail::memory_banks::Void"));
   }
 
   const Byte* Data() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to void memory"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to nesdev::core::detail::memory_banks::Void"));
   }
 };
 

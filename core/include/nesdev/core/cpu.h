@@ -72,6 +72,18 @@ class CPU : public Clock {
 
   virtual void NMI() noexcept = 0;
 
+  virtual Byte PCRegister() const noexcept = 0;
+
+  virtual Byte ARegister() const noexcept = 0;
+
+  virtual Byte XRegister() const noexcept = 0;
+
+  virtual Byte YRegister() const noexcept = 0;
+
+  virtual Byte SRegister() const noexcept = 0;
+
+  virtual Byte PRegister() const noexcept = 0;
+
  public:
   [[nodiscard]]
   std::size_t Cycle() const noexcept {

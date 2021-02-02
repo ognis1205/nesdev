@@ -28,10 +28,10 @@ std::unique_ptr<ROM> ROMFactory::NROM(std::istream& is) {
   is.read(reinterpret_cast<char*>(header.get()), sizeof(ROM::Header));
 
   if (!header->HasValidMagic())
-    NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible file format to iNES"));
+    NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible file format to nesdev::core::ROMFactory::NROM"));
 
   if (header->Mapper() != 0)
-    NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible mapper specified to NROM"));
+    NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible mapper specified to nesdev::core::ROMFactory::NROM"));
 
   if (header->ContainsTrainer())
     is.seekg(512, std::ios_base::cur);

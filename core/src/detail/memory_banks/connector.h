@@ -43,24 +43,24 @@ class Connector final : public MemoryBank {
 
   Byte Read(Address address) const override {
     if (HasValidAddress(address)) return reader_(address);
-    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Connector::Read", address));
   }
 
   void Write(Address address, [[maybe_unused]] Byte byte) override {
     if (HasValidAddress(address)) writer_(address, byte);
-    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+    else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Connector::Write", address));
   }
 
   std::size_t Size() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to bus connector"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to nesdev::core::detail::memory_banks::Connector"));
   }
 
   Byte* Data() override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to bus connector"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to nesdev::core::detail::memory_banks::Connector"));
   }
 
   const Byte* Data() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to bus connector"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to nesdev::core::detail::memory_banks::Connector"));
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:

@@ -11,11 +11,14 @@
 #include <nesdev/core.h>
 #include <SDL.h>
 #include "backend.h"
+#include "utility.h"
 
 namespace nc = nesdev::core;
 
-Backend::Backend(nc::NES::Controller* const player_one,
-                 nc::NES::Controller* const player_two) {
+Backend::Backend(const nc::NES& nes,
+		 nc::NES::Controller* const player_one,
+                 nc::NES::Controller* const player_two)
+  : nes_(nes) {
   players_[0] = player_one;
   players_[1] = player_two;
 
@@ -44,7 +47,8 @@ Backend::Backend(nc::NES::Controller* const player_one,
     throw std::runtime_error(ss.str());
   }
 
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+  //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
   if (!(texture_ = SDL_CreateTexture(renderer_,
 				     SDL_PIXELFORMAT_ARGB8888,
@@ -117,6 +121,7 @@ void Backend::HandleEvents() {
       case SDLK_x:         players_[0]->A(true);      break;
       default: break;
       }
+//      Utility::Debug(nes_);
       break;
     case SDL_KEYUP:
       switch (event.key.keysym.sym) {
@@ -130,6 +135,7 @@ void Backend::HandleEvents() {
       case SDLK_x:         players_[0]->A(false);      break;
       default: break;
       }
+//      Utility::Debug(nes_);
       break;
     default:
       break;

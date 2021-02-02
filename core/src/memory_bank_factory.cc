@@ -40,15 +40,15 @@ class CPUAdapter : public MemoryBank {
   }
 
   std::size_t Size() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to cpu adapter"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to ::CPUAdapter"));
   }
 
   Byte* Data() override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to cpu adapter"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to ::CPUAdapter"));
   }
 
   const Byte* Data() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to cpu adapter"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to ::CPUAdapter"));
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -73,15 +73,15 @@ class PPUAdapter : public MemoryBank {
   }
 
   std::size_t Size() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to cpu adapter"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to ::PPUAdapter"));
   }
 
   Byte* Data() override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to cpu adapter"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to ::PPUAdapter"));
   }
 
   const Byte* Data() const override {
-    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to cpu adapter"));
+    NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to ::PPUAdapter"));
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:

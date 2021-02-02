@@ -64,6 +64,38 @@ class RP2C02 final : public PPU {
     return BIT(ppumask, background_enable) || BIT(ppumask, sprite_enable);
   }
 
+  Byte CtrlRegister() const noexcept override {
+    return registers_->ppuctrl.value;
+  }
+
+  Byte MaskRegister() const noexcept override {
+    return registers_->ppumask.value;
+  }
+
+  Address VRAMAddr() const override {
+    return registers_->vramaddr.value;
+  }
+
+  Address TRAMAddr() const override {
+    return registers_->tramaddr.value;
+  }
+
+  Address BgPttrLo() const override {
+    return shifters_->background_pttr_lo.value;
+  }
+
+  Address BgPttrHi() const override {
+    return shifters_->background_pttr_hi.value;
+  }
+
+  Address BgAttrLo() const override {
+    return shifters_->background_attr_lo.value;
+  }
+
+  Address BgAttrHi() const override {
+    return shifters_->background_attr_hi.value;
+  }
+
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   class Latch {
    public:
@@ -359,33 +391,35 @@ class RP2C02 final : public PPU {
         bg_pix = (static_cast<Byte>((BACK(pttr_hi) & FINE_X) > 0) << 1) | static_cast<Byte>((BACK(pttr_lo) & FINE_X) > 0);
         bg_pal = (static_cast<Byte>((BACK(attr_hi) & FINE_X) > 0) << 1) | static_cast<Byte>((BACK(attr_lo) & FINE_X) > 0);
       }
-      Byte fg_pix = 0x00;
-      Byte fg_pal = 0x00;
-      Byte fg_pri = 0x00;
-      if (BIT(ppumask, sprite_enable) && (BIT(ppumask, sprite_leftmost_enable) || (cycle >= 9))) {
-        sprite_zero_rendered_ = false;
-        for (std::size_t entry = 0; entry < context_->num_sprites; entry++) {
-          if (context_->sprite[entry].x == 0) {
-            fg_pix = (static_cast<Byte>((SPRT(pttr_hi, entry) & 0x80) > 0) << 1) | static_cast<Byte>((SPRT(pttr_lo, entry) & 0x80) > 0);
-            fg_pal = (context_->sprite[entry].attr & 0x03) + 0x04;
-            fg_pri = (context_->sprite[entry].attr & 0x20) == 0;
-            if (fg_pix != 0) {
-              if (entry == 0) sprite_zero_rendered_ = true;
-              break;
-            }
-          }
-        }
-      }
-      Byte pix = 0x00;
-      Byte pal = 0x00;
-      if (bg_pix > 0 && fg_pix > 0) {
-        pix = fg_pri ? fg_pix : bg_pix;
-        pal = fg_pri ? fg_pal : bg_pal;
-        if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
-      } else {
-        pix = fg_pix + bg_pix;
-        pal = fg_pix ? fg_pal : bg_pal;
-      }
+//      Byte fg_pix = 0x00;
+//      Byte fg_pal = 0x00;
+//      [[maybe_unused]]Byte fg_pri = 0x00;
+//      if (BIT(ppumask, sprite_enable) && (BIT(ppumask, sprite_leftmost_enable) || (cycle >= 9))) {
+//        sprite_zero_rendered_ = false;
+//        for (std::size_t entry = 0; entry < context_->num_sprites; entry++) {
+//          if (context_->sprite[entry].x == 0) {
+//            fg_pix = (static_cast<Byte>((SPRT(pttr_hi, entry) & 0x80) > 0) << 1) | static_cast<Byte>((SPRT(pttr_lo, entry) & 0x80) > 0);
+//            fg_pal = (context_->sprite[entry].attr & 0x03) + 0x04;
+//            fg_pri = (context_->sprite[entry].attr & 0x20) == 0;
+//            if (fg_pix != 0) {
+//              if (entry == 0) sprite_zero_rendered_ = true;
+//              break;
+//            }
+//          }
+//        }
+//      }
+//      Byte pix = 0x00;
+//      Byte pal = 0x00;
+      Byte pix = bg_pix;
+      Byte pal = bg_pal;
+//      if (bg_pix > 0 && fg_pix > 0) {
+//        pix = fg_pri ? fg_pix : bg_pix;
+//        pal = fg_pri ? fg_pal : bg_pal;
+//        if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
+//      } else {
+//        pix = fg_pix + bg_pix;
+//        pal = fg_pix ? fg_pal : bg_pal;
+//      }
       if (0 <= cycle - 1 && cycle -1 < PPU::kFrameW && 0 <= scanline && scanline < PPU::kFrameH)
 	context_->pixel_writer(
 	  cycle - 1,
@@ -456,7 +490,7 @@ class RP2C02 final : public PPU {
     case 0x0005: return MemoryMap::PPUSCROLL;
     case 0x0006: return MemoryMap::PPUADDR;
     case 0x0007: return MemoryMap::PPUDATA;
-    default:     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Map", address));
+    default:     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::RP2C02::Map", address));
     }
   }
 
