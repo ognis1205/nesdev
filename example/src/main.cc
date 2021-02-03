@@ -52,8 +52,8 @@ int main(int argc, char** argv) {
     } else {
       while (sdl.IsRunning()) {
 	nes.Tick();
-	if (/*nes.cpu->IsIdle() &&*/ (nes.cycle % 3 == 0))
-	  Utility::Trace(nes);
+//	if (/*nes.cpu->IsIdle() &&*/ (nes.cycle % 3 == 0))
+//	  Utility::Trace(nes);
 	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0) {
 	  sdl.Update();
 	}
