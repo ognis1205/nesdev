@@ -2,7 +2,7 @@
 
 ### Summary
 
-C++ NES Developing Toolkits for My Own Learning Porpose. The implementation is NOT fully faithfull to the original NES hardware though,
+Modern C++ NES developing toolkits for My Own Learning Porpose. The implementation is NOT fully faithfull to the original NES hardware though,
 but CPU instruction implementations are cycle accurate.
 
 ### Things NOT faithfull to the original NES hardware so far (01/24/2021)
@@ -56,7 +56,25 @@ The following is a checklist of features and their progress:
   - [ ] Test ROMs
   - [ ] Logging
 
+### Generating + Compiling
+
+NesDev builds with **CMake**
+
+On macOS / Linux
+```bash
+# in NesDev root
+mkdir build
+cd build
+cmake ..
+make
+make install
+```
+
 ### Usage
+
+NesDev library (**libnesdev**) is a static library for developing NES emulators, so **libnesdev** it self does NOT
+contain any media layer implementations. All you have to do is implememnt media backends with your favorite library,
+such as **SDL2**m and hook the NesDev's **Framebuffer** API for PPU and **Sampling** API for APU respectively.
 
 ```c++
 #include <filesystem>
@@ -128,4 +146,3 @@ int main(int argc, char** argv) {
 1. [NesDev](http://nesdev.com/)
 2. [Bisqwit's implementation](https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/)
 3. [Javidx9's series of NES emulator](https://www.youtube.com/watch?v=F8kx56OZQhg)
-
