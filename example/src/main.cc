@@ -20,11 +20,6 @@
 
 namespace nc = nesdev::core;
 
-//void Debug(const nc::NES& nes) {
-//  Utility::Debug(nes);
-//  std::cin.ignore();
-//}
-
 int main(int argc, char** argv) {
   Utility::Init();
   CLI cli(argc, argv);
@@ -57,10 +52,8 @@ int main(int argc, char** argv) {
     } else {
       while (sdl.IsRunning()) {
 	nes.Tick();
-//	if (/*nes.cpu->IsIdle() &&*/ (nes.cycle % 3 == 0))
-//	  Utility::Trace(nes);
-// 	if (nes.ppu->IsRendering() && (nes.cycle % 3 == 0))
-//	  Debug(nes);
+	if (/*nes.cpu->IsIdle() &&*/ (nes.cycle % 3 == 0))
+	  Utility::Trace(nes);
 	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0) {
 	  sdl.Update();
 	}
@@ -71,5 +64,5 @@ int main(int argc, char** argv) {
     std::cerr << e.what() << std::endl;
   }
 
-  return EXIT_SUCCESS;
+  return 0;
 }

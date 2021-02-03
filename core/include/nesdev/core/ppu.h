@@ -126,8 +126,8 @@ class PPU : public Clock {
     template <typename U>
     Shifter& operator<<=(const U& rhs) {
       NESDEV_CORE_CASSERT(
-	CHAR_BIT * sizeof(T) > rhs,
-	"Right operand is greater than or equal to the number of bits in the left operand");
+        CHAR_BIT * sizeof(T) > rhs,
+        "Right operand is greater than or equal to the number of bits in the left operand");
       value_ <<= rhs;
       return *this;
     }
@@ -135,8 +135,8 @@ class PPU : public Clock {
     template <typename U>
     Shifter& operator()(const U& operand) {
       NESDEV_CORE_CASSERT(
-	CHAR_BIT * sizeof(T) > CHAR_BIT * sizeof(U),
-	"Right operand is greater than or equal to the number of bits in the left operand");
+        CHAR_BIT * sizeof(T) > CHAR_BIT * sizeof(U),
+        "Right operand is greater than or equal to the number of bits in the left operand");
       value_ &= ~((1u << CHAR_BIT * sizeof(U)) - 1u);
       value_ |= operand;
       return *this;
@@ -200,11 +200,11 @@ class PPU : public Clock {
    public:
     Nametables(std::size_t size, ROM* const rom)
       : rom_{rom},
-	size_{size} {
+        size_{size} {
 // TODO: Check if this assertion is unneccessary.      
 //      NESDEV_CORE_CASSERT(
-//	((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
-//	"Size does not match address range");
+//      ((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
+//      "Size does not match address range");
       data_[0].resize(size_);
       data_[1].resize(size_);
     }
@@ -246,19 +246,19 @@ class PPU : public Clock {
       address %= 0x1000;
       switch(rom_->header->Mirroring()) {
       case ROM::Header::Mirroring::HORIZONTAL:
-	if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address % Size()];
-	if (address >= 0x0400 && address <= 0x07FF) return &data_[0x00].data()[address % Size()];
-	if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x01].data()[address % Size()];
-	if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address % Size()];
-	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
+        if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address % Size()];
+        if (address >= 0x0400 && address <= 0x07FF) return &data_[0x00].data()[address % Size()];
+        if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x01].data()[address % Size()];
+        if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address % Size()];
+        NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
       case ROM::Header::Mirroring::VERTICAL:
-	if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address % Size()];
-	if (address >= 0x0400 && address <= 0x07FF) return &data_[0x01].data()[address % Size()];
-	if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x00].data()[address % Size()];
-	if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address % Size()];
-	NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
+        if (address >= 0x0000 && address <= 0x03FF) return &data_[0x00].data()[address % Size()];
+        if (address >= 0x0400 && address <= 0x07FF) return &data_[0x01].data()[address % Size()];
+        if (address >= 0x0800 && address <= 0x0BFF) return &data_[0x00].data()[address % Size()];
+        if (address >= 0x0C00 && address <= 0x0FFF) return &data_[0x01].data()[address % Size()];
+        NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Nametables", address));
       default:
-	NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible mirroring specified to ROM"));
+        NESDEV_CORE_THROW(InvalidROM::Occur("Incompatible mirroring specified to ROM"));
       }
     }
 
@@ -268,6 +268,71 @@ class PPU : public Clock {
     std::size_t size_;
 
     std::array<std::vector<Byte>, 0x02> data_;
+  };
+
+  template <Address From, Address To>
+  class Palette final : public MemoryBank {
+   public:
+    static_assert(
+      From <= To,
+      "Start address must be greater than end address");
+
+   public:
+    Palette(std::size_t size)
+      : size_{size} {
+// TODO: Check if this assertion is unneccessary.      
+//      NESDEV_CORE_CASSERT(
+//      ((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
+//      "Size does not match address range");
+      data_.resize(size_);
+    }
+
+    [[nodiscard]]
+    bool HasValidAddress(Address address) const noexcept override {
+      if constexpr (From == 0) return address <= To;
+      else return address >= From && address <= To;
+    }
+
+    Byte Read(Address address) const override {
+      if (HasValidAddress(address)) return *PtrTo(address);
+      else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Read", address));
+    }
+
+    void Write(Address address, Byte byte) override {
+      if (HasValidAddress(address)) *PtrTo(address) = byte;
+      else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to Write", address));
+    }
+
+    std::size_t Size() const override {
+      return size_;
+    }
+
+    Byte* Data() override {
+      NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to Palette"));
+    }
+
+    const Byte* Data() const override {
+      NESDEV_CORE_THROW(NotImplemented::Occur("Not implemented method operated to Palette"));
+    }
+
+   NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    Byte* PtrTo(Address address) {
+      return const_cast<Byte*>(std::as_const(*this).PtrTo(address));
+    }
+
+    const Byte* PtrTo(Address address) const {
+      address &= 0x001F;
+      if (address == 0x0010) address = 0x0000;
+      if (address == 0x0014) address = 0x0004;
+      if (address == 0x0018) address = 0x0008;
+      if (address == 0x001C) address = 0x000C;
+      return &data_.data()[address % Size()];
+    }
+
+  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
+    std::size_t size_;
+
+    std::vector<Byte> data_;
   };
 
   template <std::size_t Entries=64>
@@ -322,8 +387,8 @@ class PPU : public Clock {
   };
 
  public:
-  explicit PPU(const std::vector<Byte>& palette)
-    : palette_{palette} {};
+  explicit PPU(const std::vector<Byte>& colours)
+    : colours_{colours} {};
 
   virtual ~PPU() = default;
 
@@ -389,7 +454,7 @@ class PPU : public Clock {
 
   [[nodiscard]]
   ARGB Colour(Byte intensity, Byte colour) {
-    return palette_.Colour(intensity, colour);
+    return colours_.Get(intensity, colour);
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
@@ -455,10 +520,10 @@ class PPU : public Clock {
       background.lsb  = {0x00};
       background.msb  = {0x00};
       for (std::size_t entry = 0; entry < kNumSprites; entry++) {
-	sprite[entry].y    = {0x00};
-	sprite[entry].id   = {0x00};
-	sprite[entry].attr = {0x00};
-	sprite[entry].x    = {0x00};
+        sprite[entry].y    = {0x00};
+        sprite[entry].id   = {0x00};
+        sprite[entry].attr = {0x00};
+        sprite[entry].x    = {0x00};
       }
     }
 
@@ -486,55 +551,55 @@ class PPU : public Clock {
    * Predefined palette stored in VGA Palette format.
    * [SEE] https://wiki.nesdev.com/w/index.php/.pal
    */
-  class Palette {
+  class Colours {
    public:
     static constexpr double kIntensityFactor = 0.3;
 
    public:
-    Palette(const std::vector<Byte>& pal) {
+    Colours(const std::vector<Byte>& pal) {
       NESDEV_CORE_CASSERT(pal.size() == 0x40 * 3, "Size does not match palette size");
 
       for (std::size_t colour = 0x00; colour < 0x40; ++colour) {
-	Byte r = pal[(colour * 3) + 0];
-	Byte g = pal[(colour * 3) + 1];
-	Byte b = pal[(colour * 3) + 2];
-	data_[0][colour] = (r << 16) | (g << 8) | b;
+        Byte r = pal[(colour * 3) + 0];
+        Byte g = pal[(colour * 3) + 1];
+        Byte b = pal[(colour * 3) + 2];
+        data_[0][colour] = (r << 16) | (g << 8) | b;
       }
 
       for (std::size_t intensity = 0x01; intensity < 0x08; ++intensity) {
-	for (std::size_t colour = 0x00; colour < 0x40; ++colour) {
-	  double dr = static_cast<Byte>(data_[0][colour] >> 16);
-	  double dg = static_cast<Byte>(data_[0][colour] >>  8);
-	  double db = static_cast<Byte>(data_[0][colour] >>  0);
-	  // Intensify red
-	  if (intensity & 0x01) {
-	    dr *= 1 + kIntensityFactor;
-	    dg *= 1 - kIntensityFactor;
-	    db *= 1 - kIntensityFactor;
-	  }
-	  // Intensify green
-	  if (intensity & 0x02) {
-	    dr *= 1 - kIntensityFactor;
-	    dg *= 1 + kIntensityFactor;
-	    db *= 1 - kIntensityFactor;
-	  }
-	  // Intensify blue
-	  if (intensity & 0x04) {
-	    dr *= 1 - kIntensityFactor;
-	    dg *= 1 - kIntensityFactor;
-	    db *= 1 + kIntensityFactor;
-	  }
-	  auto r = static_cast<Byte>(dr > 0xFF ? 0xFF : dr);
-	  auto g = static_cast<Byte>(dg > 0xFF ? 0xFF : dg);
-	  auto b = static_cast<Byte>(db > 0xFF ? 0xFF : db);
-	  data_[intensity][colour] = (r << 16) | (g << 8) | b;
-	}
+        for (std::size_t colour = 0x00; colour < 0x40; ++colour) {
+          double dr = static_cast<Byte>(data_[0][colour] >> 16);
+          double dg = static_cast<Byte>(data_[0][colour] >>  8);
+          double db = static_cast<Byte>(data_[0][colour] >>  0);
+          // Intensify red
+          if (intensity & 0x01) {
+            dr *= 1 + kIntensityFactor;
+            dg *= 1 - kIntensityFactor;
+            db *= 1 - kIntensityFactor;
+          }
+          // Intensify green
+          if (intensity & 0x02) {
+            dr *= 1 - kIntensityFactor;
+            dg *= 1 + kIntensityFactor;
+            db *= 1 - kIntensityFactor;
+          }
+          // Intensify blue
+          if (intensity & 0x04) {
+            dr *= 1 - kIntensityFactor;
+            dg *= 1 - kIntensityFactor;
+            db *= 1 + kIntensityFactor;
+          }
+          auto r = static_cast<Byte>(dr > 0xFF ? 0xFF : dr);
+          auto g = static_cast<Byte>(dg > 0xFF ? 0xFF : dg);
+          auto b = static_cast<Byte>(db > 0xFF ? 0xFF : db);
+          data_[intensity][colour] = (r << 16) | (g << 8) | b;
+        }
       }
     };
 
-    ~Palette() = default;
+    ~Colours() = default;
 
-    ARGB Colour(Byte intensity, Byte colour) {
+    ARGB Get(Byte intensity, Byte colour) {
       return data_.at(intensity).at(colour);
     }
 
@@ -571,7 +636,7 @@ class PPU : public Clock {
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
   Context context_;
 
-  Palette palette_;
+  Colours colours_;
 
   ROM* rom_ = nullptr;
 };

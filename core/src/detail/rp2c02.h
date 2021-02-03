@@ -50,7 +50,7 @@ class RP2C02 final : public PPU {
          PPU::Registers* const registers,
          PPU::Shifters* const shifters,
          MMU* const mmu,
-         const std::vector<Byte>& palette);
+         const std::vector<Byte>& colours);
 
   ~RP2C02();
 
@@ -111,6 +111,7 @@ class RP2C02 final : public PPU {
 
     Byte Latched(Byte byte) noexcept {
       return latch_ = byte;
+//      return byte;
     }
 
     [[nodiscard]]
@@ -169,39 +170,47 @@ class RP2C02 final : public PPU {
     }
 
     void WritePPUCtrl(Byte byte) {
-      REG(ppuctrl)               = Latched(byte);
+      REG(ppuctrl)               = byte;
+//      REG(ppuctrl)               = Latched(byte);
       BIT(tramaddr, nametable_x) = unsigned(BIT(ppuctrl, nametable_x));
       BIT(tramaddr, nametable_y) = unsigned(BIT(ppuctrl, nametable_y));
     }
 
     void WritePPUMask(Byte byte) {
-      REG(ppumask) = Latched(byte);
+      REG(ppumask) = byte;
+//      REG(ppumask) = Latched(byte);
     }
 
-    void WritePPUStatus(Byte byte) {
-      Latched(byte);
+    void WritePPUStatus([[maybe_unused]]Byte byte) {
+//      Latched(byte);
     }
 
     void WriteOAMAddr(Byte byte) {
-      REG(oamaddr) = Latched(byte);
+      REG(oamaddr) = byte;
+//      REG(oamaddr) = Latched(byte);
     }
 
     void WriteOAMData(Byte byte) {
-      chips_->oam->Write(REG(oamaddr), Latched(byte));
+      chips_->oam->Write(REG(oamaddr), byte);
+//      chips_->oam->Write(REG(oamaddr), Latched(byte));
     }
 
     void WritePPUScroll(Byte byte) {
       if (!is_latched_) {
         // First write to scroll register contains X offset in pixel space
         // which we split into coarse and fine x values
-        REG(fine_x)             = Latched(byte) & 0x07;
-        BIT(tramaddr, coarse_x) = Latched(byte) >> 3;
+        REG(fine_x)             = byte & 0x07;
+        BIT(tramaddr, coarse_x) = byte >> 3;
+//      REG(fine_x)             = Latched(byte) & 0x07;
+//        BIT(tramaddr, coarse_x) = Latched(byte) >> 3;
         is_latched_             = true;
       } else {
         // First write to scroll register contains Y offset in pixel space
         // which we split into coarse and fine Y values
-        BIT(tramaddr, fine_y)   = Latched(byte) & 0x07;
-        BIT(tramaddr, coarse_y) = Latched(byte) >> 3;
+        BIT(tramaddr, fine_y)   = byte & 0x07;
+        BIT(tramaddr, coarse_y) = byte >> 3;
+//      BIT(tramaddr, fine_y)   = Latched(byte) & 0x07;
+//        BIT(tramaddr, coarse_y) = Latched(byte) >> 3;
         is_latched_             = false;
       }
     }
@@ -212,21 +221,24 @@ class RP2C02 final : public PPU {
         // registers. The fisrt write to this register latches the high byte
         // of the address, the second is the low byte. Note the writes
         // are stored in the tram register.
-        BIT(tramaddr, hi) = Latched(byte) & 0x3F;
+        BIT(tramaddr, hi) = byte & 0x3F;
+//      BIT(tramaddr, hi) = Latched(byte) & 0x3F;
         is_latched_       = true;
       } else {
         // When a whole address has been written, the internal vram address
         // buffer is updated. Writing to the PPU is unwise during rendering
         // as the PPU will maintam the vram address automatically whilst
         // rendering the scanline position.
-        BIT(tramaddr, lo) = Latched(byte);
+        BIT(tramaddr, lo) = byte;
+//      BIT(tramaddr, lo) = Latched(byte);
         REG(vramaddr)     = REG(tramaddr);
         is_latched_       = false;
       }
     }
 
     void WritePPUData(Byte byte) {
-      mmu_->Write(REG(vramaddr), Latched(byte));
+      mmu_->Write(REG(vramaddr), byte);
+//      mmu_->Write(REG(vramaddr), Latched(byte));
       REG(vramaddr) += BIT(ppuctrl, increment) ? 0x0020 : 0x0001;
     }
 
@@ -247,13 +259,13 @@ class RP2C02 final : public PPU {
   class Shift {
    public:
     Shift(PPU::Context* const context,
-          PPU::Palette* const palette,
+          PPU::Colours* const colours,
           PPU::Registers* const registers,
           PPU::Shifters* const shifters,
           MMU* const mmu,
           PPU::Chips* const chips)
       : context_{context},
-        palette_{palette},
+        colours_{colours},
         registers_{registers},
         shifters_{shifters},
         mmu_{mmu},
@@ -291,10 +303,10 @@ class RP2C02 final : public PPU {
 
     void ReadBgAttr() {
       context_->background.attr = mmu_->Read(0x23C0
-					     | ( BIT(vramaddr, nametable_y)    << 11)
-					     | ( BIT(vramaddr, nametable_x)    << 10) 
-					     | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
-					     | ( BIT(vramaddr, coarse_x)       >>  2));
+                                             | ( BIT(vramaddr, nametable_y)    << 11)
+                                             | ( BIT(vramaddr, nametable_x)    << 10) 
+                                             | ((BIT(vramaddr, coarse_y) >> 2) <<  3) 
+                                             | ( BIT(vramaddr, coarse_x)       >>  2));
       // Since we know we can access a tile directly from the 12 bit address, we
       // can analyse the bottom bits of the coarse coordinates to provide us with
       // the correct offset into the 8-bit word, to yield the 2 bits we are
@@ -316,9 +328,9 @@ class RP2C02 final : public PPU {
 
     void ReadBgMSB() {
       context_->background.msb = mmu_->Read((BIT(ppuctrl, background_tile) << 12)
-					    + (context_->background.id << 4)
-					    + BIT(vramaddr, fine_y)
-					    + 8);
+                                            + (context_->background.id << 4)
+                                            + BIT(vramaddr, fine_y)
+                                            + 8);
     }
 
     void ClearSp() {
@@ -331,8 +343,8 @@ class RP2C02 final : public PPU {
     void EvaluateSpAt(std::int16_t scanline) {
       // Clear sprites scanline with 0xFF, because 0xFF y coordinate is not visible.
       std::memset(context_->sprite,
-		  0xFF,
-		  PPU::kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
+                  0xFF,
+                  PPU::kNumSprites * sizeof(PPU::ObjectAttributeMap<>::Entry));
       context_->num_sprites = 0;
       ClearSp();
       // Populate sprites to be rendered, that is, sprites which "collide" to the scanline.
@@ -344,8 +356,8 @@ class RP2C02 final : public PPU {
         std::int16_t diff = scanline - static_cast<std::int16_t>(chips_->oam->Read(entry_addr));
         if (diff >= 0 && diff < (Is8x8Mode() ? 8 : 16) && context_->num_sprites < PPU::kNumSprites) {
           std::memcpy(&context_->sprite[context_->num_sprites++],
-		      &chips_->oam->Data()[entry_addr],
-		      sizeof(PPU::ObjectAttributeMap<>::Entry));
+                      &chips_->oam->Data()[entry_addr],
+                      sizeof(PPU::ObjectAttributeMap<>::Entry));
           if (entry == 0) may_sprite_zero_hit_ = true;
         }
         entry++;
@@ -391,40 +403,38 @@ class RP2C02 final : public PPU {
         bg_pix = (static_cast<Byte>((BACK(pttr_hi) & FINE_X) > 0) << 1) | static_cast<Byte>((BACK(pttr_lo) & FINE_X) > 0);
         bg_pal = (static_cast<Byte>((BACK(attr_hi) & FINE_X) > 0) << 1) | static_cast<Byte>((BACK(attr_lo) & FINE_X) > 0);
       }
-//      Byte fg_pix = 0x00;
-//      Byte fg_pal = 0x00;
-//      [[maybe_unused]]Byte fg_pri = 0x00;
-//      if (BIT(ppumask, sprite_enable) && (BIT(ppumask, sprite_leftmost_enable) || (cycle >= 9))) {
-//        sprite_zero_rendered_ = false;
-//        for (std::size_t entry = 0; entry < context_->num_sprites; entry++) {
-//          if (context_->sprite[entry].x == 0) {
-//            fg_pix = (static_cast<Byte>((SPRT(pttr_hi, entry) & 0x80) > 0) << 1) | static_cast<Byte>((SPRT(pttr_lo, entry) & 0x80) > 0);
-//            fg_pal = (context_->sprite[entry].attr & 0x03) + 0x04;
-//            fg_pri = (context_->sprite[entry].attr & 0x20) == 0;
-//            if (fg_pix != 0) {
-//              if (entry == 0) sprite_zero_rendered_ = true;
-//              break;
-//            }
-//          }
-//        }
-//      }
-//      Byte pix = 0x00;
-//      Byte pal = 0x00;
-      Byte pix = bg_pix;
-      Byte pal = bg_pal;
-//      if (bg_pix > 0 && fg_pix > 0) {
-//        pix = fg_pri ? fg_pix : bg_pix;
-//        pal = fg_pri ? fg_pal : bg_pal;
-//        if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
-//      } else {
-//        pix = fg_pix + bg_pix;
-//        pal = fg_pix ? fg_pal : bg_pal;
-//      }
+      Byte fg_pix = 0x00;
+      Byte fg_pal = 0x00;
+      [[maybe_unused]]Byte fg_pri = 0x00;
+      if (BIT(ppumask, sprite_enable) && (BIT(ppumask, sprite_leftmost_enable) || (cycle >= 9))) {
+        sprite_zero_rendered_ = false;
+        for (std::size_t entry = 0; entry < context_->num_sprites; entry++) {
+          if (context_->sprite[entry].x == 0) {
+            fg_pix = (static_cast<Byte>((SPRT(pttr_hi, entry) & 0x80) > 0) << 1) | static_cast<Byte>((SPRT(pttr_lo, entry) & 0x80) > 0);
+            fg_pal = (context_->sprite[entry].attr & 0x03) + 0x04;
+            fg_pri = (context_->sprite[entry].attr & 0x20) == 0;
+            if (fg_pix != 0) {
+              if (entry == 0) sprite_zero_rendered_ = true;
+              break;
+            }
+          }
+        }
+      }
+      Byte pix = 0x00;
+      Byte pal = 0x00;
+      if (bg_pix > 0 && fg_pix > 0) {
+        pix = fg_pri ? fg_pix : bg_pix;
+        pal = fg_pri ? fg_pal : bg_pal;
+        if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
+      } else {
+        pix = fg_pix + bg_pix;
+        pal = fg_pix ? fg_pal : bg_pal;
+      }
       if (0 <= cycle - 1 && cycle -1 < PPU::kFrameW && 0 <= scanline && scanline < PPU::kFrameH)
-	context_->pixel_writer(
-	  cycle - 1,
-	  scanline,
-	  palette_->Colour(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F));
+        context_->pixel_writer(
+          cycle - 1,
+          scanline,
+          colours_->Get(BIT(ppumask, intensity), mmu_->Read(0x3F00 + (pal << 2) + pix) & 0x3F));
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
@@ -464,7 +474,7 @@ class RP2C02 final : public PPU {
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     PPU::Context* context_;
 
-    PPU::Palette* palette_;
+    PPU::Colours* colours_;
 
     PPU::Registers* const registers_;
 

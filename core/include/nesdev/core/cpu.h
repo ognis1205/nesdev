@@ -95,6 +95,10 @@ class CPU : public Clock {
     return context_.fetched;
   }
 
+  Byte Fetched(Byte byte) noexcept {
+    return context_.fetched = byte;
+  }
+
   [[nodiscard]]
   Byte Op() const noexcept {
     return context_.opcode_byte;

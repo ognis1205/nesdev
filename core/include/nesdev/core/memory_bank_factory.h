@@ -19,10 +19,10 @@ class MemoryBankFactory {
  public:
   [[nodiscard]]
   static MemoryBanks CPUBus(ROM* const rom,
-			    PPU* const ppu,
-			    NES::DirectMemoryAccess* const dma,
-			    NES::Controller* const controller_1,
-	    NES::Controller* const controller_2);
+                            PPU* const ppu,
+                            NES::DirectMemoryAccess* const dma,
+                            NES::Controller* const controller_1,
+            NES::Controller* const controller_2);
 
   [[nodiscard]]
   static MemoryBanks PPUBus(ROM* const rom);

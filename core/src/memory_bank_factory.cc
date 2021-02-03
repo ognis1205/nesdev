@@ -104,10 +104,10 @@ namespace nesdev {
 namespace core {
 
 MemoryBanks MemoryBankFactory::CPUBus(ROM* const rom,
-				      PPU* const ppu,
-				      NES::DirectMemoryAccess* const dma,
-				      NES::Controller* const controller_1,
-				      NES::Controller* const controller_2) {
+                                      PPU* const ppu,
+                                      NES::DirectMemoryAccess* const dma,
+                                      NES::Controller* const controller_1,
+                                      NES::Controller* const controller_2) {
   MemoryBanks banks;
   banks.push_back(std::make_unique<detail::memory_banks::Chip     <0x0000, 0x1FFF>>(0x800));                                          // RAM
   banks.push_back(std::make_unique<detail::memory_banks::Connector<0x2000, 0x3FFF>>(::Reader(ppu), ::Writer(ppu)));                   // PPU
@@ -123,9 +123,10 @@ MemoryBanks MemoryBankFactory::CPUBus(ROM* const rom,
 
   MemoryBanks MemoryBankFactory::PPUBus(ROM* const rom) {
   MemoryBanks banks;
-  banks.push_back(std::make_unique<::PPUAdapter>(rom));                                       // ROM
-  banks.push_back(std::make_unique<PPU::Nametables           <0x2000, 0x3EFF>>(0x0400, rom)); // Nametables
-  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x3F00, 0x3FFF>>(0x20));        // Pallete
+  banks.push_back(std::make_unique<::PPUAdapter>(rom));                            // ROM
+  banks.push_back(std::make_unique<PPU::Nametables<0x2000, 0x3EFF>>(0x0400, rom)); // Nametables
+  banks.push_back(std::make_unique<PPU::Palette   <0x3F00, 0x3FFF>>(0x20));        // Pallete
+//  banks.push_back(std::make_unique<detail::memory_banks::Chip<0x3F00, 0x3FFF>>(0x20));        // Pallete
   return banks;
 }
 

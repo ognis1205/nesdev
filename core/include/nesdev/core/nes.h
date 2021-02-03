@@ -68,8 +68,8 @@ class NES final : public Clock {
     void Transfer(PPU::Chips* const chips) {
       chips->oam->Write(address_.offset++, data_);
       if (address_.offset == 0x00) {
-	transfer_            = false;
-	wait_for_even_cycle_ = true;
+        transfer_            = false;
+        wait_for_even_cycle_ = true;
       }
     }
     

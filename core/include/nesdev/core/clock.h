@@ -20,3 +20,4 @@ class Clock {
 }  // namespace core
 }  // namespace nesdev
 #endif  // ifndef _NESDEV_CORE_CLOCK_H_
+

@@ -78,7 +78,7 @@ class RP2A03 final : public CPU {
 
     Stack(CPU::Registers* const registers, MMU* const mmu)
       : registers_{registers},
-	mmu_{mmu} {}
+        mmu_{mmu} {}
 
     [[nodiscard]]
     Byte Pull() const {

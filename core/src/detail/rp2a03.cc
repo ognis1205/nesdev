@@ -36,7 +36,7 @@ RP2A03::~RP2A03() {}
 
 void RP2A03::Tick() {
   if (ClearWhenCompleted()) {
-    Next();
+    REG(p) |= MSK(unused); Next();
   } else {
     Execute();
   }
@@ -61,16 +61,17 @@ void RP2A03::Next() {
   // Stage the specified addressing mode.
   switch (AddrMode()) {
   case A::ACC:
-    Stage(/* Nothing to stage. */);
+    Stage(/*   Nothing to stage.   */);
     break;
   case A::IMP:
-    Stage(/* Nothing to stage. */);
+    Stage(/*   Nothing to stage.   */);
+//    Stage([this] { Fetched(REG(a)); });
     break;
   case A::IMM:
-    Stage(/* Nothing to stage. */);
+    Stage(/*   Nothing to stage.   */);
     break;
   case A::REL:
-    Stage(/* Nothing to stage. */);
+    Stage(/*   Nothing to stage.   */);
     break;
   case A::ABS:
     Stage([this] { AddrLo(Read(REG(pc)++));                   }                                );
@@ -400,12 +401,12 @@ void RP2A03::IRQ() noexcept {
 }
 
 void RP2A03::NMI() noexcept {
-  Stage([this] { Read(REG(pc));                                           });
-  Stage([this] { Push(REG_HI(pc));                                        });
-  Stage([this] { Push(REG_LO(pc));                                        });
-  Stage([this] { Push(REG(p));                                            });
-  Stage([this] { AddrLo(Read(RP2A03::kNMIAddress));                       });
-  Stage([this] { AddrHi(Read(RP2A03::kNMIAddress + 1)); REG(pc) = Addr(); });
+  Stage([this] { Read(REG(pc));                                                                       });
+  Stage([this] { Push(REG_HI(pc));                                                                    });
+  Stage([this] { Push(REG_LO(pc));                                                                    });
+  Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); Push(REG(p)); });
+  Stage([this] { AddrLo(Read(RP2A03::kNMIAddress));                                                   });
+  Stage([this] { AddrHi(Read(RP2A03::kNMIAddress + 1)); REG(pc) = Addr();                             });
 }
   
 }  // namespace detail

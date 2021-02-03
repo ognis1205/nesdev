@@ -6,6 +6,7 @@
  */
 //#include <cstddef>
 //#include <cstring>
+#include <iostream>
 #include <iosfwd>
 #include <istream>
 #include <memory>

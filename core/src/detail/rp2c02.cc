@@ -25,14 +25,14 @@ RP2C02::RP2C02(PPU::Chips* const chips,
                PPU::Registers* const registers,
                PPU::Shifters* const shifters,
                MMU* const mmu,
-               const std::vector<Byte>& palette)
-  : PPU{palette},
+               const std::vector<Byte>& colours)
+  : PPU{colours},
     chips_{std::move(chips)},
     registers_{registers},
     shifters_{shifters},
     mmu_{mmu},
     latch_{registers_, mmu_, chips_},
-    shift_{&context_, &palette_, registers_, shifters, mmu_, chips_} {}
+    shift_{&context_, &colours_, registers_, shifters, mmu_, chips_} {}
 
 RP2C02::~RP2C02() {}
 
