@@ -1,6 +1,6 @@
 ## NesDev Nintendo Entertainment System (NES) Developing Toolkits
 
-![Screenshot of Donkey Kong](https://i.imgur.com/sWc87EB.png)
+![Screenshot of Donkey Kong](https://i.imgur.com/sWc87EB.png | width=100)
 
 ### Summary
 
