@@ -1,5 +1,7 @@
 ## NesDev Nintendo Entertainment System (NES) Developing Toolkits
 
+![Screenshot of Donkey Kong](https://i.imgur.com/sWc87EB.png)
+
 ### Summary
 
 Modern C++ NES developing toolkits for My Own Learning Porpose. The implementation is NOT fully faithfull to the original NES hardware though,
