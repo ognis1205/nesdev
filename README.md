@@ -26,35 +26,34 @@ The following is a checklist of features and their progress:
   - [ ] PAL
   - [ ] Dendy
   - [ ] Headless mode
-- [x] Central Processing Unit (CPU)
+- [x] CPU
   - [x] Official Instructions
-  - [ ] Unofficial Instructions (Some still incorrect)
+  - [ ] Unofficial Instructions
   - [x] Interrupts
-- [x] Picture Processing Unit (PPU)
+- [x] PPU
   - [x] VRAM
   - [x] Background
   - [x] Sprites
   - [x] NTSC TV Artifact Effects
   - [x] Emphasize RGB/Grayscale
-- [ ] Audio Processing Unit (APU)
+- [ ] APU
   - [ ] Pulse Channels
   - [ ] Triangle Channels
   - [ ] Noise Channels
-  - [ ] Delta Mulation Channel (DMC)
+  - [ ] Delta Mulation Channel
 - [x] Inputs
-  - [x] Keyboard
 - [x] Memory
 - [x] Cartridge
   - [ ] Battery-backed Save RAM
   - [x] iNES Format
-  - [x] NES 2.0 Format (Can read headers, but many features still unsupported)
+  - [x] NES 2.0 Format
   - [ ] Mappers
     - [x] NROM (Mapper 0)
     - [ ] SxROM/MMC1 (Mapper 1)
     - [ ] UxROM (Mapper 2)
     - [ ] CNROM (Mapper 3)
     - [ ] TxROM/MMC3 (Mapper 4)
-    - [ ] ExROM/MMC5 (Mapper 5) (Split screen and sound is unfinished)
+    - [ ] ExROM/MMC5 (Mapper 5)
     - [ ] AxROM (Mapper 7)
     - [ ] PxROM/MMC2 (Mapper 9)
 - [ ] Testing/Debugging/Documentation
@@ -80,7 +79,7 @@ make install
 
 NesDev library (**libnesdev**) is a static library for developing NES emulators, so **libnesdev** it self does NOT
 contain any media layer implementations. All you have to do is implememnt media backends with your favorite library,
-such as **SDL2**m and hook the NesDev's **Framebuffer** API for PPU and **Sampling** API for APU respectively.
+such as **SDL2** and hook the NesDev's **Framebuffer** API for PPU and **Sampling** API for APU respectively.
 
 ```c++
 #include <filesystem>
@@ -152,3 +151,7 @@ int main(int argc, char** argv) {
 1. [NesDev](http://nesdev.com/)
 2. [Bisqwit's implementation](https://bisqwit.iki.fi/jutut/kuvat/programming_examples/nesemu1/)
 3. [Javidx9's series of NES emulator](https://www.youtube.com/watch?v=F8kx56OZQhg)
+
+### Contributing
+
+Contributions are more than welcome! Everything from code to examples and documentation are all equally valuable so please don't feel you can't contribute. To contribute please fork the project make your changes and submit a pull request. We will do our best to work through any issues with you and get your code merged into the main branch.
