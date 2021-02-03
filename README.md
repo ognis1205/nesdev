@@ -2,6 +2,10 @@
 
 ![Screenshot of Donkey Kong](https://imgur.com/QETaFxn.png)
 
+### Notice
+
+This project is STILL EXPERIMENTAL and WIP. There are LOTS OF BUGS(01/24/2021).
+
 ### Summary
 
 Modern C++ NES developing toolkits for My Own Learning Porpose. The implementation is NOT fully faithfull to the original NES hardware though,
