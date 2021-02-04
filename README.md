@@ -1,7 +1,6 @@
 ## NesDev Nintendo Entertainment System (NES) Developing Toolkits
 
 <img alt="C++" src="https://img.shields.io/badge/c++%20-%2300599C.svg?&style=for-the-badge&logo=c%2B%2B&ogoColor=white"/>
-
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ![Screenshot of Donkey Kong](https://imgur.com/QETaFxn.png)
