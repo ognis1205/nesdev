@@ -133,8 +133,8 @@ void RP2A03::Next() {
     break;
   case A::IZY:
     Stage([this] { Ptr(Read(REG(pc)++));                                                                 }                          );
-    Stage([this] { AddrLo(Read(Ptr()));                                                                  }                          );
-    Stage([this] { AddrHi(Read(Ptr() + 1)); Addr(Addr(), REG(y));                                        }                          );
+    Stage([this] { AddrLo(Read((Ptr())      & 0x00FF));                                                  }                          );
+    Stage([this] { AddrHi(Read((Ptr() + 1) & 0x00FF)); Addr(Addr(), REG(y));                             }                          );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
     Stage([this] { Fetch();                                                                              }, If(M::READ_MODIFY_WRITE));
