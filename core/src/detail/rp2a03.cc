@@ -124,12 +124,12 @@ void RP2A03::Next() {
     Stage([this] { if (PtrLo() == 0xFF) AddrHi(Read(Ptr() & 0xFF00)); else AddrHi(Read(Ptr() + 1)); REG(pc) = Addr(); });
     break;
   case A::IZX:
-    Stage([this] { Ptr(Read(REG(pc)++));                                   }                          );
-    Stage([this] { Read(Ptr());                                            }                          );
-    Stage([this] { AddrLo(Read(Ptr() + static_cast<Address>(REG(x))));     }                          );
-    Stage([this] { AddrHi(Read(Ptr() + static_cast<Address>(REG(x)) + 1)); }                          );
-    Stage([this] { Fetch();                                                }, If(M::READ_MODIFY_WRITE));
-    Stage([this] { Write(Addr(), Fetched());                               }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Ptr(Read(REG(pc)++));                                              }                          );
+    Stage([this] { Read(Ptr());                                                       }                          );
+    Stage([this] { AddrLo(Read((Ptr() + static_cast<Address>(REG(x)))     & 0x00FF)); }                          );
+    Stage([this] { AddrHi(Read((Ptr() + static_cast<Address>(REG(x)) + 1) & 0x00FF)); }                          );
+    Stage([this] { Fetch();                                                           }, If(M::READ_MODIFY_WRITE));
+    Stage([this] { Write(Addr(), Fetched());                                          }, If(M::READ_MODIFY_WRITE));
     break;
   case A::IZY:
     Stage([this] { Ptr(Read(REG(pc)++));                                                                 }                          );
@@ -217,10 +217,11 @@ void RP2A03::Next() {
     Stage([this] { Bit(REG(a), Fetch()); });
     break;
   case I::BRK:
-    Stage([this] { REG(p) |= MSK(irq_disable); Read(REG(pc)++); });
+    // TODO: Check Status register
+    Stage([this] { /*REG(p) |= MSK(irq_disable);*/ Read(REG(pc)++); });
     Stage([this] { Push(REG_HI(pc));                            });
     Stage([this] { Push(REG_LO(pc));                            });
-    Stage([this] { Push(REG(p) | MSK(brk_command));             });
+    Stage([this] { Push(REG(p) | MSK(unused) | MSK(brk_command));             });
     Stage([this] { REG_LO(pc) = Read(RP2A03::kBRKAddress);      });
     Stage([this] { REG_HI(pc) = Read(RP2A03::kBRKAddress + 1);  });
     break;
