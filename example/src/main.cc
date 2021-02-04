@@ -30,7 +30,6 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  try {
     std::ifstream ifs(rom, std::ifstream::binary);
     nc::NES nes(nc::ROMFactory::NROM(ifs));
     ifs.close();
@@ -40,6 +39,8 @@ int main(int argc, char** argv) {
       sdl.Pixel(x, y, rgba);
     });
 
+
+  try {
     if (cli.Defined("--chr_rom")) {
       while (sdl.IsRunning()) {
 	Utility::RenderCHRRom(nes, sdl);
@@ -48,14 +49,12 @@ int main(int argc, char** argv) {
     } else {
       while (sdl.IsRunning()) {
 	nes.Tick();
-	if ((nes.cycle % 3 == 0))
-	  Utility::Trace(nes);
 	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0)
 	  sdl.Update();
       }
     }
   } catch (std::exception& e) {
-    Utility::ShowStackTrace();
+    std::cerr << Utility::Info(nes) << std::endl;
     std::cerr << e.what() << std::endl;
   }
 

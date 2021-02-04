@@ -159,12 +159,10 @@ class RP2C02 final : public PPU {
         // so output buffer which contains the data from the 
         // previous read request.
         Latched(Deffered());
-        //Deffered(mmu_->Read(REG(vramaddr)));
 	Deffered(mmu_->Read(REG(vramaddr) & 0x3FFF));
       } else {
         // However, if the address was in the palette range, the
         // data is not delayed, so it returns immediately.
-        //Deffered(mmu_->Read(REG(vramaddr)));
 	Deffered(mmu_->Read(REG(vramaddr) & 0x3FFF));
         Latched(Deffered());
       }
@@ -173,28 +171,23 @@ class RP2C02 final : public PPU {
 
     void WritePPUCtrl(Byte byte) {
       REG(ppuctrl)               = byte;
-//      REG(ppuctrl)               = Latched(byte);
       BIT(tramaddr, nametable_x) = unsigned(BIT(ppuctrl, nametable_x));
       BIT(tramaddr, nametable_y) = unsigned(BIT(ppuctrl, nametable_y));
     }
 
     void WritePPUMask(Byte byte) {
       REG(ppumask) = byte;
-//      REG(ppumask) = Latched(byte);
     }
 
     void WritePPUStatus([[maybe_unused]]Byte byte) {
-//      Latched(byte);
     }
 
     void WriteOAMAddr(Byte byte) {
       REG(oamaddr) = byte;
-//      REG(oamaddr) = Latched(byte);
     }
 
     void WriteOAMData(Byte byte) {
       chips_->oam->Write(REG(oamaddr), byte);
-//      chips_->oam->Write(REG(oamaddr), Latched(byte));
     }
 
     void WritePPUScroll(Byte byte) {
@@ -203,16 +196,12 @@ class RP2C02 final : public PPU {
         // which we split into coarse and fine x values
         REG(fine_x)             = byte & 0x07;
         BIT(tramaddr, coarse_x) = byte >> 3;
-//      REG(fine_x)             = Latched(byte) & 0x07;
-//        BIT(tramaddr, coarse_x) = Latched(byte) >> 3;
         is_latched_             = true;
       } else {
         // First write to scroll register contains Y offset in pixel space
         // which we split into coarse and fine Y values
         BIT(tramaddr, fine_y)   = byte & 0x07;
         BIT(tramaddr, coarse_y) = byte >> 3;
-//      BIT(tramaddr, fine_y)   = Latched(byte) & 0x07;
-//        BIT(tramaddr, coarse_y) = Latched(byte) >> 3;
         is_latched_             = false;
       }
     }
@@ -224,7 +213,6 @@ class RP2C02 final : public PPU {
         // of the address, the second is the low byte. Note the writes
         // are stored in the tram register.
         BIT(tramaddr, hi) = byte & 0x3F;
-//      BIT(tramaddr, hi) = Latched(byte) & 0x3F;
         is_latched_       = true;
       } else {
         // When a whole address has been written, the internal vram address
@@ -232,7 +220,6 @@ class RP2C02 final : public PPU {
         // as the PPU will maintam the vram address automatically whilst
         // rendering the scanline position.
         BIT(tramaddr, lo) = byte;
-//      BIT(tramaddr, lo) = Latched(byte);
         REG(vramaddr)     = REG(tramaddr);
         is_latched_       = false;
       }
@@ -240,7 +227,6 @@ class RP2C02 final : public PPU {
 
     void WritePPUData(Byte byte) {
       mmu_->Write(REG(vramaddr) & 0x3FFF, byte);
-      //mmu_->Write(REG(vramaddr), Latched(byte));
       REG(vramaddr) += BIT(ppuctrl, increment) ? 0x0020 : 0x0001;
     }
 
@@ -378,7 +364,6 @@ class RP2C02 final : public PPU {
           addr = ((context_->sprite[entry].id & 0x01) << 12)
             | ((IsTopHalf(scanline, entry) ? (context_->sprite[entry].id & 0xFE) : ((context_->sprite[entry].id & 0xFE) + 1)) << 4)
             | (IsFlippedV(entry) ? (7 - ((scanline - context_->sprite[entry].y) & 0x07)) : ((scanline - context_->sprite[entry].y) & 0x07));
-//	std::cout << std::hex << unsigned(addr) << std::endl;
         Byte pttr_lo = mmu_->Read(addr + 0);
         Byte pttr_hi = mmu_->Read(addr + 8);
         if (IsFlippedH(entry)) {

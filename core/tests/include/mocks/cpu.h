@@ -30,7 +30,7 @@ class CPU : public nesdev::core::CPU {
 
   MOCK_METHOD0(NMI, void());
 
-  MOCK_CONST_METHOD0(PCRegister, Byte());
+  MOCK_CONST_METHOD0(PCRegister, Address());
 
   MOCK_CONST_METHOD0(ARegister, Byte());
 

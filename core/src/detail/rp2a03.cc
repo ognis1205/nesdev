@@ -133,7 +133,7 @@ void RP2A03::Next() {
     break;
   case A::IZY:
     Stage([this] { Ptr(Read(REG(pc)++));                                                                 }                          );
-    Stage([this] { AddrLo(Read((Ptr())      & 0x00FF));                                                  }                          );
+    Stage([this] { AddrLo(Read((Ptr())     & 0x00FF));                                                   }                          );
     Stage([this] { AddrHi(Read((Ptr() + 1) & 0x00FF)); Addr(Addr(), REG(y));                             }                          );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); return CrossPage() ? S::Continue : S::Skip; }, If(M::READ)             );
     Stage([this] { if (CrossPage()) Read(FixHiByte(Addr())); else Read(Addr());                          }, IfNot(M::READ)          );
@@ -141,8 +141,6 @@ void RP2A03::Next() {
     Stage([this] { Write(Addr(), Fetched());                                                             }, If(M::READ_MODIFY_WRITE));
     break;
   default:
-// TODO: Check if this fallthrough is valid.    
-//    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid addressing mode specified to Fetch", Op()));
     break;
   }
   // Stage the specified instruction.
@@ -160,56 +158,48 @@ void RP2A03::Next() {
   case I::BCC:
     Stage([this] { REG(pc)++;                                                                              }, IfCarry()   );
     Stage([    ] { /* Check if carry is clear, done in staging phase here. */                              }, IfNotCarry());
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotCarry());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotCarry());
     break;
   case I::BCS:
     Stage([this] { REG(pc)++;                                                                              }, IfNotCarry());
     Stage([    ] { /* Check if carry is set, done in staging phase here. */                                }, IfCarry()   );
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry()   );
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfCarry());
     Stage([    ] { /* Do nothing. */                                                                       }, IfCarry()   );
     break;
   case I::BEQ:
     Stage([this] { REG(pc)++;                                                                              }, IfNotZero());
     Stage([    ] { /* Check if zero is set, done in staging phase here. */                                 }, IfZero()   );
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero()   );
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfZero());
     Stage([    ] { /* Do nothing. */                                                                       }, IfZero()   );
     break;
   case I::BNE:
     Stage([this] { REG(pc)++;                                                                              }, IfZero()   );
     Stage([    ] { /* Check if zero is clear, done in staging phase here. */                               }, IfNotZero());
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotZero());
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotZero());
     break;
   case I::BMI:
     Stage([this] { REG(pc)++;                                                                              }, IfNotNegative());
     Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfNegative()   );
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative()   )
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNegative());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfNegative()   );
     break;
   case I::BPL:
     Stage([this] { REG(pc)++;                                                                              }, IfNegative()   );
     Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotNegative());
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotNegative());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotNegative());
     break;
   case I::BVC:
     Stage([this] { REG(pc)++;                                                                              }, IfOverflow()   );
     Stage([    ] { /* Check if negative is clear, done in staging phase here. */                           }, IfNotOverflow());
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfNotOverflow());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfNotOverflow());
     break;
   case I::BVS:
     Stage([this] { REG(pc)++;                                                                              }, IfNotOverflow());
     Stage([    ] { /* Check if negative is set, done in staging phase here. */                             }, IfOverflow()   );
-//    Stage([this] { Addr(REG(pc)++); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow()   );
     Stage([this] { Addr(Read(REG(pc)++)); FixPage(); Branch(Addr()); return CrossPage() ? S::Continue : S::Stop; }, IfOverflow());;
     Stage([    ] { /* Do nothing. */                                                                       }, IfOverflow()   );
     break;
@@ -372,8 +362,6 @@ void RP2A03::Next() {
     Stage([this] { REG(a) = PassThrough(REG(y)); });
     break;
   default:
-// TODO: Check if this fallthrough is valid.    
-//    NESDEV_CORE_THROW(InvalidOpcode::Occur("Invalid instruction specified to Fetch", Op()));
     break;
   }
 }

@@ -18,7 +18,6 @@
 namespace nesdev {
 namespace core {
 
-// TODO: Implement error codes.
 class Exception : public std::exception {
  public:
   const char* what() const noexcept override { return what_arg_.what(); }

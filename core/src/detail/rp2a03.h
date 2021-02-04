@@ -45,7 +45,7 @@ class RP2A03 final : public CPU {
 
   void NMI() override;
 
-  Byte PCRegister() const override {
+  Address PCRegister() const override {
     return registers_->pc.value;
   }
 

@@ -201,10 +201,6 @@ class PPU : public Clock {
     Nametables(std::size_t size, ROM* const rom)
       : rom_{rom},
         size_{size} {
-// TODO: Check if this assertion is unneccessary.      
-//      NESDEV_CORE_CASSERT(
-//      ((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
-//      "Size does not match address range");
       data_[0].resize(size_);
       data_[1].resize(size_);
     }
@@ -280,10 +276,6 @@ class PPU : public Clock {
    public:
     Palette(std::size_t size)
       : size_{size} {
-// TODO: Check if this assertion is unneccessary.      
-//      NESDEV_CORE_CASSERT(
-//      ((To - From + 1u) % size_ == 0) && (0x1000 % size_ == 0),
-//      "Size does not match address range");
       data_.resize(size_);
     }
 

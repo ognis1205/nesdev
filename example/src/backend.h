@@ -68,7 +68,6 @@ class Backend {
 
   bool running_ = true;
 
-//  std::uint32_t updated_time_ = {0};
   Clock::TimePoint updated_time_ = Clock::Now();
 };
 

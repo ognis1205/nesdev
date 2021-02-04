@@ -209,7 +209,6 @@ struct ROM {
     } flags8_ = {0x00};
 
     // FLAGS 9    : TV system (rarely used extension).
-    //[[maybe_unused]]
     union {
       Byte value;
       Bitfield<0, 1, Byte> tv_system;
@@ -225,7 +224,6 @@ struct ROM {
     } flags10_ = {0x00};
 
     // FLAGS 11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15)
-    //[[maybe_unused]]
     Byte unused_[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
   };
 

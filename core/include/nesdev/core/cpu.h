@@ -72,7 +72,7 @@ class CPU : public Clock {
 
   virtual void NMI() = 0;
 
-  virtual Byte PCRegister() const = 0;
+  virtual Address PCRegister() const = 0;
 
   virtual Byte ARegister() const = 0;
 
