@@ -422,13 +422,19 @@ class RP2C02 final : public PPU {
       }
       Byte pix = 0x00;
       Byte pal = 0x00;
-      if (bg_pix > 0 && fg_pix > 0) {
-        pix = fg_pri ? fg_pix : bg_pix;
-        pal = fg_pri ? fg_pal : bg_pal;
-        if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
-      } else {
-        pix = fg_pix + bg_pix;
-        pal = fg_pix ? fg_pal : bg_pal;
+      if (bg_pix == 0 && fg_pix == 0) {
+	pix = 0x00;
+	pal = 0x00;
+      } else if (bg_pix == 0 && fg_pix > 0) {
+	pix = fg_pix;
+	pal = fg_pal;
+      } else if (bg_pix > 0 && fg_pix == 0) {
+	pix = bg_pix;
+	pal = bg_pal;
+      } else if (bg_pix > 0 && fg_pix > 0) {
+	pix = fg_pri ? fg_pix : bg_pix;
+	pal = fg_pri ? fg_pal : bg_pal;
+	if (SpriteZeroHitOccur()) SpriteZeroHitAt(cycle);
       }
       if (0 <= cycle - 1 && cycle -1 < PPU::kFrameW && 0 <= scanline && scanline < PPU::kFrameH)
         context_->pixel_writer(
