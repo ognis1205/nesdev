@@ -48,7 +48,6 @@ Backend::Backend(const nc::NES& nes,
   }
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-  //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
   if (!(texture_ = SDL_CreateTexture(renderer_,
 				     SDL_PIXELFORMAT_ARGB8888,
@@ -79,14 +78,14 @@ Backend::~Backend() {
 }
 
 void Backend::Update() {
-  std::uint32_t delay = SDL_GetTicks() - updated_time_;
+  std::uint32_t delay = 1000 * (Clock::Now() - updated_time_).count();
 
   SDL_RenderClear(renderer_);
   HandleEvents();
   std::swap(b_buffer_, f_buffer_);
 
-  if (!updated_time_ && delay < Backend::kDelay)
-    SDL_Delay(static_cast<Uint32>(Backend::kDelay - delay));
+  if (/*!updated_time_ &&*/ delay < Backend::kDelay)
+    usleep(static_cast<std::uint32_t>(Backend::kDelay - delay));
 
   if (SDL_UpdateTexture(texture_, 0, f_buffer_, nc::PPU::kFrameW * sizeof(Uint32))) {
     std::stringstream ss("failed to update screen texture: "); ss << SDL_GetError();
@@ -99,7 +98,7 @@ void Backend::Update() {
   }
 
   SDL_RenderPresent(renderer_);
-  updated_time_ = SDL_GetTicks();
+  updated_time_ = Clock::Now();
 }
 
 void Backend::HandleEvents() {

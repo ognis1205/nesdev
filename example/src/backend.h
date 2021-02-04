@@ -7,16 +7,28 @@
 #ifndef _BACKEND_H_
 #define _BACKEND_H_
 #include <cstddef>
+#include <chrono>
+#include <unistd.h>
 #include <nesdev/core.h>
 #include <SDL.h>
 
 namespace nc = nesdev::core;
 
+struct Clock {
+  typedef std::chrono::duration<std::uint32_t, std::milli> duration;
+  typedef std::chrono::time_point<Clock> TimePoint;
+  static TimePoint Now() noexcept {
+    using namespace std::chrono;
+    return TimePoint(
+      duration(duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count()));
+  }
+};
+
 class Backend {
  public:
   static const int kFPS = 60;
 
-  static constexpr int kDelay = 1000.0f / kFPS;
+  static constexpr int kDelay = 1000000.0f / kFPS;
 
  public:
   Backend(const nc::NES& nes,
@@ -56,7 +68,8 @@ class Backend {
 
   bool running_ = true;
 
-  std::uint32_t updated_time_ = {0};
+//  std::uint32_t updated_time_ = {0};
+  Clock::TimePoint updated_time_ = Clock::Now();
 };
 
 #endif  // ifndef _BACKEND_H_
