@@ -6,6 +6,7 @@
  */
 #ifndef _NESDEV_CORE_NES_H_
 #define _NESDEV_CORE_NES_H_
+#include <iostream>
 #include <cstddef>
 #include <memory.h>
 #include "nesdev/core/clock.h"

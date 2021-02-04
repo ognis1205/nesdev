@@ -36,7 +36,7 @@ class Connector final : public MemoryBank {
       writer_{std::move(writer)} {}
 
   [[nodiscard]]
-  bool HasValidAddress([[maybe_unused]] Address address) const noexcept override {
+  bool HasValidAddress([[maybe_unused]] Address address) const override {
     if constexpr (From == 0) return address <= To;
     else return address >= From && address <= To;
   }

@@ -86,19 +86,19 @@ class Mapper000 final : public ROM::Mapper {
   }
 
   [[nodiscard]]
-  bool IRQ() const noexcept override {
+  bool IRQ() const override {
     return false;
   }
 
-  void ClearIRQ() noexcept override {
+  void ClearIRQ() override {
     // Do nothing.
   }
 
-  void OnVisibleCycleEnds() noexcept override {
+  void OnVisibleCycleEnds() override {
     // Do nothing.
   }
 
-  void Reset() noexcept override {
+  void Reset() override {
     // Do nothing.
   }
 };

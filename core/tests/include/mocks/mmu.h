@@ -16,15 +16,11 @@ namespace mocks {
 
 class MMU : public nesdev::core::MMU {
  public:
-  MOCK_METHOD1(MockSet, void(MemoryBanks));
+  MOCK_METHOD1(Set, void(MemoryBanks));
 
   MOCK_CONST_METHOD1(Read, Byte(Address));
 
   MOCK_METHOD2(Write, void(Address, Byte));
-
-  virtual void Set(MemoryBanks memory_banks) noexcept {
-    return MockSet(std::move(memory_banks));
-  }
 };
 
 }  // namespace mocks

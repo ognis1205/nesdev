@@ -84,7 +84,7 @@ void Backend::Update() {
   HandleEvents();
   std::swap(b_buffer_, f_buffer_);
 
-  if (/*!updated_time_ &&*/ delay < Backend::kDelay)
+  if (delay < Backend::kDelay)
     usleep(static_cast<std::uint32_t>(Backend::kDelay - delay));
 
   if (SDL_UpdateTexture(texture_, 0, f_buffer_, nc::PPU::kFrameW * sizeof(Uint32))) {
@@ -120,7 +120,6 @@ void Backend::HandleEvents() {
       case SDLK_x:         players_[0]->A(true);      break;
       default: break;
       }
-//      Utility::Debug(nes_);
       break;
     case SDL_KEYUP:
       switch (event.key.keysym.sym) {
@@ -134,7 +133,6 @@ void Backend::HandleEvents() {
       case SDLK_x:         players_[0]->A(false);      break;
       default: break;
       }
-//      Utility::Debug(nes_);
       break;
     default:
       break;

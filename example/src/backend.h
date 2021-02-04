@@ -26,7 +26,7 @@ struct Clock {
 
 class Backend {
  public:
-  static const int kFPS = 60;
+  static const int kFPS = 30;
 
   static constexpr int kDelay = 1000000.0f / kFPS;
 

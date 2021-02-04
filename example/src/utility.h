@@ -40,16 +40,16 @@ FixedQueue<std::string, 100> stack_trace;
 
 class Utility {
  public:
-  static void Init() noexcept {
+  static void Init() {
     srand(time(nullptr));
   }
 
   template<nc::ARGB From, nc::ARGB To>
-  static nc::ARGB Noise() noexcept {
+  static nc::ARGB Noise() {
     return From + rand() % (To - From + 1);
   }
 
-  static void ShowHeader(const nc::NES& nes) noexcept {
+  static void ShowHeader(const nc::NES& nes) {
     std::cerr << "================" << std::endl;
     std::cerr << "[HEADER]" << std::endl;
     std::cerr << "prg rom:" << nes.rom->header->SizeOfPRGRom() << std::endl;
@@ -58,7 +58,7 @@ class Utility {
     std::cerr << "chr ram:" << nes.rom->header->SizeOfCHRRam() << std::endl;
   }
 
-  static std::string Info(const nc::NES& nes) noexcept {
+  static std::string Info(const nc::NES& nes) {
     std::stringstream ss;
 
     ss << "================" << std::endl;
@@ -175,7 +175,7 @@ class Utility {
 # define G(x) ((x) & 0x0000FF00)
 # define B(x) ((x) & 0x000000FF)
 
-  static void RenderCHRRom(const nc::NES& nes, Backend& sdl) noexcept {
+  static void RenderCHRRom(const nc::NES& nes, Backend& sdl) {
     for (auto h = 0; h < NUM_PTTR_TABLES; h++) {
       for (auto i = 0; i < PTTR_TILE_COUNT; i++) {
         for (auto j = 0; j < TILE_PIXEL_H; j++) {

@@ -22,15 +22,15 @@ class Pipeline final {
 
   Pipeline() = default;
 
-  void Push(const std::function<void()>& step) noexcept;
+  void Push(const std::function<void()>& step);
 
-  void Push(const Step& step) noexcept;
+  void Push(const Step& step);
 
-  void Append(const Pipeline& other) noexcept;
+  void Append(const Pipeline& other);
 
-  bool Done() const noexcept;
+  bool Done() const;
 
-  void Clear() noexcept;
+  void Clear();
 
   void Tick();
 

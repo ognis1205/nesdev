@@ -169,10 +169,10 @@ struct Opcode {
 class Opcodes {
  public:
   [[nodiscard]]
-  static Opcode Decode(Byte opcode) noexcept;
+  static Opcode Decode(Byte opcode);
 
   [[nodiscard]]
-  static std::string ToString(Byte opcode) noexcept;
+  static std::string ToString(Byte opcode);
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Opcodes() {}

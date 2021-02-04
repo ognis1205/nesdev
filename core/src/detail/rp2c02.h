@@ -60,15 +60,15 @@ class RP2C02 final : public PPU {
 
   void Write(Address address, Byte byte) override;
 
-  bool IsRendering() const noexcept override {
+  bool IsRendering() const override {
     return BIT(ppumask, background_enable) || BIT(ppumask, sprite_enable);
   }
 
-  Byte CtrlRegister() const noexcept override {
+  Byte CtrlRegister() const override {
     return registers_->ppuctrl.value;
   }
 
-  Byte MaskRegister() const noexcept override {
+  Byte MaskRegister() const override {
     return registers_->ppumask.value;
   }
 
@@ -105,21 +105,21 @@ class RP2C02 final : public PPU {
         chips_{chips} {}
 
     [[nodiscard]]
-    Byte Latched() const noexcept {
+    Byte Latched() const {
       return latch_;
     }
 
-    Byte Latched(Byte byte) noexcept {
+    Byte Latched(Byte byte) {
       return latch_ = byte;
 //      return byte;
     }
 
     [[nodiscard]]
-    Byte Deffered() const noexcept {
+    Byte Deffered() const {
       return deffered_;
     }
 
-    Byte Deffered(Byte byte) noexcept {
+    Byte Deffered(Byte byte) {
       return deffered_ = byte;
     }
 
@@ -159,11 +159,13 @@ class RP2C02 final : public PPU {
         // so output buffer which contains the data from the 
         // previous read request.
         Latched(Deffered());
-        Deffered(mmu_->Read(REG(vramaddr)));
+        //Deffered(mmu_->Read(REG(vramaddr)));
+	Deffered(mmu_->Read(REG(vramaddr) & 0x3FFF));
       } else {
         // However, if the address was in the palette range, the
         // data is not delayed, so it returns immediately.
-        Deffered(mmu_->Read(REG(vramaddr)));
+        //Deffered(mmu_->Read(REG(vramaddr)));
+	Deffered(mmu_->Read(REG(vramaddr) & 0x3FFF));
         Latched(Deffered());
       }
       REG(vramaddr) += BIT(ppuctrl, increment) ? 0x0020 : 0x0001;
@@ -237,8 +239,8 @@ class RP2C02 final : public PPU {
     }
 
     void WritePPUData(Byte byte) {
-      mmu_->Write(REG(vramaddr), byte);
-//      mmu_->Write(REG(vramaddr), Latched(byte));
+      mmu_->Write(REG(vramaddr) & 0x3FFF, byte);
+      //mmu_->Write(REG(vramaddr), Latched(byte));
       REG(vramaddr) += BIT(ppuctrl, increment) ? 0x0020 : 0x0001;
     }
 
@@ -376,7 +378,7 @@ class RP2C02 final : public PPU {
           addr = ((context_->sprite[entry].id & 0x01) << 12)
             | ((IsTopHalf(scanline, entry) ? (context_->sprite[entry].id & 0xFE) : ((context_->sprite[entry].id & 0xFE) + 1)) << 4)
             | (IsFlippedV(entry) ? (7 - ((scanline - context_->sprite[entry].y) & 0x07)) : ((scanline - context_->sprite[entry].y) & 0x07));
-
+//	std::cout << std::hex << unsigned(addr) << std::endl;
         Byte pttr_lo = mmu_->Read(addr + 0);
         Byte pttr_hi = mmu_->Read(addr + 8);
         if (IsFlippedH(entry)) {
@@ -444,11 +446,11 @@ class RP2C02 final : public PPU {
     }
 
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-    bool Is8x8Mode() const noexcept {
+    bool Is8x8Mode() const {
       return !BIT(ppuctrl, sprite_height);
     }
 
-    bool IsTopHalf(std::int16_t scanline, std::size_t entry) const noexcept {
+    bool IsTopHalf(std::int16_t scanline, std::size_t entry) const {
       return scanline - context_->sprite[entry].y < 8;
     }
 
@@ -506,23 +508,23 @@ class RP2C02 final : public PPU {
     case 0x0005: return MemoryMap::PPUSCROLL;
     case 0x0006: return MemoryMap::PPUADDR;
     case 0x0007: return MemoryMap::PPUDATA;
-    default:     NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::RP2C02::Map", address));
+    default: NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::RP2C02::Map", address));
     }
   }
 
   [[nodiscard]]
-  bool IsMaster() const noexcept {
+  bool IsMaster() const {
     return BIT(ppuctrl, ppu_master_slave);
   }
 
   [[nodiscard]]
-  bool IsNMIEnable() const noexcept {
+  bool IsNMIEnable() const {
     return BIT(ppuctrl, nmi_enable);
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
-  void Ticked() noexcept {
+  void Ticked() {
     NextCycle();
     if (IsRendering() && (Cycle() == 260 && Scanline() < 240))
       rom_->mapper->OnVisibleCycleEnds();
@@ -535,7 +537,7 @@ class RP2C02 final : public PPU {
   }
 
   [[nodiscard]]
-  Byte Latched() const noexcept {
+  Byte Latched() const {
     return latch_.Latched();
   }
 
@@ -643,7 +645,7 @@ class RP2C02 final : public PPU {
     shift_.ComposeAt(cycle, scanline);
   }
 
-  void ScrollX() noexcept {
+  void ScrollX() {
     if (IsRendering()) {
       // A single name table is 32 x 30 tiles.
       if (BIT(vramaddr, coarse_x) == 31) {
@@ -655,7 +657,7 @@ class RP2C02 final : public PPU {
     }
   }
 
-  void ScrollY() noexcept {
+  void ScrollY() {
     if (IsRendering()) {
       // A single name table is 32 x 30 tiles.                
       // According to the existence of attribute memory, an increment in Yx first adjusts the fine offset.
@@ -675,14 +677,14 @@ class RP2C02 final : public PPU {
     }
   }
 
-  void TransferX() noexcept {
+  void TransferX() {
     if (IsRendering()) {
       BIT(vramaddr, nametable_x) = unsigned(BIT(tramaddr, nametable_x));
       BIT(vramaddr, coarse_x)    = unsigned(BIT(tramaddr, coarse_x));
     }
   }
 
-  void TransferY() noexcept {
+  void TransferY() {
     if (IsRendering()) {
       BIT(vramaddr, fine_y)      = unsigned(BIT(tramaddr, fine_y));
       BIT(vramaddr, nametable_y) = unsigned(BIT(tramaddr, nametable_y));

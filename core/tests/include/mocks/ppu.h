@@ -25,11 +25,11 @@ class PPU : public nesdev::core::PPU {
 
   MOCK_METHOD2(Write, void(Address, Byte));
 
-  MOCK_CONST_METHOD0(MockIsRendering, bool());
+  MOCK_CONST_METHOD0(IsRendering, bool());
 
-  MOCK_CONST_METHOD0(MockCtrlRegister, Byte());
+  MOCK_CONST_METHOD0(CtrlRegister, Byte());
 
-  MOCK_CONST_METHOD0(MockMaskRegister, Byte());
+  MOCK_CONST_METHOD0(MaskRegister, Byte());
 
   MOCK_CONST_METHOD0(VRAMAddr, Address());
 
@@ -42,18 +42,6 @@ class PPU : public nesdev::core::PPU {
   MOCK_CONST_METHOD0(BgAttrLo, Address());
 
   MOCK_CONST_METHOD0(BgAttrHi, Address());
-
-  bool IsRendering() const noexcept {
-    return MockIsRendering();
-  }
-
-  Byte CtrlRegister() const noexcept {
-    return MockCtrlRegister();
-  }
-
-  Byte MaskRegister() const noexcept {
-    return MockMaskRegister();
-  }
 };
 
 }  // namespace mocks

@@ -16,7 +16,7 @@ class CLI {
       tokens_.push_back(std::string(argv[i]));
   }
 
-  const std::string& Get(const std::string &option) const{
+  const std::string& Get(const std::string &option) const {
     auto itr =  std::find(tokens_.begin(), tokens_.end(), option);
     if (itr != tokens_.end() && ++itr != tokens_.end()){
       return *itr;
@@ -25,7 +25,7 @@ class CLI {
     return empty_string;
   }
 
-  bool Defined(const std::string &option) const{
+  bool Defined(const std::string &option) const {
     return std::find(tokens_.begin(), tokens_.end(), option) != tokens_.end();
   }
 

@@ -91,7 +91,7 @@ const std::vector<Byte> rp2c02 = {
 namespace nesdev {
 namespace core {
 
-std::vector<Byte> Palettes::RP2C02() noexcept {
+std::vector<Byte> Palettes::RP2C02() {
   return ::rp2c02;
 }
 

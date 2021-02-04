@@ -34,15 +34,11 @@ int main(int argc, char** argv) {
     std::ifstream ifs(rom, std::ifstream::binary);
     nc::NES nes(nc::ROMFactory::NROM(ifs));
     ifs.close();
-    Utility::ShowHeader(nes);
 
     Backend sdl(nes, nes.controller_1.get(), nes.controller_2.get());
     nes.ppu->Framebuffer([&sdl](std::int16_t x, std::int16_t y, nc::ARGB rgba) {
       sdl.Pixel(x, y, rgba);
     });
-    //nes->apu->Sampling([&sdl]() {
-    //  /* This is a placeholder for APU API. */
-    //});
 
     if (cli.Defined("--chr_rom")) {
       while (sdl.IsRunning()) {
@@ -52,14 +48,13 @@ int main(int argc, char** argv) {
     } else {
       while (sdl.IsRunning()) {
 	nes.Tick();
-//	if (/*nes.cpu->IsIdle() &&*/ (nes.cycle % 3 == 0))
-//	  Utility::Trace(nes);
-	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0) {
+	if ((nes.cycle % 3 == 0))
+	  Utility::Trace(nes);
+	if (nes.ppu->IsPostRenderLine() && nes.ppu->Cycle() == 0)
 	  sdl.Update();
-	}
       }
     }
-  } catch (const std::exception& e) {
+  } catch (std::exception& e) {
     Utility::ShowStackTrace();
     std::cerr << e.what() << std::endl;
   }

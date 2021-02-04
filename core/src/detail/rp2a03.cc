@@ -378,11 +378,11 @@ void RP2A03::Next() {
   }
 }
 
-bool RP2A03::IsIdle() const noexcept {
+bool RP2A03::IsIdle() const {
   return pipeline_.Done();
 }
 
-void RP2A03::Reset() noexcept {
+void RP2A03::Reset() {
   Stage([this] { AddrLo(Read(RP2A03::kRSTAddress));                       });
   Stage([this] { AddrHi(Read(RP2A03::kRSTAddress + 1)); REG(pc) = Addr(); });
   Stage([this] { REG(a) = 0x00;                                           });
@@ -392,7 +392,7 @@ void RP2A03::Reset() noexcept {
   Stage([this] { REG(p) = 0x00 | MSK(unused);                             });
 }
 
-void RP2A03::IRQ() noexcept {
+void RP2A03::IRQ() {
   Stage([this] { Push(REG_HI(pc));                                                      }, IfNotIRQDisable());
   Stage([this] { Push(REG_LO(pc));                                                      }, IfNotIRQDisable());
   Stage([this] { REG(p) |= MSK(unused) | MSK(irq_disable); REG(p) &= ~MSK(brk_command); }, IfNotIRQDisable());
@@ -401,7 +401,7 @@ void RP2A03::IRQ() noexcept {
   Stage([this] { AddrHi(Read(RP2A03::kBRKAddress + 1)); REG(pc) = Addr();               }, IfNotIRQDisable());
 }
 
-void RP2A03::NMI() noexcept {
+void RP2A03::NMI() {
   Stage([this] { Read(REG(pc));                                                                       });
   Stage([this] { Push(REG_HI(pc));                                                                    });
   Stage([this] { Push(REG_LO(pc));                                                                    });

@@ -37,35 +37,35 @@ class RP2A03 final : public CPU {
 
   void Next() override;
 
-  bool IsIdle() const noexcept override;
+  bool IsIdle() const override;
 
-  void Reset() noexcept override;
+  void Reset() override;
 
-  void IRQ() noexcept override;
+  void IRQ() override;
 
-  void NMI() noexcept override;
+  void NMI() override;
 
-  Byte PCRegister() const noexcept override {
+  Byte PCRegister() const override {
     return registers_->pc.value;
   }
 
-  Byte ARegister() const noexcept override {
+  Byte ARegister() const override {
     return registers_->a.value;
   }
 
-  Byte XRegister() const noexcept override {
+  Byte XRegister() const override {
     return registers_->x.value;
   }
 
-  Byte YRegister() const noexcept override {
+  Byte YRegister() const override {
     return registers_->y.value;
   }
 
-  Byte SRegister() const noexcept override {
+  Byte SRegister() const override {
     return registers_->s.value;
   }
 
-  Byte PRegister() const noexcept override {
+  Byte PRegister() const override {
     return registers_->p.value;
   }
 
@@ -103,7 +103,7 @@ class RP2A03 final : public CPU {
       Bitfield<8, 8, Word> a;
     };
 
-    static Bus Load(Byte a, Byte b) noexcept {
+    static Bus Load(Byte a, Byte b) {
       return {static_cast<Word>(a << 8 | b)};      
     };
 
@@ -111,7 +111,7 @@ class RP2A03 final : public CPU {
       : registers_ {registers} {}
 
     [[nodiscard]]
-    Byte ShiftL(Bus bus, bool rotate_carry) noexcept {
+    Byte ShiftL(Bus bus, bool rotate_carry) {
       bus.concat <<= 1;
       bus.b |= rotate_carry ? registers_->p.carry : 0x00;
       registers_->p.carry    = bus.a  & 0x01;
@@ -121,7 +121,7 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte ShiftR(Bus bus, bool rotate_carry) noexcept {
+    Byte ShiftR(Bus bus, bool rotate_carry) {
       bus.concat >>= 1;
       bus.a |= rotate_carry ? registers_->p.carry << 7 : 0x00;
       registers_->p.carry    = bus.b  & 0x80;
@@ -131,7 +131,7 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte Increment(Bus bus) noexcept {
+    Byte Increment(Bus bus) {
       ++bus.b;
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
@@ -139,7 +139,7 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte Decrement(Bus bus) noexcept {
+    Byte Decrement(Bus bus) {
       --bus.b;
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
@@ -147,14 +147,14 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte PassThrough(Bus bus) noexcept {
+    Byte PassThrough(Bus bus) {
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
       return bus.b;
     }
 
     [[nodiscard]]
-    Byte Or(Bus bus) noexcept {
+    Byte Or(Bus bus) {
       bus.b |= bus.a;
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
@@ -162,7 +162,7 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte And(Bus bus) noexcept {
+    Byte And(Bus bus) {
       bus.b &= bus.a;
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
@@ -170,7 +170,7 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte Xor(Bus bus) noexcept {
+    Byte Xor(Bus bus) {
       bus.b ^= bus.a;
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
@@ -178,7 +178,7 @@ class RP2A03 final : public CPU {
     }
 
     [[nodiscard]]
-    Byte Add(Bus bus) noexcept {
+    Byte Add(Bus bus) {
       bus.concat = CheckOverflow(bus.a, bus.b, bus.a + bus.b + registers_->p.carry);
       registers_->p.carry    = bus.a  & 0x01;
       registers_->p.zero     = bus.b == 0x00;
@@ -186,14 +186,14 @@ class RP2A03 final : public CPU {
       return bus.b;
     }
 
-    void Cmp(Bus bus) noexcept {
+    void Cmp(Bus bus) {
       registers_->p.carry    = bus.a >= bus.b;
       bus.concat = bus.a - bus.b;
       registers_->p.zero     = bus.b == 0x00;
       registers_->p.negative = bus.b  & 0x80;
     }
 
-    void Bit(Bus bus) noexcept {
+    void Bit(Bus bus) {
       bus.concat = (bus.a & bus.b) << 8 | bus.b;
       registers_->p.zero     = bus.a == 0x00;
       registers_->p.negative = bus.b  & 1u << 7;
@@ -203,7 +203,7 @@ class RP2A03 final : public CPU {
    NESDEV_CORE_PRIVATE_UNLESS_TESTED:
     // [SEE] http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
     [[nodiscard]]
-    Word CheckOverflow(Word a, Word b, Word r) noexcept {
+    Word CheckOverflow(Word a, Word b, Word r) {
       registers_->p.overflow = (a ^ r) & (b ^ r) & 0x80;
       return r;
     };
@@ -218,27 +218,27 @@ class RP2A03 final : public CPU {
    * modes. Because the processor cannot undo a write to an invalid address, it
    * always reads from the address first.
    */
-  static constexpr Address FixHiByte(Address address) noexcept {
+  static constexpr Address FixHiByte(Address address) {
     return address - static_cast<Address>(0x0100);
   }
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
-  Byte Fetch() noexcept override {
+  Byte Fetch() override {
     if (AddrMode() == AddressingMode::IMM)
       Addr(registers_->pc.value++);
     return context_.fetched = Read(Addr());
   }
 
-  void Stage() noexcept {
+  void Stage() {
     // This is just for formatting the code.
   }
 
-  void Stage(const std::function<void()>& step, bool when=true) noexcept {
+  void Stage(const std::function<void()>& step, bool when=true) {
     if (when) pipeline_.Push(step);
   }
 
   [[nodiscard]]
-  bool ClearWhenCompleted() noexcept {
+  bool ClearWhenCompleted() {
     if (pipeline_.Done()) {
       pipeline_.Clear();
       return true;
@@ -250,7 +250,7 @@ class RP2A03 final : public CPU {
     pipeline_.Tick();
   }
 
-  void Parse() noexcept {
+  void Parse() {
     context_.opcode_byte = Read(registers_->pc.value++);
     context_.opcode = Opcodes::Decode(context_.opcode_byte);
   }
@@ -273,60 +273,60 @@ class RP2A03 final : public CPU {
   }
 
   [[nodiscard]]
-  Byte ShiftL(Byte b, bool rotate_carry) noexcept {
+  Byte ShiftL(Byte b, bool rotate_carry) {
     return alu_.ShiftL(ALU::Load(0x00, b), rotate_carry);
   }
 
   [[nodiscard]]
-  Byte ShiftR(Byte a, bool rotate_carry) noexcept {
+  Byte ShiftR(Byte a, bool rotate_carry) {
     return alu_.ShiftR(ALU::Load(a, 0x00), rotate_carry);
   }
 
   [[nodiscard]]
-  Byte Increment(Byte b) noexcept {
+  Byte Increment(Byte b) {
     return alu_.Increment(ALU::Load(0x00, b));
   }
 
   [[nodiscard]]
-  Byte Decrement(Byte b) noexcept {
+  Byte Decrement(Byte b) {
     return alu_.Decrement(ALU::Load(0x00, b));
   }
 
   [[nodiscard]]
-  Byte PassThrough(Byte b) noexcept {
+  Byte PassThrough(Byte b) {
     return alu_.PassThrough(ALU::Load(0x00, b));
   }
 
   [[nodiscard]]
-  Byte Or(Byte a, Byte b) noexcept {
+  Byte Or(Byte a, Byte b) {
     return alu_.Or(ALU::Load(a, b));
   }
 
   [[nodiscard]]
-  Byte And(Byte a, Byte b) noexcept {
+  Byte And(Byte a, Byte b) {
     return alu_.And(ALU::Load(a, b));
   }
 
   [[nodiscard]]
-  Byte Xor(Byte a, Byte b) noexcept {
+  Byte Xor(Byte a, Byte b) {
     return alu_.Xor(ALU::Load(a, b));
   }
 
   [[nodiscard]]
-  Byte Add(Byte a, Byte b) noexcept {
+  Byte Add(Byte a, Byte b) {
     return alu_.Add(ALU::Load(a, b));
   }
 
   [[nodiscard]]
-  Byte Sub(Byte a, Byte b) noexcept {
+  Byte Sub(Byte a, Byte b) {
     return alu_.Add(ALU::Load(a, ~b));
   }
 
-  void Cmp(Byte a, Byte b) noexcept {
+  void Cmp(Byte a, Byte b) {
     return alu_.Cmp(ALU::Load(a, b));
   }
 
-  void Bit(Byte a, Byte b) noexcept {
+  void Bit(Byte a, Byte b) {
     return alu_.Bit(ALU::Load(a, b));
   }
 
@@ -338,82 +338,82 @@ class RP2A03 final : public CPU {
   }
 
   [[nodiscard]]
-  bool IfCarry() const noexcept {
+  bool IfCarry() const {
     return !!registers_->p.carry;
   }
 
   [[nodiscard]]
-  bool IfZero() const noexcept {
+  bool IfZero() const {
     return !!registers_->p.zero;
   }
 
   [[nodiscard]]
-  bool IfIRQDisable() const noexcept {
+  bool IfIRQDisable() const {
     return !!registers_->p.irq_disable;
   }
 
   [[nodiscard]]
-  bool IfDecimalMode() const noexcept {
+  bool IfDecimalMode() const {
     return !!registers_->p.decimal_mode;
   }
 
   [[nodiscard]]
-  bool IfBRKCommand() const noexcept {
+  bool IfBRKCommand() const {
     return !!registers_->p.brk_command;
   }
 
   [[nodiscard]]
-  bool IfUnused() const noexcept {
+  bool IfUnused() const {
     return !!registers_->p.unused;
   }
 
   [[nodiscard]]
-  bool IfOverflow() const noexcept {
+  bool IfOverflow() const {
     return !!registers_->p.overflow;
   }
 
   [[nodiscard]]
-  bool IfNegative() const noexcept {
+  bool IfNegative() const {
     return !!registers_->p.negative;
   }
 
   [[nodiscard]]
-  bool IfNotCarry() const noexcept {
+  bool IfNotCarry() const {
     return !registers_->p.carry;
   }
 
   [[nodiscard]]
-  bool IfNotZero() const noexcept {
+  bool IfNotZero() const {
     return !registers_->p.zero;
   }
 
   [[nodiscard]]
-  bool IfNotIRQDisable() const noexcept {
+  bool IfNotIRQDisable() const {
     return !registers_->p.irq_disable;
   }
 
   [[nodiscard]]
-  bool IfNotDecimalMode() const noexcept {
+  bool IfNotDecimalMode() const {
     return !registers_->p.decimal_mode;
   }
 
   [[nodiscard]]
-  bool IfNotBRKCommand() const noexcept {
+  bool IfNotBRKCommand() const {
     return !registers_->p.brk_command;
   }
 
   [[nodiscard]]
-  bool IfNotUnused() const noexcept {
+  bool IfNotUnused() const {
     return !registers_->p.unused;
   }
 
   [[nodiscard]]
-  bool IfNotOverflow() const noexcept {
+  bool IfNotOverflow() const {
     return !registers_->p.overflow;
   }
 
   [[nodiscard]]
-  bool IfNotNegative() const noexcept {
+  bool IfNotNegative() const {
     return !registers_->p.negative;
   }
 

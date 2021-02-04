@@ -27,7 +27,7 @@ class CPUAdapter : public MemoryBank {
   explicit CPUAdapter(ROM* const rom)
     : rom_(rom) {}
 
-  bool HasValidAddress(Address address) const noexcept override {
+  bool HasValidAddress(Address address) const override {
     return rom_->mapper->HasValidAddress(ROM::Mapper::Space::CPU, address);
   }
 
@@ -60,7 +60,7 @@ class PPUAdapter : public MemoryBank {
   explicit PPUAdapter(ROM* const rom)
     : rom_(rom) {}
 
-  bool HasValidAddress(Address address) const noexcept override {
+  bool HasValidAddress(Address address) const override {
     return rom_->mapper->HasValidAddress(ROM::Mapper::Space::PPU, address);
   }
 

@@ -20,7 +20,7 @@ namespace core {
 class Palettes {
  public:
   [[nodiscard]]
-  static std::vector<Byte> RP2C02() noexcept;
+  static std::vector<Byte> RP2C02();
 
  NESDEV_CORE_PRIVATE_UNLESS_TESTED:
   Palettes() {}

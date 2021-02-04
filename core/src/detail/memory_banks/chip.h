@@ -32,7 +32,7 @@ class Chip final : public MemoryBank {
   }
 
   [[nodiscard]]
-  bool HasValidAddress(Address address) const noexcept override {
+  bool HasValidAddress(Address address) const override {
     if constexpr (From == 0) return address <= To;
     else return address >= From && address <= To;
   }
@@ -47,7 +47,7 @@ class Chip final : public MemoryBank {
     else NESDEV_CORE_THROW(InvalidAddress::Occur("Invalid address specified to nesdev::core::detail::memory_banks::Chip::Write", address));
   }
 
-  std::size_t Size() const noexcept override {
+  std::size_t Size() const override {
     return data_.size();
   }
 

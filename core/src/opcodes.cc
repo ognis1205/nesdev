@@ -384,7 +384,7 @@ const std::map<Byte, Opcode> lookup = {
   {0xFF, {Instruction::NOP, AddressingMode::IMP,  MemoryAccess::READ             }},
 };
 
-std::string ToString(Instruction instruction) noexcept {
+std::string ToString(Instruction instruction) {
   switch (instruction) {
   case ADC: return "ADC";
   case AND: return "AND";
@@ -482,7 +482,7 @@ std::string ToString(Instruction instruction) noexcept {
   }
 }
 
-std::string ToString(AddressingMode addressing_mode) noexcept {
+std::string ToString(AddressingMode addressing_mode) {
   switch (addressing_mode) {
   case ABS:  return "ABS";
   case ABX:  return "ABX";
@@ -522,11 +522,11 @@ std::string ToString(AddressingMode addressing_mode) noexcept {
 namespace nesdev {
 namespace core {
 
-Opcode Opcodes::Decode(Byte byte) noexcept {
+Opcode Opcodes::Decode(Byte byte) {
   return ::lookup.at(byte);
 }
 
-std::string Opcodes::ToString(Byte byte) noexcept {
+std::string Opcodes::ToString(Byte byte) {
   return ::ToString(Opcodes::Decode(byte).instruction) + ", " + ::ToString(Opcodes::Decode(byte).addressing_mode);
 }
 

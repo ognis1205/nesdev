@@ -20,71 +20,27 @@ class CPU : public nesdev::core::CPU {
 
   MOCK_METHOD0(Next, void());
 
-  MOCK_CONST_METHOD0(MockIsIdle, bool());
+  MOCK_CONST_METHOD0(IsIdle, bool());
 
-  MOCK_METHOD0(MockFetch, Byte());
+  MOCK_METHOD0(Fetch, Byte());
 
-  MOCK_METHOD0(MockReset, void());
+  MOCK_METHOD0(Reset, void());
 
-  MOCK_METHOD0(MockIRQ, void());
+  MOCK_METHOD0(IRQ, void());
 
-  MOCK_METHOD0(MockNMI, void());
+  MOCK_METHOD0(NMI, void());
 
-  MOCK_CONST_METHOD0(MockPCRegister, Byte());
+  MOCK_CONST_METHOD0(PCRegister, Byte());
 
-  MOCK_CONST_METHOD0(MockARegister, Byte());
+  MOCK_CONST_METHOD0(ARegister, Byte());
 
-  MOCK_CONST_METHOD0(MockXRegister, Byte());
+  MOCK_CONST_METHOD0(XRegister, Byte());
 
-  MOCK_CONST_METHOD0(MockYRegister, Byte());
+  MOCK_CONST_METHOD0(YRegister, Byte());
 
-  MOCK_CONST_METHOD0(MockSRegister, Byte());
+  MOCK_CONST_METHOD0(SRegister, Byte());
 
-  MOCK_CONST_METHOD0(MockPRegister, Byte());
-
-  bool IsIdle() const noexcept {
-    return MockIsIdle();
-  }
-
-  Byte Fetch() noexcept {
-    return MockFetch();
-  }
-
-  void Reset() noexcept {
-    MockReset();
-  }
-
-  void IRQ() noexcept {
-    MockIRQ();
-  }
-
-  void NMI() noexcept {
-    MockNMI();
-  }
-
-  Byte PCRegister() const noexcept {
-    return MockPCRegister();
-  }
-
-  Byte ARegister() const noexcept {
-    return MockARegister();
-  }
-
-  Byte XRegister() const noexcept {
-    return MockXRegister();
-  }
-
-  Byte YRegister() const noexcept {
-    return MockYRegister();
-  }
-
-  Byte SRegister() const noexcept {
-    return MockSRegister();
-  }
-
-  Byte PRegister() const noexcept {
-    return MockPRegister();
-  }
+  MOCK_CONST_METHOD0(PRegister, Byte());
 };
 
 }  // namespace mocks

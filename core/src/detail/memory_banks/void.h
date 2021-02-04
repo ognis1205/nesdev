@@ -22,7 +22,7 @@ class Void final : public MemoryBank {
   Void() = default;
 
   [[nodiscard]]
-  bool HasValidAddress([[maybe_unused]] Address address) const noexcept override {
+  bool HasValidAddress([[maybe_unused]] Address address) const override {
     return false;
   }
 

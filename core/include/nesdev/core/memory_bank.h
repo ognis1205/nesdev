@@ -19,7 +19,7 @@ class MemoryBank {
   virtual ~MemoryBank() = default;
 
   [[nodiscard]]
-  virtual bool HasValidAddress(Address address) const noexcept = 0;
+  virtual bool HasValidAddress(Address address) const = 0;
 
   virtual Byte Read(Address address) const = 0;
 

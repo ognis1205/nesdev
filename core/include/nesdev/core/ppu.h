@@ -210,7 +210,7 @@ class PPU : public Clock {
     }
 
     [[nodiscard]]
-    bool HasValidAddress(Address address) const noexcept override {
+    bool HasValidAddress(Address address) const override {
       if constexpr (From == 0) return address <= To;
       else return address >= From && address <= To;
     }
@@ -288,7 +288,7 @@ class PPU : public Clock {
     }
 
     [[nodiscard]]
-    bool HasValidAddress(Address address) const noexcept override {
+    bool HasValidAddress(Address address) const override {
       if constexpr (From == 0) return address <= To;
       else return address >= From && address <= To;
     }
@@ -347,7 +347,7 @@ class PPU : public Clock {
 
    public:
     [[nodiscard]]
-    bool HasValidAddress(Address address) const noexcept override {
+    bool HasValidAddress(Address address) const override {
       return address >= 0 && address < sizeof(Entry) * Entries;
     }
 
@@ -398,11 +398,11 @@ class PPU : public Clock {
 
   virtual void Write(Address address, Byte byte) = 0;
 
-  virtual bool IsRendering() const noexcept = 0;
+  virtual bool IsRendering() const = 0;
 
-  virtual Byte CtrlRegister() const noexcept = 0;
+  virtual Byte CtrlRegister() const = 0;
 
-  virtual Byte MaskRegister() const noexcept = 0;
+  virtual Byte MaskRegister() const = 0;
 
   virtual Address VRAMAddr() const = 0;
 
@@ -427,28 +427,28 @@ class PPU : public Clock {
   }
 
   [[nodiscard]]
-  std::int16_t Cycle() noexcept {
+  std::int16_t Cycle() {
     return context_.cycle;
   }
 
   [[nodiscard]]
-  std::int16_t Scanline() noexcept {
+  std::int16_t Scanline() {
     return context_.scanline;
   }
 
-  Byte BgId() const noexcept {
+  Byte BgId() const {
     return context_.background.id;
   }
 
-  Byte BgAttr() const noexcept {
+  Byte BgAttr() const {
     return context_.background.attr;
   }
 
-  Byte BgLSB() const noexcept {
+  Byte BgLSB() const {
     return context_.background.lsb;
   }
 
-  Byte BgMSB() const noexcept {
+  Byte BgMSB() const {
     return context_.background.msb;
   }
 
@@ -459,49 +459,49 @@ class PPU : public Clock {
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsPreRenderOrVisibleLine() const noexcept {
+  bool IsPreRenderOrVisibleLine() const {
     return context_.scanline >= -1 && context_.scanline < 240;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsEndOfVisibleCycle() const noexcept {
+  bool IsEndOfVisibleCycle() const {
     return context_.cycle == 256;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsPostRenderLine() const noexcept {
+  bool IsPostRenderLine() const {
     return context_.scanline == 240;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsStartOfIdleCycle() const noexcept {
+  bool IsStartOfIdleCycle() const {
     return context_.cycle == 257;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsNotIdleCycle() const noexcept {
+  bool IsNotIdleCycle() const {
     return (context_.cycle >= 2 && context_.cycle < 258) || (context_.cycle >= 321 && context_.cycle < 338);
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsStartOfVBlank() const noexcept {
+  bool IsStartOfVBlank() const {
     return context_.scanline == 241 && context_.cycle == 1;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsEndOfVBlank() const noexcept {
+  bool IsEndOfVBlank() const {
     return context_.scanline == -1 && context_.cycle >= 280 && context_.cycle < 305;
   }
 
   /* [SEE] https://wiki.nesdev.com/w/index.php/PPU_rendering */
   [[nodiscard]]
-  bool IsEndOfScanline(bool superflous) const noexcept {
+  bool IsEndOfScanline(bool superflous) const {
     if (superflous)
       return context_.cycle == 338 || context_.cycle == 340;
     else
@@ -608,28 +608,28 @@ class PPU : public Clock {
   };
 
  NESDEV_CORE_PROTECTED_UNLESS_TESTED:
-  void NextCycle() noexcept {
+  void NextCycle() {
     context_.cycle++;
   }
 
- void Cycle(int cycle) noexcept {
+ void Cycle(int cycle) {
     context_.cycle = cycle;
   }
 
-  void NextScanline() noexcept {
+  void NextScanline() {
     context_.scanline++;
   }
 
-  void Scanline(int scanline) noexcept {
+  void Scanline(int scanline) {
     context_.scanline = scanline;
   }
 
   [[nodiscard]]
-  bool IsOddFrame() const noexcept {
+  bool IsOddFrame() const {
     return context_.odd_frame;
   }
 
-  void TransitFrame() noexcept {
+  void TransitFrame() {
     context_.odd_frame = !context_.odd_frame;
   }
 

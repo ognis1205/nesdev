@@ -46,12 +46,12 @@ struct ROM {
 
    public:
     [[nodiscard]]
-    bool HasValidMagic() const noexcept {
+    bool HasValidMagic() const {
       return magic_[0] == 0x4E && magic_[1] == 0x45 && magic_[2] == 0x53 && magic_[3] == 0x1A;
     }
 
     [[nodiscard]]
-    std::size_t SizeOfPRGRom() const noexcept {
+    std::size_t SizeOfPRGRom() const {
       return NumOfPRGRoms() * k16KByte;
     }
 
@@ -68,7 +68,7 @@ struct ROM {
     }
 
     [[nodiscard]]
-    std::size_t SizeOfCHRRom() const noexcept {
+    std::size_t SizeOfCHRRom() const {
       return NumOfCHRRoms() * k8KByte;
     }
 
@@ -85,57 +85,57 @@ struct ROM {
     }
 
     [[nodiscard]]
-    std::size_t SizeOfPRGRam() const noexcept {
+    std::size_t SizeOfPRGRam() const {
       return NumOfPRGRams() * k8KByte;
     }
 
     [[nodiscard]]
-    std::size_t NumOfPRGRams() const noexcept {
+    std::size_t NumOfPRGRams() const {
       return flags8_.prg_ram_chunks == 0 ? 1 : flags8_.prg_ram_chunks;
     }
 
     [[nodiscard]]
-    std::size_t SizeOfCHRRam() const noexcept {
+    std::size_t SizeOfCHRRam() const {
       return NumOfCHRRams() * k8KByte;
     }
 
     [[nodiscard]]
-    std::size_t NumOfCHRRams() const noexcept {
+    std::size_t NumOfCHRRams() const {
       return NumOfCHRRoms() == 0 ? 1 : 0;
     }
 
     [[nodiscard]]
-    Header::Mirroring Mirroring() const noexcept {
+    Header::Mirroring Mirroring() const {
       return flags6_.mirroring ? Header::Mirroring::VERTICAL : Header::Mirroring::HORIZONTAL;
     }
 
     [[nodiscard]]
-    bool ContainsPersistentMemory() const noexcept {
+    bool ContainsPersistentMemory() const {
       return flags6_.contains_persistent_memory;
     }
 
     [[nodiscard]]
-    bool ContainsTrainer() const noexcept {
+    bool ContainsTrainer() const {
       return flags6_.contains_trainer;
     }
 
     [[nodiscard]]
-    bool IgnoreMirroing() const noexcept {
+    bool IgnoreMirroing() const {
       return flags6_.ignore_mirroring;
     }
 
     [[nodiscard]]
-    bool IsVSUnisystem() const noexcept {
+    bool IsVSUnisystem() const {
       return flags7_.is_vs_unisystem;
     }
 
     [[nodiscard]]
-    bool IsPlayChoice() const noexcept {
+    bool IsPlayChoice() const {
       return flags7_.is_play_choice;
     }
 
     [[nodiscard]]
-    Header::Format Format() const noexcept {
+    Header::Format Format() const {
       switch (flags7_.ines_format) {
       case 0x10: return Header::Format::NES20;
       default  : return Header::Format::NES10;
@@ -143,7 +143,7 @@ struct ROM {
     }
 
     [[nodiscard]]
-    Byte Mapper() const noexcept {
+    Byte Mapper() const {
       return flags7_.mapper_nibble_hi << 4 | flags6_.mapper_nibble_lo;
     }
 
@@ -162,12 +162,12 @@ struct ROM {
     }
 
     [[nodiscard]]
-    bool HasPRGRam() const noexcept {
+    bool HasPRGRam() const {
       return !flags10_.prg_ram_not_present;
     }
 
     [[nodiscard]]
-    bool HasBusConflict() const noexcept {
+    bool HasBusConflict() const {
       return flags10_.has_bus_conflict;
     }
 
@@ -268,13 +268,13 @@ struct ROM {
     virtual void Write(Space space, Address address, Byte byte) const = 0;
 
     [[nodiscard]]
-    virtual bool IRQ() const noexcept = 0;
+    virtual bool IRQ() const = 0;
 
-    virtual void ClearIRQ() noexcept = 0;
+    virtual void ClearIRQ() = 0;
 
-    virtual void OnVisibleCycleEnds() noexcept = 0;
+    virtual void OnVisibleCycleEnds() = 0;
 
-    virtual void Reset() noexcept = 0;
+    virtual void Reset() = 0;
 
    NESDEV_CORE_PROTECTED_UNLESS_TESTED:
     const Header* const header_;

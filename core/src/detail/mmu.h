@@ -17,11 +17,11 @@ namespace detail {
 
 class MMU final : public nesdev::core::MMU {
  public:
-  void Clear() noexcept;
+  void Clear();
 
   void Add(std::unique_ptr<MemoryBank> memory_bank);
 
-  void Set(MemoryBanks memory_banks) noexcept override;
+  void Set(MemoryBanks memory_banks) override;
 
   Byte Read(Address address) const override;
 

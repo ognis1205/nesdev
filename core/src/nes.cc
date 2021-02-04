@@ -47,7 +47,6 @@ void NES::Tick() {
   ppu->Tick();
   if (cycle % 3 == 0) {
     if (dma->IsTransfering()) {
-//      std::cout << "OAM" << std::endl;
       dma->TransactAt(cycle, cpu_bus.get(), ppu_chips.get());
     }
     else cpu->Tick();
